@@ -1,0 +1,21 @@
+# Build
+/build/
+/target/
+/out/
+
+# Gradle
+/.gradle/
+
+# IntelliJ
+/.idea/
+*.iml
+
+# Logs
+*.log
+
+# Mac
+.DS_Store
+
+# Env
+.env
+.env.*
