@@ -3,7 +3,7 @@ name: CD - Docker Build & Deploy
 on:
   push:
     branches: [ "main" ]
-
+  workflow_dispatch:    # 수동 트리거 추가
 jobs:
   deploy:
     runs-on: ubuntu-latest
