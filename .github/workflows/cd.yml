@@ -2,7 +2,7 @@ name: CD - Docker Build & Deploy
 
 on:
   push:
-    branches: [ "main", "in-65-ci-cd-구축" ]
+    branches: [ "main" ]
   workflow_dispatch:    # 수동 트리거 추가
 jobs:
   deploy:
