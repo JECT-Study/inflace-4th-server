@@ -40,6 +40,8 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: youngh1p/inflace:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
