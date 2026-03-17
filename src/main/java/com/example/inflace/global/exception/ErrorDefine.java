@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorDefine {
 
     INVALID_HEADER_ERROR("AUTH_400", HttpStatus.BAD_REQUEST, "Bad Request: Invalid Header Error"),
-    INVALID_ARGUMENT("AUTH_400", HttpStatus.BAD_REQUEST, "Bad Request: Invalid Arguments");
+    INVALID_ARGUMENT("COMMON_400", HttpStatus.BAD_REQUEST, "Bad Request: Invalid Arguments");
 
 
     private final String errorCode;
