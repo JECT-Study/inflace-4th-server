@@ -7,6 +7,9 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 springdoc:
   api-docs:
@@ -14,6 +17,15 @@ springdoc:
   swagger-ui:
     path: /api-docs
     url: /v3/api-docs
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID}
+  client-secret: ${GOOGLE_CLIENT_SECRET}
+  redirect-uri: ${GOOGLE_REDIRECT_URI}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
 
 youtube:
   data-api:
