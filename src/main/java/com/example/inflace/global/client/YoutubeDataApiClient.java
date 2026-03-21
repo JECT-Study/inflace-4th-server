@@ -13,16 +13,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class YoutubeDataApiClient {
 
     private static final String CHANNELS_PATH = "/channels";
-    private static final String CHANNEL_PARTS = "snippet,statistics";
 
     private final RestClient restClient;
     private final YoutubeProperties youtubeProperties;
 
-    public YoutubeDataChannelResponse getYoutubeChannels(String channelId) {
+    public YoutubeDataChannelResponse getYoutubeChannels(String channelId, String parts) {
         URI uri = UriComponentsBuilder
                 .fromUriString(youtubeProperties.dataApi().baseUrl())
                 .path(CHANNELS_PATH)
-                .queryParam("part", CHANNEL_PARTS)
+                .queryParam("part", parts)
                 .queryParam("id", channelId)
                 .queryParam("key", youtubeProperties.dataApi().apiKey())
                 .build()
