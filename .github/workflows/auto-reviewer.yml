@@ -1,0 +1,39 @@
+name: Auto Assign Reviewers
+
+on:
+  pull_request:
+    types: [ opened, reopened, synchronize ]
+
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign reviewers based on base branch
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.AUTO_REVIEWER_TOKEN }}
+          script: |
+            const author = context.payload.pull_request.user.login;
+            const branch = context.payload.pull_request.base.ref;
+            let reviewers = [];
+
+            if (branch === 'develop' || branch === 'main') {
+              reviewers = ['youcastle03','HwangRock','sunJ0120'].filter(u => u !== author);
+            }
+
+            if (reviewers.length > 0) {
+              try{
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  reviewers: reviewers
+                });
+                console.log('Reviewers assigned successfully');
+              } catch (error) {
+                console.log('Error assigning reviewers:', error);
+              }
+            } else {
+              console.log(`No reviewers to assign. PR author (${author}) is the only candidate.`);
+            }
