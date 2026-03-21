@@ -13,6 +13,21 @@ springdoc:
     path: /api-docs
     url: /v3/api-docs
 
+spring:
+  application:
+    name: inflace
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /api-docs
+    url: /v3/api-docs
+
 youtube:
   data-api:
     base-url: ${DATA_API_URL}

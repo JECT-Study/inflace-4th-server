@@ -11,7 +11,7 @@ public class ChannelService {
 
     private final YoutubeDataApiClient youtubeDataApiClient;
 
-    public YoutubeDataChannelResponse getYoutubeChannel(String channelId) {
+    private YoutubeDataChannelResponse getYoutubeChannel(String channelId) {
         YoutubeDataChannelResponse response = youtubeDataApiClient.getYoutubeChannels(channelId);
         return response;
     }
