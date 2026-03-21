@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: inflace
   datasource:
@@ -17,3 +19,6 @@ youtube:
   data-api:
     base-url: ${DATA_API_URL}
     api-key: ${DATA_API_KEY}
+  analytics-api:
+    base-url: ${ANALYTICS_API_URL}
+    access-token: ${ANALYTICS_TEST_ACCESS_TOKEN}
