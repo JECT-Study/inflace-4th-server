@@ -12,3 +12,8 @@ springdoc:
   swagger-ui:
     path: /api-docs
     url: /v3/api-docs
+
+youtube:
+  data-api:
+    base-url: ${DATA_API_URL}
+    api-key: ${DATA_API_KEY}
