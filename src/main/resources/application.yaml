@@ -21,4 +21,4 @@ youtube:
     api-key: ${DATA_API_KEY}
   analytics-api:
     base-url: ${ANALYTICS_API_URL}
-    accessToken: ${ANALYTICS_TEST_ACCESS_TOKEN}
+    access-token: ${ANALYTICS_TEST_ACCESS_TOKEN}
