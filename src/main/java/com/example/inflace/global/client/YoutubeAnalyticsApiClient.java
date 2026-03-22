@@ -1,5 +1,6 @@
 package com.example.inflace.global.client;
 
+import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoRequest;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoResponse;
 import com.example.inflace.global.properties.YoutubeProperties;
@@ -20,8 +21,9 @@ public class YoutubeAnalyticsApiClient {
 
     private final RestClient restClient;
     private final YoutubeProperties youtubeProperties;
+    private final GoogleAccessTokenStore googleAccessTokenStore;
 
-    public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(YoutubeAnalyticsVideoRequest request) {
+    public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(String googleId, YoutubeAnalyticsVideoRequest request) {
         URI uri = UriComponentsBuilder
                 .fromUriString(youtubeProperties.analyticsApi().baseUrl())
                 .path(ANALYTICS_PATH)
@@ -32,10 +34,9 @@ public class YoutubeAnalyticsApiClient {
                 .build()
                 .toUri();
 
-        // TODO : 차후 header에 access token 실어 보내는 방식으로 변경 예정
         return restClient.get()
                 .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + youtubeProperties.analyticsApi().accessToken())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(googleId))
                 .retrieve()
                 .body(YoutubeAnalyticsVideoResponse.class);
     }

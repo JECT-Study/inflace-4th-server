@@ -12,8 +12,9 @@ public class VideoService {
 
     private final YoutubeAnalyticsApiClient youtubeAnalyticsApiClient;
 
-    private YoutubeAnalyticsVideoResponse getYoutubeAnalyticsVideo(YoutubeAnalyticsVideoRequest request) {
-        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(request);
+    public YoutubeAnalyticsVideoResponse getYoutubeAnalyticsVideo(String googleId,
+                                                                  YoutubeAnalyticsVideoRequest request) {
+        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
         return response;
     }
 }
