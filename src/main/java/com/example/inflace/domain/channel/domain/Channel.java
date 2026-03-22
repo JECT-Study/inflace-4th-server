@@ -1,5 +1,6 @@
 package com.example.inflace.domain.channel.domain;
 
+import com.example.inflace.domain.user.domain.User;
 import com.example.inflace.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -21,7 +22,7 @@ public class Channel extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;  // login merge 후에 user entity와 연동 필요
+    private User user;
 
     private String name;
 
