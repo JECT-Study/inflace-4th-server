@@ -44,7 +44,8 @@ public class VideoStats extends BaseEntity {
     private LocalDateTime collectedAt;
 
     @Builder
-    public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr, Double avgWatchDuration, LocalDateTime collectedAt) {
+    public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr,
+                      Double avgWatchDuration, LocalDateTime collectedAt) {
         this.video = video;
         this.viewCount = viewCount;
         this.likeCount = likeCount;

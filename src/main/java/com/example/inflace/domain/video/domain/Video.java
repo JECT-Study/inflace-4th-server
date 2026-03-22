@@ -47,7 +47,8 @@ public class Video extends BaseEntity {
     private String[] hashtags;
 
     @Builder
-    public Video(Channel channel, String title, String thumbnailUrl, Double duration, boolean isShort, int risingScore, LocalDateTime publishedAt, String[] hashtags) {
+    public Video(Channel channel, String title, String thumbnailUrl, Double duration, boolean isShort, int risingScore,
+                 LocalDateTime publishedAt, String[] hashtags) {
         this.channel = channel;
         this.title = title;
         this.thumbnailUrl = thumbnailUrl;
