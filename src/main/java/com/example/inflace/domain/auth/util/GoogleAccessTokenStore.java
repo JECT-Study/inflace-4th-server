@@ -1,5 +1,7 @@
 package com.example.inflace.domain.auth.util;
 
+import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ErrorDefine;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -14,6 +16,10 @@ public class GoogleAccessTokenStore {
     }
 
     public String getAccessToken(String googleId) {
-        return tokenStore.get(googleId);
+        String token = tokenStore.get(googleId);
+        if (token == null) {
+            throw new ApiException(ErrorDefine.INVALID_HEADER_ERROR);
+        }
+        return token;
     }
 }
