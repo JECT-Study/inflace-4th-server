@@ -1,0 +1,25 @@
+package com.example.inflace.domain.auth.util;
+
+import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ErrorDefine;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class GoogleAccessTokenStore {
+    private final Map<String, String> tokenStore = new ConcurrentHashMap<>();
+
+    public void save(String googleId, String accessToken) {
+        tokenStore.put(googleId, accessToken);
+    }
+
+    public String getAccessToken(String googleId) {
+        String token = tokenStore.get(googleId);
+        if (token == null) {
+            throw new ApiException(ErrorDefine.INVALID_HEADER_ERROR);
+        }
+        return token;
+    }
+}
