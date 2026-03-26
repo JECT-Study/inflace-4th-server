@@ -49,7 +49,18 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: SPRING_DATASOURCE_URL,SPRING_DATASOURCE_USERNAME,SPRING_DATASOURCE_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,DATA_API_KEY,DATA_API_URL
           script: |
-            cd ~
-            ./deploy.sh
-
+            docker pull youngh1p/inflace:latest
+            docker stop inflace || true
+            docker rm inflace || true
+            docker run -d --name inflace -p 8080:8080 \
+              -e SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL \
+              -e SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME \
+              -e SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD \
+              -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
+              -e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
+              -e GOOGLE_REDIRECT_URI=$GOOGLE_REDIRECT_URI \
+              -e DATA_API_KEY=$DATA_API_KEY \
+              -e DATA_API_URL=$DATA_API_URL \
+              youngh1p/inflace:latest
