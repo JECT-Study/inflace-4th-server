@@ -8,6 +8,11 @@ import static java.time.temporal.ChronoUnit.HOURS;
  * Analytics api에서 사용하는 계산식 유틸
  */
 public class AnalyticsCalculator {
+
+    private static long nz(Long value) {
+        return (value == null || value < 0) ? 0L : value;
+    }
+
     /**
      * 영상 참여율
      *
@@ -17,10 +22,10 @@ public class AnalyticsCalculator {
      * @return 참여율 (%)
      */
     public static double engagementRate(Long likeCount, Long commentCount, Long viewCount) {
-        if (viewCount == 0) {  // 0 나누기 방지
+        if (nz(viewCount) == 0) {  // 0 나누기 방지
             return 0.0;
         }
-        return ((likeCount + commentCount) / (double) viewCount) * 100;
+        return ((nz(likeCount) + nz(commentCount)) / (double) nz(viewCount)) * 100;
     }
 
     /**
@@ -31,10 +36,10 @@ public class AnalyticsCalculator {
      * @return 신규 유입 비율 (%)
      */
     public static double newViewerRate(Long unsubscribedViewCount, Long viewCount) {
-        if (viewCount == 0) {
+        if (nz(viewCount) == 0) {
             return 0.0;
         }
-        return (unsubscribedViewCount / (double) viewCount) * 100;
+        return (nz(unsubscribedViewCount) / (double) nz(viewCount)) * 100;
     }
 
     /**
@@ -46,10 +51,10 @@ public class AnalyticsCalculator {
      * @return 채널 평균 대비 배수
      */
     public static double outlier(Long viewCount, Long totalViewCount, Long videoCount) {
-        if (totalViewCount == 0 || videoCount == 0) {
+        if (nz(totalViewCount) == 0 || nz(videoCount) == 0) {
             return 0.0;
         }
-        return viewCount / ((double) totalViewCount / videoCount);
+        return nz(viewCount) / ((double) nz(totalViewCount) / nz(videoCount));
     }
 
     /**
@@ -60,11 +65,15 @@ public class AnalyticsCalculator {
      * @return 시간당 조회수
      */
     public static double vph(Long viewCount, LocalDateTime publishedAt) {
-        long hours = HOURS.between(publishedAt, LocalDateTime.now());
-        if (hours == 0) {
+        // 날짜 null 체크 및 미래 시간 방어
+        if (publishedAt == null || publishedAt.isAfter(LocalDateTime.now())) {
             return 0.0;
         }
-        return viewCount / (double) hours;
+        long hours = HOURS.between(publishedAt, LocalDateTime.now());
+        if (nz(hours) == 0) {
+            return 0.0;
+        }
+        return nz(viewCount) / (double) nz(hours);
     }
 
     /**

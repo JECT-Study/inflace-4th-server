@@ -26,9 +26,24 @@ class AnalyticsCalculatorTest {
     }
 
     @Test
-    @DisplayName("참여율 - 좋아요 댓글 모두 0이면 0 반환")
-    void engagementRate_좋아요댓글이0이면_0반환() {
-        double result = AnalyticsCalculator.engagementRate(0L, 0L, 1000L);
+    @DisplayName("참여율 - 조회수 null이면 0 반환")
+    void engagementRate_조회수null이면_0반환() {
+        double result = AnalyticsCalculator.engagementRate(100L, 50L, null);
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("참여율 - 좋아요 null이면 댓글만 계산")
+    void engagementRate_좋아요null이면_댓글만계산() {
+        // (0 + 50) / 1000 * 100 = 5.0
+        double result = AnalyticsCalculator.engagementRate(null, 50L, 1000L);
+        assertThat(result).isEqualTo(5.0);
+    }
+
+    @Test
+    @DisplayName("참여율 - 음수 조회수는 0으로 처리")
+    void engagementRate_음수조회수이면_0반환() {
+        double result = AnalyticsCalculator.engagementRate(100L, 50L, -1L);
         assertThat(result).isEqualTo(0.0);
     }
 
@@ -44,6 +59,20 @@ class AnalyticsCalculatorTest {
     @DisplayName("신규 유입 비율 - 조회수 0이면 0 반환")
     void newViewerRate_조회수가0이면_0반환() {
         double result = AnalyticsCalculator.newViewerRate(300L, 0L);
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("신규 유입 비율 - 조회수 null이면 0 반환")
+    void newViewerRate_조회수null이면_0반환() {
+        double result = AnalyticsCalculator.newViewerRate(300L, null);
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("신규 유입 비율 - 비구독자 수 null이면 0 반환")
+    void newViewerRate_비구독자null이면_0반환() {
+        double result = AnalyticsCalculator.newViewerRate(null, 1000L);
         assertThat(result).isEqualTo(0.0);
     }
 
@@ -77,6 +106,13 @@ class AnalyticsCalculatorTest {
     }
 
     @Test
+    @DisplayName("아웃라이어 - 전체 조회수 null이면 0 반환")
+    void outlier_전체조회수null이면_0반환() {
+        double result = AnalyticsCalculator.outlier(1000L, null, 10L);
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
     @DisplayName("아웃라이어 - 평균과 동일하면 1.0 반환")
     void outlier_평균과동일하면_1반환() {
         // 500 / (5000 / 10) = 500 / 500 = 1.0
@@ -98,6 +134,21 @@ class AnalyticsCalculatorTest {
     void vph_방금업로드이면_0반환() {
         LocalDateTime publishedAt = LocalDateTime.now();
         double result = AnalyticsCalculator.vph(1000L, publishedAt);
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("VPH - publishedAt null이면 0 반환")
+    void vph_publishedAt_null이면_0반환() {
+        double result = AnalyticsCalculator.vph(1000L, null);
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("VPH - 미래 시간이면 0 반환")
+    void vph_미래시간이면_0반환() {
+        LocalDateTime future = LocalDateTime.now().plusHours(5);
+        double result = AnalyticsCalculator.vph(1000L, future);
         assertThat(result).isEqualTo(0.0);
     }
 
