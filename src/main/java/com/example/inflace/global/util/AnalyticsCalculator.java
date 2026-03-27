@@ -9,7 +9,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
  */
 public class AnalyticsCalculator {
     /**
-     * 참여율
+     * 영상 참여율
      *
      * @param likeCount    좋아요 수
      * @param commentCount 댓글 수
