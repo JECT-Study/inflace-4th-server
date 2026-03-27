@@ -39,28 +39,46 @@ jobs:
           context: .
           platforms: linux/arm64
           push: true
-          tags: youngh1p/inflace:latest
+          tags: |   # 버전 안정성을 위해 sha 태그로 관리                         
+            youngh1p/inflace:${{ github.sha }}
+            youngh1p/inflace:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
+        env: # secrets 변수 주입
+          IMAGE_TAG: ${{ github.sha }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+          DATA_API_KEY: ${{ secrets.DATA_API_KEY }}
+          DATA_API_URL: ${{ secrets.DATA_API_URL }}
+          ANALYTICS_API_URL: ${{ secrets.ANALYTICS_API_URL }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: SPRING_DATASOURCE_URL,SPRING_DATASOURCE_USERNAME,SPRING_DATASOURCE_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,DATA_API_KEY,DATA_API_URL
+          envs: IMAGE_TAG,DB_URL,DB_USERNAME,DB_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,DATA_API_KEY,DATA_API_URL,ANALYTICS_API_URL,JWT_EXPIRATION,JWT_SECRET
           script: |
-            docker pull youngh1p/inflace:latest
+            docker pull youngh1p/inflace:$IMAGE_TAG
             docker stop inflace || true
             docker rm inflace || true
             docker run -d --name inflace -p 8080:8080 \
-              -e SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL \
-              -e SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME \
-              -e SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD \
+              -e DB_URL=$DB_URL \
+              -e DB_USERNAME=$DB_USERNAME \
+              -e DB_PASSWORD=$DB_PASSWORD \
               -e GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
               -e GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
               -e GOOGLE_REDIRECT_URI=$GOOGLE_REDIRECT_URI \
               -e DATA_API_KEY=$DATA_API_KEY \
               -e DATA_API_URL=$DATA_API_URL \
-              youngh1p/inflace:latest
+              -e ANALYTICS_API_URL=$ANALYTICS_API_URL \
+              -e JWT_EXPIRATION=$JWT_EXPIRATION \
+              -e JWT_SECRET=$JWT_SECRET \
+              youngh1p/inflace:$IMAGE_TAG
