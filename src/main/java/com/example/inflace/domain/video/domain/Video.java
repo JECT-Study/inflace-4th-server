@@ -46,9 +46,14 @@ public class Video extends BaseEntity {
     @Column(name = "hashtags", columnDefinition = "text[]")
     private String[] hashtags;
 
+    @Column(name = "video_url")
+    private String videoUrl;
+
+    private String description;
+
     @Builder
     public Video(Channel channel, String title, String thumbnailUrl, Double duration, boolean isShort, int risingScore,
-                 LocalDateTime publishedAt, String[] hashtags) {
+                 LocalDateTime publishedAt, String[] hashtags, String videoUrl, String description) {
         this.channel = channel;
         this.title = title;
         this.thumbnailUrl = thumbnailUrl;
@@ -57,5 +62,7 @@ public class Video extends BaseEntity {
         this.risingScore = risingScore;
         this.publishedAt = publishedAt;
         this.hashtags = hashtags;
+        this.videoUrl = videoUrl;
+        this.description = description;
     }
 }
