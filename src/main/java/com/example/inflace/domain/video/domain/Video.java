@@ -37,7 +37,7 @@ public class Video extends BaseEntity {
     private boolean isShort;
 
     @Column(name = "rising_score")
-    private int risingScore;
+    private Double risingScore;
 
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
@@ -46,9 +46,12 @@ public class Video extends BaseEntity {
     @Column(name = "hashtags", columnDefinition = "text[]")
     private String[] hashtags;
 
+    @Column(name = "youtube_video_id")
+    private String youtubeVideoId;
+
     @Builder
-    public Video(Channel channel, String title, String thumbnailUrl, Double duration, boolean isShort, int risingScore,
-                 LocalDateTime publishedAt, String[] hashtags) {
+    public Video(Channel channel, String title, String thumbnailUrl, Double duration, boolean isShort, Double risingScore,
+                 LocalDateTime publishedAt, String[] hashtags, String youtubeVideoId) {
         this.channel = channel;
         this.title = title;
         this.thumbnailUrl = thumbnailUrl;
@@ -57,5 +60,6 @@ public class Video extends BaseEntity {
         this.risingScore = risingScore;
         this.publishedAt = publishedAt;
         this.hashtags = hashtags;
+        this.youtubeVideoId = youtubeVideoId;
     }
 }
