@@ -30,6 +30,7 @@ public class YoutubeAnalyticsApiClient {
                 .queryParam("startDate", request.startDate().toString())
                 .queryParam("endDate", request.endDate().toString())
                 .queryParam("ids", CHANNEL_IDS)
+                .queryParam("filters", "video==" + request.youtubeVideoId())
                 .queryParam("metrics", request.formattedMetricsList())
                 .build()
                 .toUri();
