@@ -19,3 +19,6 @@
 # Env
 .env
 .env.*
+
+# claude
+.claude/

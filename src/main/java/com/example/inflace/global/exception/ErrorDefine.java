@@ -12,6 +12,7 @@ public enum ErrorDefine {
 
     // VIDEO
     VIDEO_NOT_FOUND("VIDEO_404", HttpStatus.NOT_FOUND, "Not Found: Video not found");
+    CHANNEL_NOT_FOUND("CHANNEL_404", HttpStatus.NOT_FOUND, "Not Found: Channel Not Found");
 
     private final String errorCode;
     private final HttpStatus httpStatus;

@@ -37,7 +37,7 @@ public class Video extends BaseEntity {
     private boolean isShort;
 
     @Column(name = "rising_score")
-    private int risingScore;
+    private Double risingScore;
 
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
