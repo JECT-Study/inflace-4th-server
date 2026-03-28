@@ -21,9 +21,11 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ChannelService {
 
     private final YoutubeDataApiClient youtubeDataApiClient;
@@ -31,6 +33,7 @@ public class ChannelService {
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
 
+    @Transactional(readOnly = true)
     public ChannelTopVideosResponse getTopVideos(Long channelId, String contentType) {
         validateChannelExists(channelId);
 
@@ -52,6 +55,7 @@ public class ChannelService {
         return new ChannelTopVideosResponse(items);
     }
 
+    @Transactional(readOnly = true)
     public ChannelEngagementRateResponse getEngagementRateVideos(Long channelId) {
         validateChannelExists(channelId);
 
