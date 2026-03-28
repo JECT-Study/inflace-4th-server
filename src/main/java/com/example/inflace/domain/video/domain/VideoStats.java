@@ -43,9 +43,19 @@ public class VideoStats extends BaseEntity {
     @Column(name = "collected_at")
     private LocalDateTime collectedAt;
 
+    @Column(name = "subscribers_gained")
+    private Long subscribersGained;
+
+    @Column(name = "unsubscribed_view_count")
+    private Long unsubscribedViewCount;
+
+    @Column(name = "average_view_percentage")
+    private Long averageViewPercentage;
+
     @Builder
     public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr,
-                      Double avgWatchDuration, LocalDateTime collectedAt) {
+                      Double avgWatchDuration, LocalDateTime collectedAt, Long subscribersGained,
+                      Long unsubscribedViewCount, Long averageViewPercentage) {
         this.video = video;
         this.viewCount = viewCount;
         this.likeCount = likeCount;
@@ -54,5 +64,8 @@ public class VideoStats extends BaseEntity {
         this.ctr = ctr;
         this.avgWatchDuration = avgWatchDuration;
         this.collectedAt = collectedAt;
+        this.subscribersGained = subscribersGained;
+        this.unsubscribedViewCount = unsubscribedViewCount;
+        this.averageViewPercentage = averageViewPercentage;
     }
 }
