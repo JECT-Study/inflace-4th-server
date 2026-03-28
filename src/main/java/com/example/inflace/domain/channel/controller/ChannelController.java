@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/channels")
-public class ChannelController {
+public class ChannelController implements ChannelApi{
 
     private final ChannelService channelService;
 
