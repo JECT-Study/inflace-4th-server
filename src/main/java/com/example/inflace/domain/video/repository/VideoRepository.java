@@ -21,4 +21,6 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             @Param("isShort") boolean isShort,
             Pageable pageable
     );
+
+    List<Video> findByChannelId(Long channelId);
 }

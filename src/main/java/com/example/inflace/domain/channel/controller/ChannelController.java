@@ -1,9 +1,8 @@
 package com.example.inflace.domain.channel.controller;
 
+import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.service.ChannelService;
-import com.example.inflace.domain.video.dto.ChannelTopVideosResponse;
-import com.example.inflace.global.exception.ApiErrorDefines;
-import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,5 +24,12 @@ public class ChannelController {
             @RequestParam(defaultValue = "LONG_FORM") String contentType
     ) {
         return new BaseResponse<>(channelService.getTopVideos(channelId, contentType));
+    }
+
+    @GetMapping("/{channelId}/engagement-rate")
+    public BaseResponse<ChannelEngagementRateResponse> getEngagementRateVideos(
+            @PathVariable Long channelId
+    ) {
+        return new BaseResponse<>(channelService.getEngagementRateVideos(channelId));
     }
 }

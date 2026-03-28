@@ -1,4 +1,4 @@
-package com.example.inflace.domain.video.dto;
+package com.example.inflace.domain.channel.dto;
 
 import java.util.List;
 
