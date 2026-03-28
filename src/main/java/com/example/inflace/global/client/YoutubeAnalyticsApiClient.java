@@ -24,16 +24,20 @@ public class YoutubeAnalyticsApiClient {
     private final GoogleAccessTokenStore googleAccessTokenStore;
 
     public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(String googleId, YoutubeAnalyticsVideoRequest request) {
-        URI uri = UriComponentsBuilder
+        UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(youtubeProperties.analyticsApi().baseUrl())
                 .path(ANALYTICS_PATH)
                 .queryParam("startDate", request.startDate().toString())
                 .queryParam("endDate", request.endDate().toString())
                 .queryParam("ids", CHANNEL_IDS)
-                .queryParam("filters", "video==" + request.youtubeVideoId())
-                .queryParam("metrics", request.formattedMetricsList())
-                .build()
-                .toUri();
+                .queryParam("metrics", request.formattedMetricsList());
+
+        // video filter 없이 가져오는 경우가 있어서, 분리
+        if (request.youtubeVideoId() != null) {
+            builder.queryParam("filters", "video==" + request.youtubeVideoId());
+        }
+
+        URI uri = builder.build().toUri();
 
         return restClient.get()
                 .uri(uri)
