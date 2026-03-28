@@ -46,7 +46,7 @@ public class ChannelService {
 
         List<Video> videos = videoRepository.findTopVideos(
                 channelId,
-                parsedContentType == VideoType.SHORT_FORM,
+                parsedContentType.isShort(),
                 PageRequest.of(0, 5)
         );
 
