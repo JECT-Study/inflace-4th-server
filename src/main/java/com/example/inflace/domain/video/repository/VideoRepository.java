@@ -11,7 +11,7 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     @Query("""
             select v
             from Video v
-            join VideoStats vs on vs.video = v
+            left join VideoStats vs on vs.video = v
             where v.channel.id = :channelId
               and v.isShort = :isShort
             order by v.risingScore desc, vs.ctr desc, v.id desc
