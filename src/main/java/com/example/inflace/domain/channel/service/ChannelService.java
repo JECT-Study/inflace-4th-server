@@ -108,7 +108,7 @@ public class ChannelService {
                     video.getTitle(),
                     video.getThumbnailUrl(),
                     videoStats != null ? videoStats.getViewCount() : 0L,
-                    (double) video.getRisingScore(),
+                    video.getRisingScore() != null ? video.getRisingScore() : 0.0,
                     videoStats != null && videoStats.getCtr() != null ? videoStats.getCtr() : 0.0,
                     videoStats != null && videoStats.getAverageViewPercentage() != null
                             ? videoStats.getAverageViewPercentage() : 0.0
