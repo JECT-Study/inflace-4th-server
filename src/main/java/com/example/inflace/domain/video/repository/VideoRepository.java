@@ -14,7 +14,7 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             left join VideoStats vs on vs.video = v
             where v.channel.id = :channelId
               and v.isShort = :isShort
-            order by v.risingScore desc, vs.ctr desc, v.id desc
+            order by coalesce(v.risingScore, 0) desc, coalesce(vs.ctr, 0) desc, v.id desc
             """)
     List<Video> findTopVideos(
             @Param("channelId") Long channelId,
