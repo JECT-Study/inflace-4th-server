@@ -1,7 +1,10 @@
 package com.example.inflace.domain.video.repository;
 
 import com.example.inflace.domain.video.domain.VideoStats;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface VideoStatsRepository extends JpaRepository<VideoStats, Long> {
