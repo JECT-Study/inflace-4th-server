@@ -13,6 +13,7 @@ public enum ErrorDefine {
     // VIDEO
     VIDEO_NOT_FOUND("VIDEO_404", HttpStatus.NOT_FOUND, "Not Found: Video not found"),
     VIDEO_STATS_NOT_FOUND("VIDEO_STATS_404", HttpStatus.NOT_FOUND, "Not Found: Video Stats not found"),
+    RETENTION_NOT_FOUND("RETENTION_404", HttpStatus.NOT_FOUND, "Not Found: Retention not found"),
 
     CHANNEL_NOT_FOUND("CHANNEL_404", HttpStatus.NOT_FOUND, "Not Found: Channel Not Found");
 
