@@ -13,4 +13,8 @@ public class AnalyticsParser {
         if (value == null) return 0.0;
         return ((Number) value).doubleValue();
     }
+
+    public static Double safeDoubleValue(Long value) {
+        return value != null ? value.doubleValue() : 0.0;
+    }
 }
