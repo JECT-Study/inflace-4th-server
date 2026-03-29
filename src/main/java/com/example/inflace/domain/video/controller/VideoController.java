@@ -1,5 +1,6 @@
 package com.example.inflace.domain.video.controller;
 
+import com.example.inflace.domain.video.dto.AudienceRetentionResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
 import com.example.inflace.domain.video.service.VideoService;
@@ -32,6 +33,16 @@ public class VideoController implements VideoApi {
             @PathVariable Long videoId
     ) {
         VideoStatsResponse response = videoService.getVideoStats(videoId);
+        return new BaseResponse<>(response);
+    }
+
+    @Override
+    @GetMapping("/{videoId}/retention")
+    public BaseResponse<AudienceRetentionResponse> getRetention(
+            @AuthenticationPrincipal String googleId,
+            @PathVariable Long videoId
+    ) {
+        AudienceRetentionResponse response = videoService.getRetention(videoId);
         return new BaseResponse<>(response);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.inflace.domain.video.controller;
 
+import com.example.inflace.domain.video.dto.AudienceRetentionResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
@@ -30,4 +31,13 @@ public interface VideoApi {
     @ApiErrorDefines(ErrorDefine.VIDEO_NOT_FOUND)
     BaseResponse<VideoStatsResponse> getVideoStats(@AuthenticationPrincipal String googleId,
                                                           @PathVariable("videoId") Long videoId);
+
+    @Operation(
+            summary = "에픽 2-4, 비디오 시청 지속률 시계열",
+            description = "비디오 ID로 시청 지속률 시계열 데이터를 조회합니다. <br>" +
+                    "0.01~1.00 구간의 100개 포인트를 반환합니다."
+    )
+    @ApiErrorDefines(ErrorDefine.VIDEO_NOT_FOUND)
+    BaseResponse<AudienceRetentionResponse> getRetention(@AuthenticationPrincipal String googleId,
+                                                 @PathVariable("videoId") Long videoId);
 }
