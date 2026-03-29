@@ -31,7 +31,7 @@ public class VideoController implements VideoApi {
             @AuthenticationPrincipal String googleId,
             @PathVariable Long videoId
     ) {
-        VideoStatsResponse response = videoService.getVideoStats(googleId, videoId);
+        VideoStatsResponse response = videoService.getVideoStats(videoId);
         return new BaseResponse<>(response);
     }
 }

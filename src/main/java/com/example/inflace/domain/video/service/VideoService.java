@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class VideoService {
 
-    private final VideoStatsApiService videoStatsApiService;
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
 
@@ -28,16 +27,12 @@ public class VideoService {
         return VideoMetaResponse.from(video);
     }
 
-    @Transactional
-    public VideoStatsResponse getVideoStats(String googleId, Long videoId) {
+    public VideoStatsResponse getVideoStats(Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
-        VideoStats videoStats = videoStatsRepository.findByVideoId(videoId)
-                .orElseGet(() -> {
-                    VideoStats stats = videoStatsApiService.fetchStats(video, googleId);
-                    return videoStatsRepository.save(stats);
-                });
+        VideoStats videoStats = videoStatsRepository.findByVideo(video)
+                .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
 
         return VideoStatsResponse.from(videoStats, 0L, 0L);
     }
