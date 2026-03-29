@@ -9,9 +9,11 @@ import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class VideoService {
 
     private final VideoStatsApiService videoStatsApiService;
@@ -26,6 +28,7 @@ public class VideoService {
         return VideoMetaResponse.from(video);
     }
 
+    @Transactional
     public VideoStatsResponse getVideoStats(String googleId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
