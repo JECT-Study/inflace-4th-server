@@ -1,6 +1,7 @@
 package com.example.inflace.global.client;
 
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
+import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.properties.YoutubeProperties;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class YoutubeDataApiClient {
 
     private static final String CHANNELS_PATH = "/channels";
+    private static final String VIDEOS_PATH = "/videos";
 
     private final RestClient restClient;
     private final YoutubeProperties youtubeProperties;
@@ -31,5 +33,21 @@ public class YoutubeDataApiClient {
                 .uri(uri)
                 .retrieve()
                 .body(YoutubeDataChannelResponse.class);
+    }
+
+    public YoutubeDataVideoResponse getYoutubeVideo(String videoId, String parts) {
+        URI uri = UriComponentsBuilder
+                .fromUriString(youtubeProperties.dataApi().baseUrl())
+                .path(VIDEOS_PATH)
+                .queryParam("part", parts)
+                .queryParam("id", videoId)
+                .queryParam("key", youtubeProperties.dataApi().apiKey())
+                .build()
+                .toUri();
+
+        return restClient.get()
+                .uri(uri)
+                .retrieve()
+                .body(YoutubeDataVideoResponse.class);
     }
 }
