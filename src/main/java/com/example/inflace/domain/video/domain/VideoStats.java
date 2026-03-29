@@ -50,12 +50,12 @@ public class VideoStats extends BaseEntity {
     private Long unsubscribedViewCount;
 
     @Column(name = "average_view_percentage")
-    private Long averageViewPercentage;
+    private Double averageViewPercentage;
 
     @Builder
     public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr,
                       Double avgWatchDuration, LocalDateTime collectedAt, Long subscribersGained,
-                      Long unsubscribedViewCount, Long averageViewPercentage) {
+                      Long unsubscribedViewCount, Double averageViewPercentage) {
         this.video = video;
         this.viewCount = viewCount;
         this.likeCount = likeCount;

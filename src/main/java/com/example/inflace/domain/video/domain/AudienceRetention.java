@@ -32,11 +32,16 @@ public class AudienceRetention extends BaseEntity {
     @Column(name = "collected_at")
     private LocalDateTime collectedAt;
 
+    @Column(name = "relative_retention_performance")
+    private Long relativeRetentionPerformance;
+
     @Builder
-    public AudienceRetention(Video video, Double timeOffset, Double retentionRate, LocalDateTime collectedAt) {
+    public AudienceRetention(Video video, Double timeOffset, Double retentionRate,
+                             LocalDateTime collectedAt, Long relativeRetentionPerformance) {
         this.video = video;
         this.timeOffset = timeOffset;
         this.retentionRate = retentionRate;
         this.collectedAt = collectedAt;
+        this.relativeRetentionPerformance = relativeRetentionPerformance;
     }
 }
