@@ -21,7 +21,9 @@ public record VideoMetaResponse(
                 video.getTitle(),
                 video.getPublishedAt(),
                 video.getDescription(),
-                Arrays.stream(video.getHashtags()).toList()
+                video.getHashtags() != null
+                        ? Arrays.stream(video.getHashtags()).toList()
+                        : List.of()
         );
     }
 }
