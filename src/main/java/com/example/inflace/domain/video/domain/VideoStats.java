@@ -2,10 +2,7 @@ package com.example.inflace.domain.video.domain;
 
 import com.example.inflace.global.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -52,10 +49,13 @@ public class VideoStats extends BaseEntity {
     @Column(name = "average_view_percentage")
     private Double averageViewPercentage;
 
+    @Column(name = "relative_retention_performance")
+    private Double relativeRetentionPerformance;
+
     @Builder
     public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr,
                       Double avgWatchDuration, LocalDateTime collectedAt, Long subscribersGained,
-                      Long unsubscribedViewCount, Double averageViewPercentage) {
+                      Long unsubscribedViewCount, Double averageViewPercentage, Double relativeRetentionPerformance) {
         this.video = video;
         this.viewCount = viewCount;
         this.likeCount = likeCount;
@@ -67,5 +67,6 @@ public class VideoStats extends BaseEntity {
         this.subscribersGained = subscribersGained;
         this.unsubscribedViewCount = unsubscribedViewCount;
         this.averageViewPercentage = averageViewPercentage;
+        this.relativeRetentionPerformance = relativeRetentionPerformance;
     }
 }
