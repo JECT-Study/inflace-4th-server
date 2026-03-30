@@ -32,9 +32,12 @@ public class VideoService {
         return VideoMetaResponse.from(video);
     }
 
-    public VideoStatsResponse getVideoStats(Long videoId) {
+    public VideoStatsResponse getVideoStats(String email, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
+
+        // 소유자 확인
+        validateVideoOwnership(video, email);
 
         VideoStats videoStats = videoStatsRepository.findByVideo(video)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
@@ -42,9 +45,12 @@ public class VideoService {
         return VideoStatsResponse.from(videoStats, 0L, 0L);
     }
 
-    public AudienceRetentionResponse getRetention(Long videoId) {
-        videoRepository.findById(videoId)
+    public AudienceRetentionResponse getRetention(String email, Long videoId) {
+        Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
+
+        // 소유자 확인
+        validateVideoOwnership(video, email);
 
         List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(videoId);
         if (retentionList.isEmpty()) {
@@ -52,5 +58,12 @@ public class VideoService {
         }
 
         return AudienceRetentionResponse.from(retentionList);
+    }
+
+    private void validateVideoOwnership(Video video, String email) {
+        String ownerEmail = video.getChannel().getUser().getEmail();
+        if (!ownerEmail.equals(email)) {
+            throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
+        }
     }
 }

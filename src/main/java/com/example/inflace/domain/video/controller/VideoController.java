@@ -19,7 +19,7 @@ public class VideoController implements VideoApi {
     @Override
     @GetMapping("/{videoId}")
     public BaseResponse<VideoMetaResponse> getVideoMeta(
-            @AuthenticationPrincipal String googleId,
+            @AuthenticationPrincipal String email,  // 현재 jwt에 저장되는 컨텍스트가 이메일
             @PathVariable Long videoId
     ) {
         VideoMetaResponse response = videoService.getVideoMeta(videoId);
@@ -29,20 +29,20 @@ public class VideoController implements VideoApi {
     @Override
     @GetMapping("/{videoId}/stats")
     public BaseResponse<VideoStatsResponse> getVideoStats(
-            @AuthenticationPrincipal String googleId,
+            @AuthenticationPrincipal String email,
             @PathVariable Long videoId
     ) {
-        VideoStatsResponse response = videoService.getVideoStats(videoId);
+        VideoStatsResponse response = videoService.getVideoStats(email, videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/retention")
     public BaseResponse<AudienceRetentionResponse> getRetention(
-            @AuthenticationPrincipal String googleId,
+            @AuthenticationPrincipal String email,
             @PathVariable Long videoId
     ) {
-        AudienceRetentionResponse response = videoService.getRetention(videoId);
+        AudienceRetentionResponse response = videoService.getRetention(email, videoId);
         return new BaseResponse<>(response);
     }
 }

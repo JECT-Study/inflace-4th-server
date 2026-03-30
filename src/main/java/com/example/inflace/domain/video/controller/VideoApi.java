@@ -30,14 +30,14 @@ public interface VideoApi {
     )
     @ApiErrorDefines(ErrorDefine.VIDEO_NOT_FOUND)
     BaseResponse<VideoStatsResponse> getVideoStats(@AuthenticationPrincipal String googleId,
-                                                          @PathVariable("videoId") Long videoId);
+                                                   @PathVariable("videoId") Long videoId);
 
     @Operation(
             summary = "에픽 2-4, 비디오 시청 지속률 시계열",
             description = "비디오 ID로 시청 지속률 시계열 데이터를 조회합니다. <br>" +
                     "0.01~1.00 구간의 100개 포인트를 반환합니다."
     )
-    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<AudienceRetentionResponse> getRetention(@AuthenticationPrincipal String googleId,
-                                                 @PathVariable("videoId") Long videoId);
+                                                         @PathVariable("videoId") Long videoId);
 }
