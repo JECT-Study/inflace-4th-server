@@ -46,7 +46,7 @@ public class VideoService {
         videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
-        List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoId(videoId);
+        List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(videoId);
         if (retentionList.isEmpty()) {
             throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
         }

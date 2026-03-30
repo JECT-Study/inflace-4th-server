@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface AudienceRetentionRepository extends JpaRepository<AudienceRetention, Long> {
-    List<AudienceRetention> findByVideoId(Long videoId);
+    List<AudienceRetention> findByVideoIdOrderByTimeRatioAsc(Long videoId);
 }

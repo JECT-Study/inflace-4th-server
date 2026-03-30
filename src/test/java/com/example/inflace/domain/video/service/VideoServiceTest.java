@@ -65,7 +65,7 @@ class VideoServiceTest {
     void 시청_지속률_정상_조회() {
         // given
         given(videoRepository.findById(1L)).willReturn(Optional.of(video));
-        given(audienceRetentionRepository.findByVideoId(1L)).willReturn(List.of(retention));
+        given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(1L)).willReturn(List.of(retention));
 
         // when
         AudienceRetentionResponse response = videoService.getRetention(1L);
@@ -91,7 +91,7 @@ class VideoServiceTest {
     void 시청_지속률_조회시_데이터가_없으면_RETENTION_NOT_FOUND_예외() {
         // given
         given(videoRepository.findById(1L)).willReturn(Optional.of(video));
-        given(audienceRetentionRepository.findByVideoId(1L)).willReturn(List.of());
+        given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(1L)).willReturn(List.of());
 
         // when & then
         assertThatThrownBy(() -> videoService.getRetention(1L))
