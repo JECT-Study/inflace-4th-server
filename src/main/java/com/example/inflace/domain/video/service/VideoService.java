@@ -24,10 +24,13 @@ public class VideoService {
     private final VideoStatsRepository videoStatsRepository;
     private final AudienceRetentionRepository audienceRetentionRepository;
 
-    public VideoMetaResponse getVideoMeta(Long videoId) {
+    public VideoMetaResponse getVideoMeta(String email, Long videoId) {
         // 영상 목록에서 클릭 후 이동, 외부 API 필요하지 않음
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
+
+        // 소유자 확인
+        validateVideoOwnership(video, email);
 
         return VideoMetaResponse.from(video);
     }

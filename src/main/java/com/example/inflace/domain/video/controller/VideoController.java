@@ -22,7 +22,7 @@ public class VideoController implements VideoApi {
             @AuthenticationPrincipal String email,  // 현재 jwt에 저장되는 컨텍스트가 이메일
             @PathVariable Long videoId
     ) {
-        VideoMetaResponse response = videoService.getVideoMeta(videoId);
+        VideoMetaResponse response = videoService.getVideoMeta(email, videoId);
         return new BaseResponse<>(response);
     }
 
