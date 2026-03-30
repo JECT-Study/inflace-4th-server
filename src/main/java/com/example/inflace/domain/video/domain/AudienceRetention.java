@@ -23,8 +23,8 @@ public class AudienceRetention extends BaseEntity {
     @JoinColumn(name = "video_id", nullable = false)
     private Video video;
 
-    @Column(name = "time_offset")
-    private Double timeOffset;
+    @Column(name = "time_ratio")
+    private Double timeRatio;
 
     @Column(name = "retention_rate")
     private Double retentionRate;
@@ -32,16 +32,12 @@ public class AudienceRetention extends BaseEntity {
     @Column(name = "collected_at")
     private LocalDateTime collectedAt;
 
-    @Column(name = "relative_retention_performance")
-    private Long relativeRetentionPerformance;
-
     @Builder
-    public AudienceRetention(Video video, Double timeOffset, Double retentionRate,
-                             LocalDateTime collectedAt, Long relativeRetentionPerformance) {
+    public AudienceRetention(Video video, Double timeRatio, Double retentionRate,
+                             LocalDateTime collectedAt) {
         this.video = video;
-        this.timeOffset = timeOffset;
+        this.timeRatio = timeRatio;
         this.retentionRate = retentionRate;
         this.collectedAt = collectedAt;
-        this.relativeRetentionPerformance = relativeRetentionPerformance;
     }
 }

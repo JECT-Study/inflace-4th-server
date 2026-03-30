@@ -1,5 +1,6 @@
 package com.example.inflace.domain.video.controller;
 
+import com.example.inflace.domain.video.dto.AudienceRetentionResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
@@ -18,7 +19,7 @@ public interface VideoApi {
                     "썸네일, 제목, 설명, 해시태그 등을 반환합니다."
     )
     @ApiErrorDefines(ErrorDefine.VIDEO_NOT_FOUND)
-    BaseResponse<VideoMetaResponse> getVideoMeta(@AuthenticationPrincipal String googleId,
+    BaseResponse<VideoMetaResponse> getVideoMeta(@AuthenticationPrincipal String email,
                                                  @PathVariable("videoId") Long videoId);
 
     @Operation(
@@ -28,6 +29,15 @@ public interface VideoApi {
                     "DB에 데이터가 없을 경우 YouTube Analytics API를 호출하여 저장 후 반환합니다."
     )
     @ApiErrorDefines(ErrorDefine.VIDEO_NOT_FOUND)
-    BaseResponse<VideoStatsResponse> getVideoStats(@AuthenticationPrincipal String googleId,
-                                                          @PathVariable("videoId") Long videoId);
+    BaseResponse<VideoStatsResponse> getVideoStats(@AuthenticationPrincipal String email,
+                                                   @PathVariable("videoId") Long videoId);
+
+    @Operation(
+            summary = "에픽 2-4, 비디오 시청 지속률 시계열",
+            description = "비디오 ID로 시청 지속률 시계열 데이터를 조회합니다. <br>" +
+                    "0.01~1.00 구간의 100개 포인트를 반환합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
+    BaseResponse<AudienceRetentionResponse> getRetention(@AuthenticationPrincipal String email,
+                                                         @PathVariable("videoId") Long videoId);
 }
