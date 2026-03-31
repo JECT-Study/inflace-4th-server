@@ -1,6 +1,7 @@
 package com.example.inflace.domain.channel.service;
 
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
+import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.video.domain.Video;
@@ -68,6 +69,16 @@ public class ChannelService {
         List<ChannelEngagementRateResponse.EngageVideo> items = mapEngagementRateItems(allVideos, allVideoStatsMap);
 
         return new ChannelEngagementRateResponse(new ChannelEngagementRateResponse.Summary(longFormAverage, shortFormAverage), items);
+    }
+
+    @Transactional(readOnly = true)
+    public ChannelNewSubscriberResponse getNewSubscriberVideos(Long channelId) {
+        validateChannelExists(channelId);
+
+        List<Video> videos = videoRepository.findTopNewSubscriberVideos(
+                channelId,
+                PageRequest.of(0,5)
+        );
     }
 
     private void validateChannelExists(Long channelId) {

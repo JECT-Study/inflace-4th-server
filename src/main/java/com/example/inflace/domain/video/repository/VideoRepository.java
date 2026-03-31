@@ -22,5 +22,17 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             Pageable pageable
     );
 
+    @Query("""
+       select v
+       from Video v
+       left join VideoStats vs on vs.video = v
+       where v.channel.id = :channelId
+       order by coalesce(vs.unsubscribedViewerPercentage, 0) desc, v.id desc
+    """)
+    List<Video> findTopNewSubscriberVideos(
+            @Param("channelId") Long channelId,
+            Pageable pageable
+    );
+
     List<Video> findByChannelId(Long channelId);
 }

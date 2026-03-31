@@ -38,6 +38,6 @@ public class ChannelController implements ChannelApi{
     public BaseResponse<ChannelNewSubscriberResponse> getNewSubscriberVideos(
             @PathVariable Long channelId
     ) {
-        return new BaseResponse<>();
+        return new BaseResponse<>(channelService.getNewSubscriberVideos(channelId));
     }
 }
