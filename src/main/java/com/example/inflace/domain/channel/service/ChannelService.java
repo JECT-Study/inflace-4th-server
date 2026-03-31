@@ -2,6 +2,7 @@ package com.example.inflace.domain.channel.service;
 
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
+import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse.NewSubscriberVideo;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.video.domain.Video;
@@ -79,6 +80,30 @@ public class ChannelService {
                 channelId,
                 PageRequest.of(0,5)
         );
+
+        Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
+        List<NewSubscriberVideo> items = new ArrayList<>();
+
+        int rank = 1;
+        for (Video video : videos) {
+            VideoStats videoStats = videoStatsMap.get(video.getId());
+
+            items.add(new NewSubscriberVideo(
+                    rank,
+                    video.getId(),
+                    video.getTitle(),
+                    video.getThumbnailUrl(),
+                    videoStats != null ? videoStats.getViewCount() : 0L,
+                    videoStats != null ? videoStats.getSubscribersGained() : 0L,
+                    videoStats != null && videoStats.getUnsubscribedViewerPercentage() != null
+                            ? videoStats.getUnsubscribedViewerPercentage() : 0.0,
+                    videoStats != null && videoStats.getAverageViewPercentage() != null
+                            ? videoStats.getAverageViewPercentage() : 0.0
+            ));
+            rank++;
+        }
+
+        return new ChannelNewSubscriberResponse(items);
     }
 
     private void validateChannelExists(Long channelId) {
