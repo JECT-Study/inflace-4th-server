@@ -46,6 +46,6 @@ public class ChannelController implements ChannelApi{
     public BaseResponse<ChannelKpiResponse> getKpi(
             @PathVariable Long channelId
     ) {
-        return new BaseResponse<>(channelService.getKpi(channelId));
+        return new BaseResponse<>(channelService.getChannelKpi(channelId));
     }
 }

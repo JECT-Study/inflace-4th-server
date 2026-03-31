@@ -1,10 +1,13 @@
 package com.example.inflace.domain.channel.service;
 
+import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
+import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse.NewSubscriberVideo;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
+import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
@@ -15,6 +18,7 @@ import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.util.AnalyticsCalculator;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +37,7 @@ public class ChannelService {
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final ChannelRepository channelRepository;
     private final VideoRepository videoRepository;
+    private final ChannelStatsRepository channelStatsRepository;
     private final VideoStatsRepository videoStatsRepository;
 
     @Transactional(readOnly = true)
@@ -104,6 +109,28 @@ public class ChannelService {
         }
 
         return new ChannelNewSubscriberResponse(items);
+    }
+
+    @Transactional(readOnly = true)
+    public ChannelKpiResponse getChannelKpi(Long channelId) {
+        validateChannelExists(channelId);
+
+        ChannelStats channelStats = channelStatsRepository.findByChannelId(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+
+        List<Video> videos = videoRepository.findByChannelId(channelId);
+        Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
+
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
+        Long recentUploadCount = videoRepository.countByChannelIdAndPublishedAtGreaterThanEqual(channelId, oneMonthAgo);
+        double weeklyUploadCount = Math.round((recentUploadCount / (30.0 / 7.0)) * 100) / 100.0;
+
+        return new ChannelKpiResponse(
+                channelStats.getTotalViewCount() != null ? channelStats.getTotalViewCount() : 0L,
+                channelStats.getAvgEngagementRate() != null ? channelStats.getAvgEngagementRate() : 0.0,
+                calculateAverageRetentionRate(videos, videoStatsMap),
+                weeklyUploadCount
+        );
     }
 
     private void validateChannelExists(Long channelId) {
@@ -235,6 +262,24 @@ public class ChannelService {
         }
 
         return rankedItems;
+    }
+
+    //채널 참여율 평균 구하기
+    private double calculateAverageRetentionRate(List<Video> videos, Map<Long, VideoStats> videoStatsMap) {
+        double totalAverageViewPercentage = 0.0;
+        int count = 0;
+
+        for (Video video : videos) {
+            VideoStats videoStats = videoStatsMap.get(video.getId());
+            if (videoStats == null || videoStats.getAverageViewPercentage() == null) {
+                continue;
+            }
+
+            totalAverageViewPercentage += videoStats.getAverageViewPercentage();
+            count++;
+        }
+
+        return count == 0 ? 0.0 : totalAverageViewPercentage / count;
     }
 
     private YoutubeDataChannelResponse getYoutubeChannel(String channelId, String parts) {
