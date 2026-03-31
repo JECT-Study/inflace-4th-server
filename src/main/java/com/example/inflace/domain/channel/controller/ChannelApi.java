@@ -1,6 +1,8 @@
 package com.example.inflace.domain.channel.controller;
 
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
+import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
+import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -29,4 +31,18 @@ public interface ChannelApi {
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
     BaseResponse<ChannelEngagementRateResponse> getEngagementRateVideos(@PathVariable Long channelId);
+
+    @Operation(
+            summary = "신규 유입 비율 TOP 영상",
+            description = "채널의 신규 유입 비율이 높은 상위 5개 영상을 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    BaseResponse<ChannelNewSubscriberResponse> getNewSubscriberVideos(@PathVariable Long channelId);
+
+    @Operation(
+            summary = "핵심 지표 카드(KPI)",
+            description = "채널의 핵심 지표 카드를 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
+    BaseResponse<ChannelKpiResponse> getChannelKpi(@PathVariable Long channelId);
 }

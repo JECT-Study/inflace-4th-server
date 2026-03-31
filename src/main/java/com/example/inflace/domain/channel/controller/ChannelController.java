@@ -43,7 +43,7 @@ public class ChannelController implements ChannelApi{
     }
 
     @GetMapping("/{channelId}/kpi")
-    public BaseResponse<ChannelKpiResponse> getKpi(
+    public BaseResponse<ChannelKpiResponse> getChannelKpi(
             @PathVariable Long channelId
     ) {
         return new BaseResponse<>(channelService.getChannelKpi(channelId));
