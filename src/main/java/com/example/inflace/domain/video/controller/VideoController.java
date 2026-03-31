@@ -1,6 +1,7 @@
 package com.example.inflace.domain.video.controller;
 
 import com.example.inflace.domain.video.dto.AudienceRetentionResponse;
+import com.example.inflace.domain.video.dto.RetentionSummaryResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
 import com.example.inflace.domain.video.service.VideoService;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/video")
+@RequestMapping("/api/v1/videos")
 public class VideoController implements VideoApi {
 
     private final VideoService videoService;
@@ -43,6 +44,16 @@ public class VideoController implements VideoApi {
             @PathVariable Long videoId
     ) {
         AudienceRetentionResponse response = videoService.getRetention(email, videoId);
+        return new BaseResponse<>(response);
+    }
+
+    @Override
+    @GetMapping("/{videoId}/retention/summary")
+    public BaseResponse<RetentionSummaryResponse> getRetentionSummary(
+            @AuthenticationPrincipal String email,
+            @PathVariable Long videoId
+    ) {
+        RetentionSummaryResponse response = videoService.getRetentionSummary(email, videoId);
         return new BaseResponse<>(response);
     }
 }
