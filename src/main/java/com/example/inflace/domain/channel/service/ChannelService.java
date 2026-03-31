@@ -115,7 +115,7 @@ public class ChannelService {
     public ChannelKpiResponse getChannelKpi(Long channelId) {
         validateChannelExists(channelId);
 
-        ChannelStats channelStats = channelStatsRepository.findByChannelId(channelId)
+        ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
 
         List<Video> videos = videoRepository.findByChannelId(channelId);
