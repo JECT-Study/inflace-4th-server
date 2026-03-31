@@ -1,6 +1,7 @@
 package com.example.inflace.domain.video.controller;
 
 import com.example.inflace.domain.video.dto.AudienceRetentionResponse;
+import com.example.inflace.domain.video.dto.RetentionSummaryResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
@@ -40,4 +41,13 @@ public interface VideoApi {
     @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<AudienceRetentionResponse> getRetention(@AuthenticationPrincipal String email,
                                                          @PathVariable("videoId") Long videoId);
+
+    @Operation(
+            summary = "에픽 2-4, 비디오 시청 지속률 요약 통계",
+            description = "비디오 ID로 시청 지속률 요약 통계를 조회합니다. <br>" +
+                    "평균 시청 지속 시간(초)과 평균 대비 유지율을 반환합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.VIDEO_STATS_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
+    BaseResponse<RetentionSummaryResponse> getRetentionSummary(@AuthenticationPrincipal String email,
+                                                               @PathVariable("videoId") Long videoId);
 }

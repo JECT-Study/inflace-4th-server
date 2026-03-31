@@ -63,6 +63,18 @@ public class VideoService {
         return AudienceRetentionResponse.from(retentionList);
     }
 
+    public RetentionSummaryResponse getRetentionSummary(String email, Long videoId) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
+
+        validateVideoOwnership(video, email);
+
+        VideoStats videoStats = videoStatsRepository.findByVideo(video)
+                .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
+
+        return RetentionSummaryResponse.from(videoStats);
+    }
+
     private void validateVideoOwnership(Video video, String email) {
         String ownerEmail = video.getChannel().getUser().getEmail();
         if (!ownerEmail.equals(email)) {
