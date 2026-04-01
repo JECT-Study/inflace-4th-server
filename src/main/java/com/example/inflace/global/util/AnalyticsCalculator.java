@@ -1,6 +1,7 @@
 package com.example.inflace.global.util;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static java.time.temporal.ChronoUnit.HOURS;
 
@@ -95,5 +96,38 @@ public class AnalyticsCalculator {
      */
     public static double toPercent(double value) {
         return value * 100;
+    }
+
+    /**
+     * 구간 평균 이탈률
+     *
+     * @param retentionRates 구간 내 retentionRate 목록 (25개)
+     * @return 연속 차이(churnRate)의 평균
+     */
+    public static double avgChurnRate(List<Double> retentionRates) {
+        if (retentionRates == null || retentionRates.size() < 2) {
+            return 0.0;
+        }
+        double sum = 0.0;
+        for (int i = 1; i < retentionRates.size(); i++) {
+            sum += churnRate(retentionRates.get(i - 1), retentionRates.get(i));
+        }
+        return sum / (retentionRates.size() - 1);
+    }
+
+    /**
+     * 시간 포맷 변환
+     *
+     * @param timeRatio 0.01 ~ 1.00
+     * @param duration  영상 길이 (초)
+     * @return "m:ss" 형태 문자열
+     */
+    public static String formatTime(double timeRatio, double duration) {
+        if (duration <= 0 || timeRatio < 0) {
+            return "0:00";
+        }
+
+        int total = (int) Math.round(timeRatio * duration);
+        return String.format("%d:%02d", total / 60, total % 60);
     }
 }

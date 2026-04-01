@@ -63,6 +63,28 @@ public class VideoService {
         return AudienceRetentionResponse.from(retentionList);
     }
 
+    public DropPointsResponse getDropPoints(String email, Long videoId) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
+
+        validateVideoOwnership(video, email);
+
+        Double duration = video.getDuration();
+        if (duration == null || duration == 0) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
+
+        List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(videoId);
+        if (retentionList.isEmpty()) {
+            throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
+        }
+        if (retentionList.size() != 100) {
+            throw new ApiException(ErrorDefine.RETENTION_INVALID);
+        }
+
+        return DropPointsResponse.from(retentionList, duration);
+    }
+
     public RetentionSummaryResponse getRetentionSummary(String email, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));

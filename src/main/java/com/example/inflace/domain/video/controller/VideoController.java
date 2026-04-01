@@ -1,6 +1,7 @@
 package com.example.inflace.domain.video.controller;
 
 import com.example.inflace.domain.video.dto.AudienceRetentionResponse;
+import com.example.inflace.domain.video.dto.DropPointsResponse;
 import com.example.inflace.domain.video.dto.RetentionSummaryResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
@@ -44,6 +45,16 @@ public class VideoController implements VideoApi {
             @PathVariable Long videoId
     ) {
         AudienceRetentionResponse response = videoService.getRetention(email, videoId);
+        return new BaseResponse<>(response);
+    }
+
+    @Override
+    @GetMapping("/{videoId}/retention/drop-points")
+    public BaseResponse<DropPointsResponse> getDropPoints(
+            @AuthenticationPrincipal String email,
+            @PathVariable Long videoId
+    ) {
+        DropPointsResponse response = videoService.getDropPoints(email, videoId);
         return new BaseResponse<>(response);
     }
 
