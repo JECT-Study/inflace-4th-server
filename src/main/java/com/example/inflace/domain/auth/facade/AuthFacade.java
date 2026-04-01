@@ -19,10 +19,15 @@ public class AuthFacade {
     public AuthResponse login(String provider, String code) {
         OAuthUserInfo userInfo = oAuthStrategyRouter.getStrategy(provider).getUserInfo(code);
 
-        userService.registerIfNotExists(userInfo.name(), userInfo.email(), userInfo.picture());
+        userService.registerIfNotExists(
+                userInfo.sub(),
+                userInfo.name(),
+                userInfo.email(),
+                userInfo.picture()
+        );
 
-        String accessToken = jwtProvider.createAccessToken(userInfo.email());
-        String refreshToken = jwtProvider.createRefreshToken(userInfo.email());
+        String accessToken = jwtProvider.createAccessToken(userInfo.sub());
+        String refreshToken = jwtProvider.createRefreshToken(userInfo.sub());
 
         return new AuthResponse(accessToken, refreshToken);
     }

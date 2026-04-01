@@ -45,10 +45,10 @@ public class JwtProvider {
         }
     }
 
-    private String createToken(String email, long expiration) {
+    private String createToken(String sub, long expiration) {
         Date now = new Date();
         return Jwts.builder()
-                .subject(email)
+                .subject(sub)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expiration))
                 .signWith(getSigningKey())

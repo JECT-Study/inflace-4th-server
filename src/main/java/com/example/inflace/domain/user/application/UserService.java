@@ -12,7 +12,7 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void registerIfNotExists(String name, String email, String profileImage) {
-        userRepository.insertIfNotExists(name, email, profileImage);
+    public void registerIfNotExists(String sub, String name, String email, String profileImage) {
+        userRepository.insertIfNotExists(sub, name, email, profileImage);
     }
 }

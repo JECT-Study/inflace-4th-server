@@ -31,14 +31,19 @@ public class User {
 
     private String email;
 
+    @Column(name = "provider_id", nullable = false, unique = true)
+    private String providerId;
+
     @Enumerated(EnumType.STRING)
     private Plan plan;
 
     @Builder
-    public User(String name, String profileImage, String email, Plan plan) {
+    public User(String name, String profileImage, String email,
+                String providerId, Plan plan) {
         this.name = name;
         this.profileImage = profileImage;
         this.email = email;
+        this.providerId = providerId;
         this.plan = plan;
     }
 }
