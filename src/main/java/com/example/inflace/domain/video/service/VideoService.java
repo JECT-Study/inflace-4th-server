@@ -69,6 +69,11 @@ public class VideoService {
 
         validateVideoOwnership(video, email);
 
+        Double duration = video.getDuration();
+        if (duration == null || duration == 0) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
+
         List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(videoId);
         if (retentionList.isEmpty()) {
             throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
@@ -77,7 +82,7 @@ public class VideoService {
             throw new ApiException(ErrorDefine.RETENTION_INVALID);
         }
 
-        return DropPointsResponse.from(retentionList, video.getDuration());
+        return DropPointsResponse.from(retentionList, duration);
     }
 
     public RetentionSummaryResponse getRetentionSummary(String email, Long videoId) {
