@@ -92,19 +92,7 @@ public class ChannelService {
         int rank = 1;
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
-
-            items.add(new NewSubscriberVideo(
-                    rank,
-                    video.getId(),
-                    video.getTitle(),
-                    video.getThumbnailUrl(),
-                    videoStats != null ? videoStats.getViewCount() : 0L,
-                    videoStats != null ? videoStats.getSubscribersGained() : 0L,
-                    videoStats != null && videoStats.getUnsubscribedViewerPercentage() != null
-                            ? videoStats.getUnsubscribedViewerPercentage() : 0.0,
-                    videoStats != null && videoStats.getAverageViewPercentage() != null
-                            ? videoStats.getAverageViewPercentage() : 0.0
-            ));
+            items.add(ChannelNewSubscriberResponse.NewSubscriberVideo.from(rank, video, videoStats));
             rank++;
         }
 
@@ -125,9 +113,9 @@ public class ChannelService {
         Long recentUploadCount = videoRepository.countByChannelIdAndPublishedAtGreaterThanEqual(channelId, oneMonthAgo);
         double weeklyUploadCount = Math.round((recentUploadCount / (30.0 / 7.0)) * 100) / 100.0;
 
-        return new ChannelKpiResponse(
-                channelStats.getTotalViewCount() != null ? channelStats.getTotalViewCount() : 0L,
-                channelStats.getAvgEngagementRate() != null ? channelStats.getAvgEngagementRate() : 0.0,
+        return ChannelKpiResponse.from(
+                channelStats.getTotalViewCount(),
+                channelStats.getAvgEngagementRate(),
                 calculateAverageRetentionRate(videos, videoStatsMap),
                 weeklyUploadCount
         );
@@ -164,19 +152,7 @@ public class ChannelService {
 
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
-
-            items.add(new ChannelTopVideosResponse.ChannelTopVideo(
-                    rank,
-                    video.getId(),
-                    video.getTitle(),
-                    video.getThumbnailUrl(),
-                    videoStats != null ? videoStats.getViewCount() : 0L,
-                    video.getRisingScore() != null ? video.getRisingScore() : 0.0,
-                    videoStats != null && videoStats.getCtr() != null ? videoStats.getCtr() : 0.0,
-                    videoStats != null && videoStats.getAverageViewPercentage() != null
-                            ? videoStats.getAverageViewPercentage() : 0.0
-            ));
-
+            items.add(ChannelTopVideosResponse.ChannelTopVideo.from(rank, video, videoStats));
             rank++;
         }
 
@@ -213,7 +189,7 @@ public class ChannelService {
 
     //참여율 항목 만들기
     private List<ChannelEngagementRateResponse.EngageVideo> mapEngagementRateItems(List<Video> videos, Map<Long, VideoStats> videoStatsMap) {
-        List<ChannelEngagementRateResponse.EngageVideo> items = new ArrayList<>();
+        List<EngagementRateItem> items = new ArrayList<>();
 
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
@@ -221,12 +197,8 @@ public class ChannelService {
                 continue;
             }
 
-            items.add(new ChannelEngagementRateResponse.EngageVideo(
-                    0,
-                    video.getId(),
-                    video.getTitle(),
-                    video.getThumbnailUrl(),
-                    video.isShort() ? VideoType.SHORT_FORM.name() : VideoType.LONG_FORM.name(),
+            items.add(new EngagementRateItem(
+                    video,
                     AnalyticsCalculator.engagementRate(
                             videoStats.getLikeCount(),
                             videoStats.getCommentCount(),
@@ -240,28 +212,31 @@ public class ChannelService {
             if (compareEngagementRate != 0) {
                 return compareEngagementRate;
             }
-            return Long.compare(item2.videoId(), item1.videoId());
+            return Long.compare(item2.video().getId(), item1.video().getId());
         });
 
         List<ChannelEngagementRateResponse.EngageVideo> rankedItems = new ArrayList<>();
         int rank = 1;
-        for (ChannelEngagementRateResponse.EngageVideo item : items) {
+        for (EngagementRateItem item : items) {
             if (rank > 5) {
                 break;
             }
 
-            rankedItems.add(new ChannelEngagementRateResponse.EngageVideo(
+            rankedItems.add(ChannelEngagementRateResponse.EngageVideo.from(
                     rank,
-                    item.videoId(),
-                    item.title(),
-                    item.thumbnailUrl(),
-                    item.contentType(),
+                    item.video(),
                     item.engagementRate()
             ));
             rank++;
         }
 
         return rankedItems;
+    }
+
+    private record EngagementRateItem(
+            Video video,
+            double engagementRate
+    ) {
     }
 
     //채널 참여율 평균 구하기
