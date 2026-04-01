@@ -27,7 +27,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -92,7 +91,7 @@ class VideoServiceTest {
 
     // 구간별 다른 감소율로 retention 데이터 생성 (dropRate 검증 전용)
     // segmentSteps[i] = i번 구간의 연속 감소량
-    // timeRatio는 이 테스트의 관심사가 아니므로 0.0으로 stub 처리
+    // timeRatio는 이 테스트의 관심사가 아니므로 0.0으로 고정
     private List<AudienceRetention> createRetentionListWithSteps(double[] segmentSteps) {
         double[] segmentStartValues = {80.0, 30.0, 90.0, 15.0};
         List<AudienceRetention> list = new ArrayList<>();
@@ -100,17 +99,12 @@ class VideoServiceTest {
         for (int seg = 0; seg < 4; seg++) {
             double rate = segmentStartValues[seg];
             for (int i = 0; i < 25; i++) {
-                AudienceRetention retention = mock(AudienceRetention.class);
-                given(retention.getRetentionRate()).willReturn(rate);
-                // getTimeRatio()는 구간의 첫(0) 아이템(startTime)과
-                // 마지막이 아닌 구간의 끝(24) 아이템(endTime)에서만 호출됨
-                // 마지막 구간(seg=3)은 endTime 계산 자체를 건너뜀
-                boolean isStart = (i == 0);
-                boolean isEnd = (i == 24 && seg < 3);
-                if (isStart || isEnd) {
-                    given(retention.getTimeRatio()).willReturn(0.0);
-                }
-                list.add(retention);
+                list.add(AudienceRetention.builder()
+                        .video(video)
+                        .retentionRate(rate)
+                        .timeRatio(0.0)
+                        .collectedAt(LocalDateTime.now())
+                        .build());
                 rate -= segmentSteps[seg];
             }
         }
