@@ -32,6 +32,9 @@ public class ChannelStats extends BaseEntity {
     @Column(name = "total_view_count")
     private Long totalViewCount;
 
+    @Column(name = "subscriber_view_count")
+    private Long subscriberViewCount;
+
     @Column(name = "avg_engagement_rate")
     private Double avgEngagementRate;
 
@@ -51,12 +54,13 @@ public class ChannelStats extends BaseEntity {
     private LocalDateTime collectedAt;
 
     @Builder
-    public ChannelStats(Channel channel, Long subscriberCount, Long totalViewCount, Double avgEngagementRate,
-                        Map<String, Double> audienceGender, Map<String, Double> audienceAge,
+    public ChannelStats(Channel channel, Long subscriberCount, Long totalViewCount, Long subscriberViewCount,
+                        Double avgEngagementRate, Map<String, Double> audienceGender, Map<String, Double> audienceAge,
                         Map<String, Double> audienceCountry, LocalDateTime collectedAt) {
         this.channel = channel;
         this.subscriberCount = subscriberCount;
         this.totalViewCount = totalViewCount;
+        this.subscriberViewCount = subscriberViewCount;
         this.avgEngagementRate = avgEngagementRate;
         this.audienceGender = audienceGender;
         this.audienceAge = audienceAge;
