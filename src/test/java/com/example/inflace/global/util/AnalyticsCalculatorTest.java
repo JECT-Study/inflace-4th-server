@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
@@ -186,5 +187,92 @@ class AnalyticsCalculatorTest {
     void toPercent_1이면_100반환() {
         double result = AnalyticsCalculator.toPercent(1.0);
         assertThat(result).isEqualTo(100.0);
+    }
+
+    @Test
+    @DisplayName("구간 평균 이탈률 - 균등 감소 구간 정상 계산")
+    void avgChurnRate_균등감소_정상계산() {
+        // [10.0, 8.0, 6.0, 4.0] → diffs = [2.0, 2.0, 2.0] → avg = 2.0
+        List<Double> rates = List.of(10.0, 8.0, 6.0, 4.0);
+
+        double result = AnalyticsCalculator.avgChurnRate(rates);
+
+        assertThat(result).isEqualTo(2.0);
+    }
+
+    @Test
+    @DisplayName("구간 평균 이탈률 - 원소 2개이면 단일 차이값 반환")
+    void avgChurnRate_원소2개이면_단일차이값반환() {
+        // [10.0, 4.0] → diff = 6.0 → avg = 6.0
+        List<Double> rates = List.of(10.0, 4.0);
+
+        double result = AnalyticsCalculator.avgChurnRate(rates);
+
+        assertThat(result).isEqualTo(6.0);
+    }
+
+    @Test
+    @DisplayName("구간 평균 이탈률 - 반복 시청으로 유지율 증가 시 음수 반환")
+    void avgChurnRate_유지율증가시_음수반환() {
+        // [5.0, 8.0, 6.0] → diffs = [-3.0, 2.0] → avg = -0.5
+        List<Double> rates = List.of(5.0, 8.0, 6.0);
+
+        double result = AnalyticsCalculator.avgChurnRate(rates);
+
+        assertThat(result).isEqualTo(-0.5);
+    }
+
+    @Test
+    @DisplayName("구간 평균 이탈률 - null 리스트이면 0 반환")
+    void avgChurnRate_null이면_0반환() {
+        double result = AnalyticsCalculator.avgChurnRate(null);
+
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("구간 평균 이탈률 - 원소 1개이면 0 반환")
+    void avgChurnRate_원소1개이면_0반환() {
+        List<Double> rates = List.of(10.0);
+
+        double result = AnalyticsCalculator.avgChurnRate(rates);
+
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("시간 포맷 변환 - 분:초 정상 변환")
+    void formatTime_분초_정상변환() {
+        // 0.5 * 600 = 300s → "5:00"
+        String result = AnalyticsCalculator.formatTime(0.5, 600.0);
+
+        assertThat(result).isEqualTo("5:00");
+    }
+
+    @Test
+    @DisplayName("시간 포맷 변환 - 초가 한 자리면 0 패딩")
+    void formatTime_초한자리이면_0패딩() {
+        // 0.01 * 600 = 6s → "0:06"
+        String result = AnalyticsCalculator.formatTime(0.01, 600.0);
+
+        assertThat(result).isEqualTo("0:06");
+    }
+
+    @Test
+    @DisplayName("시간 포맷 변환 - 정확히 분 단위이면 초 00")
+    void formatTime_정확히분단위이면_초00() {
+        // 0.1 * 600 = 60s → "1:00"
+        String result = AnalyticsCalculator.formatTime(0.1, 600.0);
+
+        assertThat(result).isEqualTo("1:00");
+    }
+
+    @Test
+    @DisplayName("시간 포맷 변환 - 반올림 적용")
+    void formatTime_반올림적용() {
+        // 0.25 * 363 = 90.75 → round → 91s → "1:31"
+        String result = AnalyticsCalculator.formatTime(0.25, 363.0);
+
+        assertThat(result).isEqualTo("1:31");
     }
 }
