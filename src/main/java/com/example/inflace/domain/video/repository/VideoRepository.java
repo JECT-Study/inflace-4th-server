@@ -1,6 +1,7 @@
 package com.example.inflace.domain.video.repository;
 
 import com.example.inflace.domain.video.domain.Video;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,6 +22,20 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             @Param("isShort") boolean isShort,
             Pageable pageable
     );
+
+    @Query("""
+       select v
+       from Video v
+       left join VideoStats vs on vs.video = v
+       where v.channel.id = :channelId
+       order by coalesce(vs.unsubscribedViewerPercentage, 0) desc, v.id desc
+    """)
+    List<Video> findTopNewSubscriberVideos(
+            @Param("channelId") Long channelId,
+            Pageable pageable
+    );
+
+    Long countByChannelIdAndPublishedAtGreaterThanEqual(Long channelId, LocalDateTime publishedAt);
 
     List<Video> findByChannelId(Long channelId);
 }

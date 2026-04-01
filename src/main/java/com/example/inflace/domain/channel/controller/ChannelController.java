@@ -1,6 +1,8 @@
 package com.example.inflace.domain.channel.controller;
 
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
+import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
+import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.response.BaseResponse;
@@ -31,5 +33,19 @@ public class ChannelController implements ChannelApi{
             @PathVariable Long channelId
     ) {
         return new BaseResponse<>(channelService.getEngagementRateVideos(channelId));
+    }
+
+    @GetMapping("/{channelId}/new-subscriber")
+    public BaseResponse<ChannelNewSubscriberResponse> getNewSubscriberVideos(
+            @PathVariable Long channelId
+    ) {
+        return new BaseResponse<>(channelService.getNewSubscriberVideos(channelId));
+    }
+
+    @GetMapping("/{channelId}/kpi")
+    public BaseResponse<ChannelKpiResponse> getChannelKpi(
+            @PathVariable Long channelId
+    ) {
+        return new BaseResponse<>(channelService.getChannelKpi(channelId));
     }
 }
