@@ -18,27 +18,31 @@ public record DropPointsResponse(List<DropPoint> dropPoints) {
         List<DropPoint> dropPoints = new ArrayList<>();
 
         for (int i = 0; i < SEGMENT_COUNT; i++) {
-            int from = i * SEGMENT_SIZE;
-            int to = from + SEGMENT_SIZE;
+            List<AudienceRetention> segment = retentionList.subList(i * SEGMENT_SIZE, (i + 1) * SEGMENT_SIZE);
 
-            List<AudienceRetention> segment = retentionList.subList(from, to);
-
-            List<Double> rates = segment.stream()
-                    .map(AudienceRetention::getRetentionRate)
-                    .toList();
-
-            String startTime = AnalyticsCalculator.formatTime(segment.get(0).getTimeRatio(), duration);
-            double dropRate = AnalyticsCalculator.avgChurnRate(rates);
+            String startTime = calcTime(segment.get(0), duration);
+            double dropRate = calcDropRate(segment);
 
             boolean isLastSegment = (i == SEGMENT_COUNT - 1);
             if (isLastSegment) {
                 dropPoints.add(new DropPoint(startTime, null, dropRate));
             } else {
-                String endTime = AnalyticsCalculator.formatTime(segment.get(SEGMENT_SIZE - 1).getTimeRatio(), duration);
+                String endTime = calcTime(segment.get(SEGMENT_SIZE - 1), duration);
                 dropPoints.add(new DropPoint(startTime, endTime, dropRate));
             }
         }
 
         return new DropPointsResponse(dropPoints);
+    }
+
+    private static double calcDropRate(List<AudienceRetention> segment) {
+        List<Double> rates = segment.stream()
+                .map(AudienceRetention::getRetentionRate)
+                .toList();
+        return AnalyticsCalculator.avgChurnRate(rates);
+    }
+
+    private static String calcTime(AudienceRetention point, Double duration) {
+        return AnalyticsCalculator.formatTime(point.getTimeRatio(), duration);
     }
 }
