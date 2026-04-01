@@ -1,9 +1,9 @@
 package com.example.inflace.domain.channel.dto;
 
 public record ChannelSubscriberPatternResponse(
-        NewSubscriber newSubscriber
+        ChannelSubscriberViewRatio subscriberRatio
 ) {
-    public record NewSubscriber(
+    public record  ChannelSubscriberViewRatio(
             Long count,
             Double ratio
     ) {
@@ -20,7 +20,7 @@ public record ChannelSubscriberPatternResponse(
         double newRatio = calculatePercentage(newViews, totalViews);
 
         return new ChannelSubscriberPatternResponse(
-                new NewSubscriber(newViews, newRatio)
+                new ChannelSubscriberViewRatio(newViews, newRatio)
         );
     }
 
