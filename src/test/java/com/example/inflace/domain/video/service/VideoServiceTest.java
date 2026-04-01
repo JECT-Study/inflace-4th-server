@@ -226,4 +226,17 @@ class VideoServiceTest {
                 .isInstanceOf(ApiException.class)
                 .hasFieldOrPropertyWithValue("error", ErrorDefine.RETENTION_NOT_FOUND);
     }
+
+    @Test
+    void 이탈_구간_조회_retention_데이터_100개_아니면_예외() {
+        // given
+        List<AudienceRetention> incompleteList = retentionList.subList(0, 50);
+        given(videoRepository.findById(VIDEO_ID)).willReturn(Optional.of(video));
+        given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(incompleteList);
+
+        // when & then
+        assertThatThrownBy(() -> videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID))
+                .isInstanceOf(ApiException.class)
+                .hasFieldOrPropertyWithValue("error", ErrorDefine.RETENTION_INVALID);
+    }
 }

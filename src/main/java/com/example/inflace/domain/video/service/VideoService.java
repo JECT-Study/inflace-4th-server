@@ -73,6 +73,9 @@ public class VideoService {
         if (retentionList.isEmpty()) {
             throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
         }
+        if (retentionList.size() != 100) {
+            throw new ApiException(ErrorDefine.RETENTION_INVALID);
+        }
 
         return DropPointsResponse.from(retentionList, video.getDuration());
     }

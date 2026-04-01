@@ -123,6 +123,10 @@ public class AnalyticsCalculator {
      * @return "m:ss" 형태 문자열
      */
     public static String formatTime(double timeRatio, double duration) {
+        if (duration <= 0 || timeRatio < 0) {
+            return "0:00";
+        }
+
         int total = (int) Math.round(timeRatio * duration);
         return String.format("%d:%02d", total / 60, total % 60);
     }

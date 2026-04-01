@@ -48,7 +48,7 @@ public interface VideoApi {
             description = "비디오 ID로 구간별 평균 이탈률을 조회합니다. <br>" +
                     "100개의 시청 지속률 데이터를 25개씩 4구간으로 나눠 각 구간의 평균 이탈률을 반환합니다."
     )
-    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.RETENTION_INVALID})
     BaseResponse<DropPointsResponse> getDropPoints(@AuthenticationPrincipal String email,
                                                    @PathVariable("videoId") Long videoId);
 
