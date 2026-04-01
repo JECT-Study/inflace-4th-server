@@ -5,6 +5,7 @@ import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse.NewSubscriberVideo;
+import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
@@ -133,6 +134,16 @@ public class ChannelService {
                 channelStats.getTotalViewCount(),
                 channelStats.getSubscriberViewCount()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ChannelSubscriberDistributionResponse getSubscriberDistribution(Long channelId) {
+        validateChannelExists(channelId);
+
+        ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+
+        return ChannelSubscriberDistributionResponse.from(channelStats);
     }
 
 

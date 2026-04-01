@@ -3,6 +3,7 @@ package com.example.inflace.domain.channel.controller;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
+import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
@@ -55,5 +56,12 @@ public class ChannelController implements ChannelApi{
             @PathVariable Long channelId
     ) {
         return new BaseResponse<>(channelService.getSubscriberPattern(channelId));
+    }
+
+    @GetMapping("/{channelId}/subscriber-distribution")
+    public BaseResponse<ChannelSubscriberDistributionResponse> getSubscriberDistribution(
+            @PathVariable Long channelId
+    ) {
+        return new BaseResponse<>(channelService.getSubscriberDistribution(channelId));
     }
 }
