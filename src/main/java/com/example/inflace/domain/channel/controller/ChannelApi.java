@@ -6,6 +6,7 @@ import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
+import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
@@ -62,4 +63,18 @@ public interface ChannelApi {
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
     BaseResponse<ChannelSubscriberDistributionResponse> getSubscriberDistribution(@PathVariable Long channelId);
 
+    @Operation(
+            summary = "영상 목록 조회",
+            description = "내 채널의 영상목록을 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    BaseResponse<ChannelVideosResponse> getChannelVideos(
+            @PathVariable Long channelId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "LATEST") String sort,
+            @RequestParam(required = false, defaultValue = "ALL") String format,
+            @RequestParam(required = false) Boolean isAd,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false, defaultValue = "12") Integer size
+    );
 }
