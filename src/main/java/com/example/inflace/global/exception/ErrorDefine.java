@@ -11,6 +11,10 @@ public enum ErrorDefine {
     AUTH_UNSUPPORTED_PROVIDER("AUTH_401", HttpStatus.BAD_REQUEST, "Bad Request: Unsupported OAuth Provider"),
     AUTH_FORBIDDEN("AUTH_403", HttpStatus.FORBIDDEN, "Forbidden: No permission to access this resource"),
 
+    // USER
+    USER_NOT_FOUND("USER_404", HttpStatus.NOT_FOUND, "Not Found: User not found"),
+    ONBOARDING_INVALID_REQUEST("USER_400", HttpStatus.BAD_REQUEST, "Bad Request: Role and need are required"),
+
     // VIDEO
     VIDEO_NOT_FOUND("VIDEO_404", HttpStatus.NOT_FOUND, "Not Found: Video not found"),
     VIDEO_STATS_NOT_FOUND("VIDEO_STATS_404", HttpStatus.NOT_FOUND, "Not Found: Video Stats not found"),

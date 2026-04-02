@@ -16,21 +16,22 @@ public class JwtProvider {
 
     private final JwtProperties jwtProperties;
 
-    public String createAccessToken(String email) {
-        return createToken(email, jwtProperties.expiration());
+    public String createAccessToken(long userId) {
+        return createToken(userId, jwtProperties.expiration());
     }
 
-    public String createRefreshToken(String email) {
-        return createToken(email, jwtProperties.expiration() * 24 * 14);
+    public String createRefreshToken(long userId) {
+        return createToken(userId, jwtProperties.expiration() * 24 * 14);
     }
 
-    public String getEmail(String token) {
-        return Jwts.parser()
+    public long getUserId(String token) {
+        String subject = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+        return Long.parseLong(subject);
     }
 
     public boolean isValid(String token) {
@@ -45,10 +46,10 @@ public class JwtProvider {
         }
     }
 
-    private String createToken(String sub, long expiration) {
+    private String createToken(long userId, long expiration) {
         Date now = new Date();
         return Jwts.builder()
-                .subject(sub)
+                .subject(String.valueOf(userId))
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expiration))
                 .signWith(getSigningKey())

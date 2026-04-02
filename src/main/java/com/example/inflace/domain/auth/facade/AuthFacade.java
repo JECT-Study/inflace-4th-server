@@ -20,15 +20,15 @@ public class AuthFacade {
     public TokenData login(String provider, String code) {
         OAuthUserInfo userInfo = oAuthStrategyRouter.getStrategy(provider).getUserInfo(code);
 
-        userService.registerIfNotExists(
+        long userId = userService.registerIfNotExists(
                 userInfo.sub(),
                 userInfo.name(),
                 userInfo.email(),
                 userInfo.picture()
         );
 
-        String accessToken = jwtProvider.createAccessToken(userInfo.sub());
-        String refreshToken = jwtProvider.createRefreshToken(userInfo.sub());
+        String accessToken = jwtProvider.createAccessToken(userId);
+        String refreshToken = jwtProvider.createRefreshToken(userId);
 
         return new TokenData(accessToken, refreshToken);
     }

@@ -1,5 +1,6 @@
-package com.example.inflace.domain.user.domain;
+package com.example.inflace.domain.user.domain.entity;
 
+import com.example.inflace.domain.user.domain.enums.Plan;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
