@@ -58,15 +58,15 @@ public class VideoQueryRepositoryImpl implements VideoQueryRepository {
                         video.title,
                         video.thumbnailUrl,
                         video.publishedAt,
-                        stats.viewCount,
-                        stats.likeCount,
-                        stats.commentCount,
+                        stats.viewCount.coalesce(0L),
+                        stats.likeCount.coalesce(0L),
+                        stats.commentCount.coalesce(0L),
                         stats.ctr.coalesce(0.0),
                         stats.vph.coalesce(0.0),
                         stats.outlierScore.coalesce(0.0)
                 ))
                 .from(video)
-                .join(stats).on(stats.video.id.eq(video.id))
+                .leftJoin(stats).on(stats.video.id.eq(video.id))
                 .where(predicate)
                 .orderBy(buildOrderSpecifiers(request.sort(), video, stats))
                 .limit(request.size() + 1L)
