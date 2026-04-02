@@ -3,7 +3,10 @@ package com.example.inflace.domain.channel.controller;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
-import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
+
+import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
+import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
+
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -54,4 +57,19 @@ public interface ChannelApi {
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
     BaseResponse<ChannelKpiResponse> getChannelKpi(@PathVariable Long channelId);
+
+    @Operation(
+            summary = "구독자/비구독자 비율",
+            description = "채널의 구독자 조회수와 비구독자 조회수 비율을 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
+    BaseResponse<ChannelSubscriberPatternResponse> getSubscriberPattern(@PathVariable Long channelId);
+
+    @Operation(
+            summary = "구독자 분포",
+            description = "채널의 국가별, 연령별, 성별 분포를 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
+    BaseResponse<ChannelSubscriberDistributionResponse> getSubscriberDistribution(@PathVariable Long channelId);
+
 }
