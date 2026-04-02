@@ -4,6 +4,7 @@ import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 
+import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 
