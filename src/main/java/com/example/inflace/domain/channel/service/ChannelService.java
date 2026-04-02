@@ -1,6 +1,8 @@
 package com.example.inflace.domain.channel.service;
 
+import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelStats;
+import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
@@ -19,6 +21,7 @@ import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.util.AnalyticsCalculator;
 import java.time.LocalDateTime;
+import org.springframework.data.domain.Limit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -131,6 +134,33 @@ public class ChannelService {
                 calculateAverageRetentionRate(videos, videoStatsMap),
                 weeklyUploadCount
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ChannelTopMainVideosResponse getMainTopVideos(String email, Long channelId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+
+        validateChannelOwnership(channel, email);
+
+        List<Video> videos = videoRepository.findAllTopVideos(channelId, Limit.of(5));
+        Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
+        List<ChannelTopMainVideosResponse.ChannelTopMainVideo> items = new ArrayList<>();
+        long rank = 1;
+
+        for (Video video : videos) {
+            items.add(ChannelTopMainVideosResponse.ChannelTopMainVideo.of(rank, video, videoStatsMap.get(video.getId())));
+            rank++;
+        }
+
+        return new ChannelTopMainVideosResponse(items);
+    }
+
+    // TODO : 차후 email이 아닌 sub 기반으로 변경
+    private void validateChannelOwnership(Channel channel, String email) {
+        if (!channel.getUser().getEmail().equals(email)) {
+            throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
+        }
     }
 
     private void validateChannelExists(Long channelId) {
