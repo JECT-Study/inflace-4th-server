@@ -21,6 +21,6 @@ public class GoogleLoginStrategy implements OAuthLoginStrategy {
         GoogleUserInfoResponse userInfo = googleApiClient.getUserInfo(token.accessToken());
         googleAccessTokenStore.save(userInfo.email(), token.accessToken());  // TODO : 인메모리에 저장, 향후 REDIS로 옮기기
 
-        return new OAuthUserInfo(userInfo.name(), userInfo.email(), userInfo.picture());
+        return new OAuthUserInfo(userInfo.sub(), userInfo.name(), userInfo.email(), userInfo.picture());
     }
 }

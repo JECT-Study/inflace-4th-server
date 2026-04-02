@@ -1,5 +1,6 @@
-package com.example.inflace.domain.user.domain;
+package com.example.inflace.domain.user.domain.entity;
 
+import com.example.inflace.domain.user.domain.enums.Plan;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,14 +32,19 @@ public class User {
 
     private String email;
 
+    @Column(name = "provider_id", nullable = false, unique = true)
+    private String providerId;
+
     @Enumerated(EnumType.STRING)
     private Plan plan;
 
     @Builder
-    public User(String name, String profileImage, String email, Plan plan) {
+    public User(String name, String profileImage, String email,
+                String providerId, Plan plan) {
         this.name = name;
         this.profileImage = profileImage;
         this.email = email;
+        this.providerId = providerId;
         this.plan = plan;
     }
 }

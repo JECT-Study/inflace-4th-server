@@ -1,6 +1,6 @@
 package com.example.inflace.domain.channel.domain;
 
-import com.example.inflace.domain.user.domain.User;
+import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
