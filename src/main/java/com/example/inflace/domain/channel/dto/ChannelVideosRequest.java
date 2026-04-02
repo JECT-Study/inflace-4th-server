@@ -1,8 +1,13 @@
 package com.example.inflace.domain.channel.dto;
 
+import com.example.inflace.domain.channel.dto.enums.ChannelVideoFormat;
+import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
+
 public record ChannelVideosRequest(
         String keyword,
         ChannelVideoSort sort,
+        ChannelVideoFormat format,
+        Boolean isAd,
         String cursor,
         Integer size
 ) {
@@ -11,6 +16,7 @@ public record ChannelVideosRequest(
 
     public ChannelVideosRequest {
         sort = sort == null ? ChannelVideoSort.LATEST : sort;
+        format = format == null ? ChannelVideoFormat.ALL : format;
         size = normalizeSize(size);
     }
 

@@ -8,7 +8,8 @@ import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse.NewSu
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideoSliceResult;
-import com.example.inflace.domain.channel.dto.ChannelVideoSort;
+import com.example.inflace.domain.channel.dto.enums.ChannelVideoFormat;
+import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
 import com.example.inflace.domain.channel.dto.ChannelVideosRequest;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
@@ -157,6 +158,8 @@ public class ChannelService {
             Long channelId,
             String keyword,
             String sort,
+            String format,
+            Boolean isAd,
             String cursor,
             Integer size
     ) {
@@ -169,7 +172,14 @@ public class ChannelService {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
 
-        ChannelVideosRequest request = new ChannelVideosRequest(keyword, parsedSort, cursor, size);
+        ChannelVideoFormat parsedFormat;
+        try {
+            parsedFormat = ChannelVideoFormat.valueOf(format.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
+
+        ChannelVideosRequest request = new ChannelVideosRequest(keyword, parsedSort, parsedFormat, isAd, cursor, size);
         ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelId, request);
 
         return new ChannelVideosResponse(

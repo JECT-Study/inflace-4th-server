@@ -1,6 +1,6 @@
 package com.example.inflace.domain.video.repository;
 
-import com.example.inflace.domain.channel.dto.ChannelVideoSort;
+import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import java.nio.charset.StandardCharsets;

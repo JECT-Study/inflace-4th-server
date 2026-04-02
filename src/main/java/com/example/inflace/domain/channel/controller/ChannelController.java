@@ -71,9 +71,11 @@ public class ChannelController implements ChannelApi{
             @PathVariable Long channelId,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "LATEST") String sort,
+            @RequestParam(defaultValue = "ALL") String format,
+            @RequestParam(required = false) Boolean isAd,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "12") Integer size
     ) {
-        return new BaseResponse<>(channelService.getChannelVideos(channelId, keyword, sort, cursor, size));
+        return new BaseResponse<>(channelService.getChannelVideos(channelId, keyword, sort, format, isAd, cursor, size));
     }
 }

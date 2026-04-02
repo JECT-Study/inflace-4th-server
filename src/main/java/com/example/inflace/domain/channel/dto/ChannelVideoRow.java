@@ -1,5 +1,6 @@
 package com.example.inflace.domain.channel.dto;
 
+import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
 import java.time.LocalDateTime;
 
 public record ChannelVideoRow(
