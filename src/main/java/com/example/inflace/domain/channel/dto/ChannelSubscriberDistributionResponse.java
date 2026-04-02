@@ -103,7 +103,7 @@ public record ChannelSubscriberDistributionResponse(
         }
 
         // ISO 국가 코드를 Locale로 변환해 한글 국가명을 만든다.
-        Locale locale = new Locale("", normalized);
+        Locale locale = Locale.of("",normalized);
         String label = locale.getDisplayCountry(Locale.KOREAN);
         return label.isBlank() ? normalized : label;
     }
