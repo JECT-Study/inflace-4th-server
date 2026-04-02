@@ -5,6 +5,7 @@ import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
+import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.response.BaseResponse;
@@ -63,5 +64,16 @@ public class ChannelController implements ChannelApi{
             @PathVariable Long channelId
     ) {
         return new BaseResponse<>(channelService.getSubscriberDistribution(channelId));
+    }
+
+    @GetMapping("/{channelId}/videos")
+    public BaseResponse<ChannelVideosResponse> getChannelVideos(
+            @PathVariable Long channelId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "LATEST") String sort,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "12") Integer size
+    ) {
+        return new BaseResponse<>();
     }
 }
