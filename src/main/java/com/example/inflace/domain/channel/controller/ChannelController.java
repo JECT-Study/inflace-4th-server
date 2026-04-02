@@ -74,6 +74,6 @@ public class ChannelController implements ChannelApi{
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "12") Integer size
     ) {
-        return new BaseResponse<>();
+        return new BaseResponse<>(channelService.getChannelVideos(channelId, keyword, sort, cursor, size));
     }
 }

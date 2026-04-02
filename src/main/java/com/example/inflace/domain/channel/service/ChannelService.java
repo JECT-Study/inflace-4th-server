@@ -7,6 +7,10 @@ import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse.NewSubscriberVideo;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
+import com.example.inflace.domain.channel.dto.ChannelVideoSliceResult;
+import com.example.inflace.domain.channel.dto.ChannelVideoSort;
+import com.example.inflace.domain.channel.dto.ChannelVideosRequest;
+import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
@@ -14,6 +18,7 @@ import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.domain.video.dto.VideoType;
+import com.example.inflace.domain.video.repository.VideoQueryRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.global.client.YoutubeDataApiClient;
@@ -39,6 +44,7 @@ public class ChannelService {
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final ChannelRepository channelRepository;
     private final VideoRepository videoRepository;
+    private final VideoQueryRepository videoQueryRepository;
     private final ChannelStatsRepository channelStatsRepository;
     private final VideoStatsRepository videoStatsRepository;
 
@@ -144,6 +150,36 @@ public class ChannelService {
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
 
         return ChannelSubscriberDistributionResponse.from(channelStats);
+    }
+
+    @Transactional(readOnly = true)
+    public ChannelVideosResponse getChannelVideos(
+            Long channelId,
+            String keyword,
+            String sort,
+            String cursor,
+            Integer size
+    ) {
+        validateChannelExists(channelId);
+
+        ChannelVideoSort parsedSort;
+        try {
+            parsedSort = ChannelVideoSort.valueOf(sort.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
+
+        ChannelVideosRequest request = new ChannelVideosRequest(keyword, parsedSort, cursor, size);
+        ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelId, request);
+
+        return new ChannelVideosResponse(
+                result.videos(),
+                new ChannelVideosResponse.PageInfo(
+                        request.size(),
+                        result.nextCursor(),
+                        result.hasNext()
+                )
+        );
     }
 
 
