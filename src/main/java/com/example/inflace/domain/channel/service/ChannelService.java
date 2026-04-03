@@ -1,19 +1,23 @@
 package com.example.inflace.domain.channel.service;
 
 import com.example.inflace.domain.channel.domain.ChannelStats;
+import com.example.inflace.domain.channel.domain.ChannelStatsHistory;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse.NewSubscriberVideo;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
+import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideoSliceResult;
+import com.example.inflace.domain.channel.dto.enums.ChannelSubscriberTrendRange;
 import com.example.inflace.domain.channel.dto.enums.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
 import com.example.inflace.domain.channel.dto.ChannelVideosRequest;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
+import com.example.inflace.domain.channel.repository.ChannelStatsHistoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoStats;
@@ -26,12 +30,17 @@ import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.util.AnalyticsCalculator;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -48,6 +57,7 @@ public class ChannelService {
     private final VideoQueryRepository videoQueryRepository;
     private final ChannelStatsRepository channelStatsRepository;
     private final VideoStatsRepository videoStatsRepository;
+    private final ChannelStatsHistoryRepository channelStatsHistoryRepository;
 
     @Transactional(readOnly = true)
     public ChannelTopVideosResponse getTopVideos(Long channelId, String contentType) {
@@ -192,6 +202,35 @@ public class ChannelService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public ChannelSubscriberTrendResponse getSubscriberTrend(Long channelId, String rangeValue) {
+        validateChannelExists(channelId);
+
+        ChannelSubscriberTrendRange range = ChannelSubscriberTrendRange.from(rangeValue);
+        ChannelStatsHistory latestHistory = channelStatsHistoryRepository
+                .findTopByChannel_IdOrderByRecordedDateDesc(channelId)
+                .orElse(null);
+
+        if (latestHistory == null) {
+            return new ChannelSubscriberTrendResponse(range.value(), List.of());
+        }
+
+        LocalDate endDate = latestHistory.getRecordedDate().toLocalDate();
+        LocalDate startDate = range.startDate(endDate);
+
+        List<ChannelStatsHistory> histories = new ArrayList<>(channelStatsHistoryRepository.findHistoriesInRange(
+                channelId,
+                startDate.atStartOfDay(),
+                endDate.plusDays(1).atStartOfDay().minusNanos(1)
+        ));
+
+        channelStatsHistoryRepository
+                .findTopByChannel_IdAndRecordedDateBeforeOrderByRecordedDateDesc(channelId, startDate.atStartOfDay())
+                .ifPresent(histories::add);
+
+        List<ChannelSubscriberTrendResponse.Point> points = buildSubscriberTrendPoints(histories, range, startDate, endDate);
+        return new ChannelSubscriberTrendResponse(range.value(), points);
+    }
 
     private void validateChannelExists(Long channelId) {
         if (!channelRepository.existsById(channelId)) {
@@ -327,6 +366,80 @@ public class ChannelService {
         }
 
         return count == 0 ? 0.0 : totalAverageViewPercentage / count;
+    }
+
+    //하루 1건 저장을 전제로 조회된 히스토리를 LocalDate -> subscriberCount 형태의 정렬된 맵으로 만든다.
+    private List<ChannelSubscriberTrendResponse.Point> buildSubscriberTrendPoints(
+            List<ChannelStatsHistory> histories,
+            ChannelSubscriberTrendRange range,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        NavigableMap<LocalDate, Long> subscriberCountByDate = new TreeMap<>();
+        for (ChannelStatsHistory history : histories) {
+            subscriberCountByDate.put(history.getRecordedDate().toLocalDate(), history.getSubscriberCount());
+        }
+
+        List<LocalDate> pointDates = createPointDates(range, startDate, endDate);
+        List<ChannelSubscriberTrendResponse.Point> points = new ArrayList<>();
+        for (LocalDate pointDate : pointDates) {
+            Map.Entry<LocalDate, Long> floorEntry = subscriberCountByDate.floorEntry(pointDate);
+            Long subscriberCount = floorEntry != null ? floorEntry.getValue() : 0L;
+            points.add(new ChannelSubscriberTrendResponse.Point(pointDate.toString(), subscriberCount));
+        }
+
+        return points;
+    }
+
+    //x축 포인트 6개를 만든다.
+    private List<LocalDate> createPointDates(
+            ChannelSubscriberTrendRange range,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        if (range == ChannelSubscriberTrendRange.DAYS_7) {
+            return List.of(
+                    startDate,
+                    startDate.plusDays(1),
+                    startDate.plusDays(2),
+                    startDate.plusDays(3),
+                    startDate.plusDays(4),
+                    endDate
+            );
+        }
+
+        if (range == ChannelSubscriberTrendRange.DAYS_30) {
+            return createFixedIntervalPointDates(endDate, 5);
+        }
+
+        if (range == ChannelSubscriberTrendRange.DAYS_90) {
+            return createFixedIntervalPointDates(endDate, 15);
+        }
+
+        if (range == ChannelSubscriberTrendRange.DAYS_180) {
+            return createFixedIntervalPointDates(endDate, 30);
+        }
+
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate);
+        List<LocalDate> dates = new ArrayList<>();
+
+        for (int i = 0; i < 6; i++) {
+            long offset = Math.round((double) totalDays * i / 5);
+            dates.add(startDate.plusDays(offset));
+        }
+
+        return dates;
+    }
+
+    // 마지막 수집일을 기준으로 고정 일수 간격을 거꾸로 적용해 6개 포인트를 만든다.
+    private List<LocalDate> createFixedIntervalPointDates(LocalDate endDate, int intervalDays) {
+        List<LocalDate> dates = new ArrayList<>();
+
+        for (int i = 5; i >= 0; i--) {
+            dates.add(endDate.minusDays((long) i * intervalDays));
+        }
+
+        return dates;
     }
 
     private YoutubeDataChannelResponse getYoutubeChannel(String channelId, String parts) {

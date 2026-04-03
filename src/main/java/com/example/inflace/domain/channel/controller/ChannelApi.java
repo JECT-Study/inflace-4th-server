@@ -5,6 +5,7 @@ import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
+import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
@@ -76,5 +77,15 @@ public interface ChannelApi {
             @RequestParam(required = false) Boolean isAd,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false, defaultValue = "12") Integer size
+    );
+
+    @Operation(
+            summary = "구독자 추이",
+            description = "범위별 구독자 추이 6개 포인트를 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    BaseResponse<ChannelSubscriberTrendResponse> getSubscriberTrend(
+            @PathVariable Long channelId,
+            @RequestParam(defaultValue = "30D") String range
     );
 }
