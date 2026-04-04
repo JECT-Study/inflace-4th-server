@@ -12,7 +12,6 @@ import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 
-import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
