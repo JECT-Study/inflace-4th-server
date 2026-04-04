@@ -1,8 +1,10 @@
 package com.example.inflace.domain.user.application;
 
+import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.infra.UserCommandRepository;
 import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.user.presentation.OnboardingRequest;
+import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +17,16 @@ public class UserService {
 
     private final UserReadRepository userReadRepository;
     private final UserCommandRepository userCommandRepository;
+    private final ChannelRepository channelRepository;
 
     @Transactional
     public long registerIfNotExists(String sub, String name, String email, String profileImage) {
         return userCommandRepository.insertIfNotExists(sub, name, email, profileImage);
+    }
+
+    @Transactional(readOnly = true)
+    public YoutubeLinkedResponse isYoutubeLinked(long userId) {
+        return new YoutubeLinkedResponse(channelRepository.existsByUser_Id(userId));
     }
 
     @Transactional
