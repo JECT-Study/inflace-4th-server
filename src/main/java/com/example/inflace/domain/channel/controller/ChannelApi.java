@@ -9,6 +9,7 @@ import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionRespo
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
+import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
@@ -26,7 +27,7 @@ public interface ChannelApi {
             description = "쇼츠/일반 구분 없이 채널의 인기 Top 5 영상을 조회합니다."
     )
     @ApiErrorDefines({ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
-    BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(@AuthenticationPrincipal String email, @PathVariable Long channelId);
+    BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(@AuthenticationPrincipal AuthUser authUser, @PathVariable Long channelId);
 
     @Operation(
             summary = "인기 급상승 영상 Top 5",

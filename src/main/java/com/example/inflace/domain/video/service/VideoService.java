@@ -24,23 +24,23 @@ public class VideoService {
     private final VideoStatsRepository videoStatsRepository;
     private final AudienceRetentionRepository audienceRetentionRepository;
 
-    public VideoMetaResponse getVideoMeta(String email, Long videoId) {
+    public VideoMetaResponse getVideoMeta(long userId, Long videoId) {
         // 영상 목록에서 클릭 후 이동, 외부 API 필요하지 않음
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
         // 소유자 확인
-        validateVideoOwnership(video, email);
+        validateVideoOwnership(video, userId);
 
         return VideoMetaResponse.from(video);
     }
 
-    public VideoStatsResponse getVideoStats(String email, Long videoId) {
+    public VideoStatsResponse getVideoStats(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
         // 소유자 확인
-        validateVideoOwnership(video, email);
+        validateVideoOwnership(video, userId);
 
         VideoStats videoStats = videoStatsRepository.findByVideo(video)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
@@ -48,12 +48,12 @@ public class VideoService {
         return VideoStatsResponse.from(videoStats, 0L, 0L);
     }
 
-    public AudienceRetentionResponse getRetention(String email, Long videoId) {
+    public AudienceRetentionResponse getRetention(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
         // 소유자 확인
-        validateVideoOwnership(video, email);
+        validateVideoOwnership(video, userId);
 
         List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(videoId);
         if (retentionList.isEmpty()) {
@@ -63,11 +63,11 @@ public class VideoService {
         return AudienceRetentionResponse.from(retentionList);
     }
 
-    public DropPointsResponse getDropPoints(String email, Long videoId) {
+    public DropPointsResponse getDropPoints(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
-        validateVideoOwnership(video, email);
+        validateVideoOwnership(video, userId);
 
         Double duration = video.getDuration();
         if (duration == null || duration == 0) {
@@ -85,11 +85,11 @@ public class VideoService {
         return DropPointsResponse.from(retentionList, duration);
     }
 
-    public RetentionSummaryResponse getRetentionSummary(String email, Long videoId) {
+    public RetentionSummaryResponse getRetentionSummary(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
-        validateVideoOwnership(video, email);
+        validateVideoOwnership(video, userId);
 
         VideoStats videoStats = videoStatsRepository.findByVideo(video)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
@@ -97,9 +97,8 @@ public class VideoService {
         return RetentionSummaryResponse.from(videoStats);
     }
 
-    private void validateVideoOwnership(Video video, String email) {
-        String ownerEmail = video.getChannel().getUser().getEmail();
-        if (!ownerEmail.equals(email)) {
+    private void validateVideoOwnership(Video video, long userId) {
+        if (video.getChannel().getUser().getId() != userId) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
     }
