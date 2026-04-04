@@ -3,19 +3,30 @@ package com.example.inflace.domain.channel.controller;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
+
+import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
+
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Channel", description = "채널 관련 API")
 public interface ChannelApi {
+
+    @Operation(
+            summary = "에픽 2-1, 메인 인기 영상 Top 5",
+            description = "쇼츠/일반 구분 없이 채널의 인기 Top 5 영상을 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
+    BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(@AuthenticationPrincipal String email, @PathVariable Long channelId);
 
     @Operation(
             summary = "인기 급상승 영상 Top 5",
