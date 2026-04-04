@@ -1,7 +1,7 @@
 package com.example.inflace.domain.video.service;
 
 import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.domain.user.domain.User;
+import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.video.domain.AudienceRetention;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.dto.DropPointsResponse;
@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,8 +48,8 @@ class VideoServiceTest {
     private Video video;
     private List<AudienceRetention> retentionList;
 
-    private static final String OWNER_EMAIL = "owner@test.com";
-    private static final String OTHER_EMAIL = "other@test.com";
+    private static final long OWNER_USER_ID = 1L;
+    private static final long OTHER_USER_ID = 2L;
     private static final Long VIDEO_ID = 1L;
     private static final double DURATION = 600.0; // 10분
 
@@ -56,8 +57,8 @@ class VideoServiceTest {
     void setUp() {
         User user = User.builder()
                 .name("테스트유저")
-                .email(OWNER_EMAIL)
                 .build();
+        ReflectionTestUtils.setField(user, "id", OWNER_USER_ID);
 
         Channel channel = Channel.builder()
                 .user(user)
@@ -118,7 +119,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(retentionList);
 
         // when
-        DropPointsResponse response = videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID);
+        DropPointsResponse response = videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID);
 
         // then
         assertThat(response.dropPoints()).hasSize(4);
@@ -131,7 +132,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(retentionList);
 
         // when
-        DropPointsResponse response = videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID);
+        DropPointsResponse response = videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID);
 
         // then
         DropPointsResponse.DropPoint lastSegment = response.dropPoints().get(3);
@@ -145,7 +146,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(retentionList);
 
         // when
-        DropPointsResponse response = videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID);
+        DropPointsResponse response = videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID);
 
         // then
         assertThat(response.dropPoints().get(0).endTime()).isNotNull();
@@ -160,7 +161,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(retentionList);
 
         // when
-        DropPointsResponse response = videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID);
+        DropPointsResponse response = videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID);
 
         // then
         // 각 구간의 startTime이 이전 구간보다 뒤여야 함
@@ -184,7 +185,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(customList);
 
         // when
-        DropPointsResponse response = videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID);
+        DropPointsResponse response = videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID);
 
         // then
         assertThat(response.dropPoints().get(0).dropRate()).isEqualTo(2.0);
@@ -199,7 +200,7 @@ class VideoServiceTest {
         given(videoRepository.findById(VIDEO_ID)).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID))
+        assertThatThrownBy(() -> videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID))
                 .isInstanceOf(ApiException.class)
                 .hasFieldOrPropertyWithValue("error", ErrorDefine.VIDEO_NOT_FOUND);
     }
@@ -210,7 +211,7 @@ class VideoServiceTest {
         given(videoRepository.findById(VIDEO_ID)).willReturn(Optional.of(video));
 
         // when & then
-        assertThatThrownBy(() -> videoService.getDropPoints(OTHER_EMAIL, VIDEO_ID))
+        assertThatThrownBy(() -> videoService.getDropPoints(OTHER_USER_ID, VIDEO_ID))
                 .isInstanceOf(ApiException.class)
                 .hasFieldOrPropertyWithValue("error", ErrorDefine.AUTH_FORBIDDEN);
     }
@@ -222,7 +223,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(List.of());
 
         // when & then
-        assertThatThrownBy(() -> videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID))
+        assertThatThrownBy(() -> videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID))
                 .isInstanceOf(ApiException.class)
                 .hasFieldOrPropertyWithValue("error", ErrorDefine.RETENTION_NOT_FOUND);
     }
@@ -235,7 +236,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(incompleteList);
 
         // when & then
-        assertThatThrownBy(() -> videoService.getDropPoints(OWNER_EMAIL, VIDEO_ID))
+        assertThatThrownBy(() -> videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID))
                 .isInstanceOf(ApiException.class)
                 .hasFieldOrPropertyWithValue("error", ErrorDefine.RETENTION_INVALID);
     }

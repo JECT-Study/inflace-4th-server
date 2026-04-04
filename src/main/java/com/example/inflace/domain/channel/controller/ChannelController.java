@@ -11,6 +11,7 @@ import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
+import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,10 +30,10 @@ public class ChannelController implements ChannelApi{
 
     @GetMapping("/{channelId}/main/tops")
     public BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long channelId
     ) {
-        return new BaseResponse<>(channelService.getMainTopVideos(email, channelId));
+        return new BaseResponse<>(channelService.getMainTopVideos(authUser.userId(), channelId));
     }
 
     @GetMapping("/{channelId}/tops")
