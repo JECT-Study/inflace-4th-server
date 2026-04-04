@@ -40,4 +40,15 @@ public class UserController implements UserApi {
         }
         return new BaseResponse<>(userService.isYoutubeLinked(authUser.userId()));
     }
+
+    @Override
+    @GetMapping("/channels/main")
+    public BaseResponse<UserChannelMainResponse> getUserChannelMain(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        if (authUser == null) {
+            throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
+        }
+        return new BaseResponse<>(userService.getMainChannelInfo(authUser.userId()));
+    }
 }

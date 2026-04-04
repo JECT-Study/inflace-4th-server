@@ -26,4 +26,11 @@ public interface UserApi {
     )
     @ApiErrorDefines(ErrorDefine.AUTH_FORBIDDEN)
     BaseResponse<YoutubeLinkedResponse> getYoutubeLinkedStatus(@AuthenticationPrincipal AuthUser authUser);
+
+    @Operation(
+            summary = "에픽 2-1, 유저 채널 메인 정보 조회",
+            description = "유저 본인의 YouTube 채널 기본 정보를 반환합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
+    BaseResponse<UserChannelMainResponse> getUserChannelMain(@AuthenticationPrincipal AuthUser authUser);
 }
