@@ -253,7 +253,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
 
         // when
-        AudienceRetentionResponse response = videoService.getRetention(OWNER_EMAIL, VIDEO_ID);
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
 
         // then
         assertThat(response.retentionData().get(1).isDrop()).isTrue();
@@ -270,7 +270,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
 
         // when
-        AudienceRetentionResponse response = videoService.getRetention(OWNER_EMAIL, VIDEO_ID);
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
 
         // then
         assertThat(response.retentionData().get(1).isDrop()).isFalse();
@@ -286,7 +286,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
 
         // when
-        AudienceRetentionResponse response = videoService.getRetention(OWNER_EMAIL, VIDEO_ID);
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
 
         // then
         assertThat(response.retentionData().get(0).displayTime()).isEqualTo("5:00");
@@ -307,7 +307,7 @@ class VideoServiceTest {
         given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
 
         // when
-        AudienceRetentionResponse response = videoService.getRetention(OWNER_EMAIL, VIDEO_ID);
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
 
         // then
         assertThat(response.retentionData().get(0).displayTime()).isEqualTo("0:00");
