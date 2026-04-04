@@ -3,14 +3,21 @@ package com.example.inflace.domain.channel.controller;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
+
+import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
+
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
+
 import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
+
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
+import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +30,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChannelController implements ChannelApi{
 
     private final ChannelService channelService;
+
+    @GetMapping("/{channelId}/main/tops")
+    public BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long channelId
+    ) {
+        return new BaseResponse<>(channelService.getMainTopVideos(authUser.userId(), channelId));
+    }
 
     @GetMapping("/{channelId}/tops")
     public BaseResponse<ChannelTopVideosResponse> getTopVideos(

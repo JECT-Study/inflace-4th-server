@@ -6,6 +6,7 @@ import com.example.inflace.domain.video.dto.RetentionSummaryResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
 import com.example.inflace.domain.video.service.VideoService;
+import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,50 +22,50 @@ public class VideoController implements VideoApi {
     @Override
     @GetMapping("/{videoId}")
     public BaseResponse<VideoMetaResponse> getVideoMeta(
-            @AuthenticationPrincipal String email,  // 현재 jwt에 저장되는 컨텍스트가 이메일
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long videoId
     ) {
-        VideoMetaResponse response = videoService.getVideoMeta(email, videoId);
+        VideoMetaResponse response = videoService.getVideoMeta(authUser.userId(), videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/stats")
     public BaseResponse<VideoStatsResponse> getVideoStats(
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long videoId
     ) {
-        VideoStatsResponse response = videoService.getVideoStats(email, videoId);
+        VideoStatsResponse response = videoService.getVideoStats(authUser.userId(), videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/retention")
     public BaseResponse<AudienceRetentionResponse> getRetention(
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long videoId
     ) {
-        AudienceRetentionResponse response = videoService.getRetention(email, videoId);
+        AudienceRetentionResponse response = videoService.getRetention(authUser.userId(), videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/retention/drop-points")
     public BaseResponse<DropPointsResponse> getDropPoints(
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long videoId
     ) {
-        DropPointsResponse response = videoService.getDropPoints(email, videoId);
+        DropPointsResponse response = videoService.getDropPoints(authUser.userId(), videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/retention/summary")
     public BaseResponse<RetentionSummaryResponse> getRetentionSummary(
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long videoId
     ) {
-        RetentionSummaryResponse response = videoService.getRetentionSummary(email, videoId);
+        RetentionSummaryResponse response = videoService.getRetentionSummary(authUser.userId(), videoId);
         return new BaseResponse<>(response);
     }
 }

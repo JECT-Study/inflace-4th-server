@@ -1,7 +1,9 @@
 package com.example.inflace.domain.channel.service;
 
+import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.domain.ChannelStatsHistory;
+import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
@@ -34,6 +36,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import org.springframework.data.domain.Limit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -141,6 +144,31 @@ public class ChannelService {
     }
 
     @Transactional(readOnly = true)
+    public ChannelTopMainVideosResponse getMainTopVideos(long userId, Long channelId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+
+        validateChannelOwnership(channel, userId);
+
+        List<Video> videos = videoRepository.findAllTopVideos(channelId, Limit.of(5));
+        Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
+        List<ChannelTopMainVideosResponse.ChannelTopMainVideo> items = new ArrayList<>();
+        long rank = 1;
+
+        for (Video video : videos) {
+            items.add(ChannelTopMainVideosResponse.ChannelTopMainVideo.of(rank, video, videoStatsMap.get(video.getId())));
+            rank++;
+        }
+
+        return new ChannelTopMainVideosResponse(items);
+    }
+
+    private void validateChannelOwnership(Channel channel, long userId) {
+        if (channel.getUser().getId() != userId) {
+            throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
+        }
+    }
+
     public ChannelSubscriberPatternResponse getSubscriberPattern(Long channelId) {
         validateChannelExists(channelId);
 
@@ -162,6 +190,7 @@ public class ChannelService {
 
         return ChannelSubscriberDistributionResponse.from(channelStats);
     }
+
 
     @Transactional(readOnly = true)
     public ChannelVideosResponse getChannelVideos(
@@ -231,6 +260,7 @@ public class ChannelService {
         List<ChannelSubscriberTrendResponse.Point> points = buildSubscriberTrendPoints(histories, range, startDate, endDate);
         return new ChannelSubscriberTrendResponse(range.value(), points);
     }
+
 
     private void validateChannelExists(Long channelId) {
         if (!channelRepository.existsById(channelId)) {

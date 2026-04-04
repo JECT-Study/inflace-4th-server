@@ -46,6 +46,10 @@ public class Video extends BaseEntity {
     @Column(name = "hashtags", columnDefinition = "text[]")
     private String[] hashtags;
 
+    @Type(value = StringArrayType.class)
+    @Column(name = "category", columnDefinition = "text[]")
+    private String[] category;
+
     @Column(name = "youtube_video_id")
     private String youtubeVideoId;
 
@@ -69,6 +73,7 @@ public class Video extends BaseEntity {
         this.risingScore = risingScore;
         this.publishedAt = publishedAt;
         this.hashtags = hashtags;
+        this.category = category;
         this.youtubeVideoId = youtubeVideoId;
         this.videoUrl = videoUrl;
         this.description = description;

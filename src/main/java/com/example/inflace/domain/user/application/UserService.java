@@ -1,18 +1,85 @@
 package com.example.inflace.domain.user.application;
 
-import com.example.inflace.domain.user.infra.UserRepository;
+import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.domain.ChannelStats;
+import com.example.inflace.domain.channel.repository.ChannelRepository;
+import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
+import com.example.inflace.domain.user.domain.entity.User;
+import com.example.inflace.domain.user.infra.UserCommandRepository;
+import com.example.inflace.domain.user.infra.UserReadRepository;
+import com.example.inflace.domain.user.presentation.OnboardingRequest;
+import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
+import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
+import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.repository.VideoRepository;
+import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ErrorDefine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private static final String YOUTUBE_STUDIO_URL_PREFIX = "https://studio.youtube.com/channel/";
 
-    private final UserRepository userRepository;
+    private final UserReadRepository userReadRepository;
+    private final UserCommandRepository userCommandRepository;
+    private final ChannelRepository channelRepository;
+    private final ChannelStatsRepository channelStatsRepository;
+    private final VideoRepository videoRepository;
 
     @Transactional
-    public void registerIfNotExists(String name, String email, String profileImage) {
-        userRepository.insertIfNotExists(name, email, profileImage);
+    public long registerIfNotExists(String sub, String name, String email, String profileImage) {
+        return userCommandRepository.insertIfNotExists(sub, name, email, profileImage);
+    }
+
+    @Transactional(readOnly = true)
+    public YoutubeLinkedResponse isYoutubeLinked(long userId) {
+        return new YoutubeLinkedResponse(channelRepository.existsByUser_Id(userId));
+    }
+
+    @Transactional(readOnly = true)
+    public UserChannelMainResponse getMainChannelInfo(long userId) {
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        Channel channel = channelRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+
+        ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channel.getId())
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+
+        List<Video> videos = videoRepository.findByChannelId(channel.getId());
+
+        List<String> category = channel.getCategory() != null
+                ? Arrays.asList(channel.getCategory())
+                : null;
+
+        return new UserChannelMainResponse(
+                user.getProfileImage(),
+                channel.getName(),
+                YOUTUBE_STUDIO_URL_PREFIX + channel.getYoutubeChannelId(),
+                channel.getChannelHandle(),
+                category,
+                channel.getEnteredAt(),
+                channelStats.getSubscriberCount(),
+                (long) videos.size(),
+                channel.getUpdatedAt()
+        );
+    }
+
+    @Transactional
+    public void onboarding(long userId, OnboardingRequest request) {
+
+        if (request.role() == null || request.need() == null || request.need().isEmpty()) {
+            throw new ApiException(ErrorDefine.ONBOARDING_INVALID_REQUEST);
+        }
+
+        userCommandRepository.insertUserType(userId, request.role().name());
+        userCommandRepository.bulkInsertNeeds(userId, request.need());
     }
 }

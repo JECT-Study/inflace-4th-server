@@ -64,4 +64,12 @@ public class BaseResponse<T> {
                                 .error(new ExceptionResponse(e))
                                 .build());
     }
+
+    public static <T> BaseResponse<T> success(@Nullable T data) {
+        return new BaseResponse<>(data);
+    }
+
+    public static BaseResponse<Void> success() {
+        return new BaseResponse<>(null);
+    }
 }

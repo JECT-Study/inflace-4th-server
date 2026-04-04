@@ -1,12 +1,14 @@
 package com.example.inflace.domain.channel.domain;
 
-import com.example.inflace.domain.user.domain.User;
+import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.global.entity.BaseEntity;
+import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 
@@ -29,17 +31,23 @@ public class Channel extends BaseEntity {
     @Column(name = "youtube_channel_id")
     private String youtubeChannelId;
 
-    private String category;
+    @Type(value = StringArrayType.class)
+    @Column(name = "category", columnDefinition = "text[]")
+    private String[] category;
+
+    @Column(name = "channel_handle")
+    private String channelHandle;
 
     @Column(name = "entered_at")
     private LocalDateTime enteredAt;
 
     @Builder
-    public Channel(User user, String name, String youtubeChannelId, String category, LocalDateTime enteredAt) {
+    public Channel(User user, String name, String youtubeChannelId, String[] category, String channelHandle, LocalDateTime enteredAt) {
         this.user = user;
         this.name = name;
         this.youtubeChannelId = youtubeChannelId;
         this.category = category;
+        this.channelHandle = channelHandle;
         this.enteredAt = enteredAt;
     }
 }
