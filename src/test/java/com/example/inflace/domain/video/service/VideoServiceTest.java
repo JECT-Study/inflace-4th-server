@@ -4,6 +4,7 @@ import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.video.domain.AudienceRetention;
 import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.dto.AudienceRetentionResponse;
 import com.example.inflace.domain.video.dto.DropPointsResponse;
 import com.example.inflace.domain.video.repository.AudienceRetentionRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
@@ -239,5 +240,76 @@ class VideoServiceTest {
         assertThatThrownBy(() -> videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID))
                 .isInstanceOf(ApiException.class)
                 .hasFieldOrPropertyWithValue("error", ErrorDefine.RETENTION_INVALID);
+    }
+
+    @Test
+    void 시청_지속률_조회_성공_감소량_0_05_이상이면_isDrop_true() {
+        // given - 차이 0.06 (>= 0.05)
+        List<AudienceRetention> list = List.of(
+                AudienceRetention.builder().video(video).timeRatio(0.01).retentionRate(90.0).collectedAt(LocalDateTime.now()).build(),
+                AudienceRetention.builder().video(video).timeRatio(0.02).retentionRate(89.94).collectedAt(LocalDateTime.now()).build()
+        );
+        given(videoRepository.findById(VIDEO_ID)).willReturn(Optional.of(video));
+        given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
+
+        // when
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
+
+        // then
+        assertThat(response.retentionData().get(1).isDrop()).isTrue();
+    }
+
+    @Test
+    void 시청_지속률_조회_성공_감소량_0_05_미만이면_isDrop_false() {
+        // given - 차이 0.03 (< 0.05)
+        List<AudienceRetention> list = List.of(
+                AudienceRetention.builder().video(video).timeRatio(0.01).retentionRate(90.0).collectedAt(LocalDateTime.now()).build(),
+                AudienceRetention.builder().video(video).timeRatio(0.02).retentionRate(89.97).collectedAt(LocalDateTime.now()).build()
+        );
+        given(videoRepository.findById(VIDEO_ID)).willReturn(Optional.of(video));
+        given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
+
+        // when
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
+
+        // then
+        assertThat(response.retentionData().get(1).isDrop()).isFalse();
+    }
+
+    @Test
+    void 시청_지속률_조회_성공_displayTime이_올바른_MM_SS_형식으로_반환() {
+        // given - timeRatio 0.5 * duration 600.0 = 300s → "5:00"
+        List<AudienceRetention> list = List.of(
+                AudienceRetention.builder().video(video).timeRatio(0.5).retentionRate(80.0).collectedAt(LocalDateTime.now()).build()
+        );
+        given(videoRepository.findById(VIDEO_ID)).willReturn(Optional.of(video));
+        given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
+
+        // when
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
+
+        // then
+        assertThat(response.retentionData().get(0).displayTime()).isEqualTo("5:00");
+    }
+
+    @Test
+    void 시청_지속률_조회_duration_null이면_displayTime이_0_00_반환() {
+        // given - duration이 null인 영상
+        Video videoWithNullDuration = Video.builder()
+                .channel(video.getChannel())
+                .title("duration없는영상")
+                .publishedAt(LocalDateTime.now().minusDays(1))
+                .build();
+        List<AudienceRetention> list = List.of(
+                AudienceRetention.builder().video(videoWithNullDuration).timeRatio(0.5).retentionRate(80.0).collectedAt(LocalDateTime.now()).build()
+        );
+        given(videoRepository.findById(VIDEO_ID)).willReturn(Optional.of(videoWithNullDuration));
+        given(audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(VIDEO_ID)).willReturn(list);
+
+        // when
+        AudienceRetentionResponse response = videoService.getRetention(OWNER_USER_ID, VIDEO_ID);
+
+        // then
+        assertThat(response.retentionData().get(0).displayTime()).isEqualTo("0:00");
     }
 }
