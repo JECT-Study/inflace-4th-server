@@ -60,7 +60,8 @@ public class VideoService {
             throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
         }
 
-        return AudienceRetentionResponse.from(retentionList);
+        double duration = video.getDuration() != null ? video.getDuration() : 0.0;
+        return AudienceRetentionResponse.from(retentionList, duration);
     }
 
     public DropPointsResponse getDropPoints(String email, Long videoId) {
