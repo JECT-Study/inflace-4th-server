@@ -127,11 +127,11 @@ public class ChannelService {
     }
 
     @Transactional(readOnly = true)
-    public ChannelTopMainVideosResponse getMainTopVideos(String email, Long channelId) {
+    public ChannelTopMainVideosResponse getMainTopVideos(long userId, Long channelId) {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
 
-        validateChannelOwnership(channel, email);
+        validateChannelOwnership(channel, userId);
 
         List<Video> videos = videoRepository.findAllTopVideos(channelId, Limit.of(5));
         Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
@@ -146,9 +146,8 @@ public class ChannelService {
         return new ChannelTopMainVideosResponse(items);
     }
 
-    // TODO : 차후 email이 아닌 sub 기반으로 변경
-    private void validateChannelOwnership(Channel channel, String email) {
-        if (!channel.getUser().getEmail().equals(email)) {
+    private void validateChannelOwnership(Channel channel, long userId) {
+        if (channel.getUser().getId() != userId) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
     }
