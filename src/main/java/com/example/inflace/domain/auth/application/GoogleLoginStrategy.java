@@ -19,7 +19,7 @@ public class GoogleLoginStrategy implements OAuthLoginStrategy {
     public OAuthUserInfo getUserInfo(String code) {
         GoogleTokenResponse token = googleApiClient.getToken(code);
         GoogleUserInfoResponse userInfo = googleApiClient.getUserInfo(token.accessToken());
-        googleAccessTokenStore.save(userInfo.email(), token.accessToken());  // TODO : 인메모리에 저장, 향후 REDIS로 옮기기
+        googleAccessTokenStore.save(userInfo.sub(), token.accessToken());  // TODO : 인메모리에 저장, 향후 REDIS로 옮기기
 
         return new OAuthUserInfo(userInfo.sub(), userInfo.name(), userInfo.email(), userInfo.picture());
     }

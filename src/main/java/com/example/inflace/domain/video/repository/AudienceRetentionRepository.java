@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface AudienceRetentionRepository extends JpaRepository<AudienceRetention, Long> {
     List<AudienceRetention> findByVideoIdOrderByTimeRatioAsc(Long videoId);
+
+    void deleteByVideoId(Long videoId);
 }

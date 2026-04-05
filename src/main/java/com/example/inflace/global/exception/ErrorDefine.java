@@ -23,7 +23,10 @@ public enum ErrorDefine {
 
     //CHANNEL
     CHANNEL_NOT_FOUND("CHANNEL_404", HttpStatus.NOT_FOUND, "Not Found: Channel Not Found"),
-    CHANNEL_STATS_NOT_FOUND("CHANNEL_STATS_404", HttpStatus.NOT_FOUND, " Not Found: Channel Stats not found");
+    CHANNEL_STATS_NOT_FOUND("CHANNEL_STATS_404", HttpStatus.NOT_FOUND, " Not Found: Channel Stats not found"),
+
+    //ETC
+    YOUTUBE_API_ERROR("YOUTUBE_500", HttpStatus.INTERNAL_SERVER_ERROR, "YouTube API Error");
 
     private final String errorCode;
     private final HttpStatus httpStatus;

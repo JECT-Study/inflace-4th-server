@@ -1,5 +1,6 @@
 package com.example.inflace.global.util;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -113,6 +114,19 @@ public class AnalyticsCalculator {
             sum += churnRate(retentionRates.get(i - 1), retentionRates.get(i));
         }
         return sum / (retentionRates.size() - 1);
+    }
+
+    /**
+     * ISO 8601 duration → 초 변환 (예: "PT1M30S" → 90.0)
+     *
+     * @param isoDuration ISO 8601 형식 duration 문자열
+     * @return 초 단위 double
+     */
+    public static double parseIso8601Duration(String isoDuration) {
+        if (isoDuration == null || isoDuration.isBlank()) {
+            return 0.0;
+        }
+        return (double) Duration.parse(isoDuration).getSeconds();
     }
 
     /**
