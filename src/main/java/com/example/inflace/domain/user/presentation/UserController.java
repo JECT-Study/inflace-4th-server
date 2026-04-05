@@ -8,6 +8,7 @@ import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,5 +51,13 @@ public class UserController implements UserApi {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
         return new BaseResponse<>(userService.getMainChannelInfo(authUser.userId()));
+    }
+
+    @Override
+    @DeleteMapping("/delete")
+    public ResponseEntity<BaseResponse<Void>> withdraw(
+            @AuthenticationPrincipal AuthUser authUser) {
+        userService.withdraw(authUser.userId());
+        return ResponseEntity.ok(new BaseResponse<>(null));
     }
 }

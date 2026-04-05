@@ -1,11 +1,13 @@
 package com.example.inflace.domain.user.infra;
 
 import com.example.inflace.domain.user.domain.enums.Need;
+import com.example.inflace.domain.user.domain.enums.Plan;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
@@ -14,27 +16,32 @@ public class UserCommandRepository {
     private final JdbcTemplate jdbcTemplate;
 
     // 유저 존재 검증 및 회원가입 쿼리. 존재하면 바로 userId 반환, 없으면 가입 후 userId 반환
-    public long insertIfNotExists(String sub, String name, String email, String profileImage) {
-        jdbcTemplate.update("""
-        insert into users (provider_id, name, email, profile_image, plan)
-        select ?, ?, ?, ?, 'FREE'
-        where not exists (
-            select 1 from users where provider_id = ?
-        )
-    """, sub, name, email, profileImage, sub);
+    public UserRegistrationResult insertIfNotExists(
+            String sub, String name, String email, String profileImage, Plan plan) {
 
-        return jdbcTemplate.queryForObject(
-                "select user_id from users where provider_id = ?",
-                Long.class,
-                sub
-        );
+        Map<String, Object> result = jdbcTemplate.queryForMap("""
+        insert into users (provider_id, name, email, profile_image, plan)
+        values (?, ?, ?, ?, ?)
+        on conflict (provider_id)
+        do update set provider_id = excluded.provider_id
+        returning user_id, (xmax = 0) as inserted
+    """, sub, name, email, profileImage, plan.name());
+
+        Long userId = ((Number) result.get("user_id")).longValue();
+        boolean isNew = (Boolean) result.get("inserted");
+
+        return new UserRegistrationResult(userId, isNew);
+    }
+
+    public void deleteUser(long userId) {
+        jdbcTemplate.update("delete from users where user_id = ?", userId);
     }
 
     public void insertUserType(Long userId, String type) {
         jdbcTemplate.update("""
-            insert into users_type (user_id, type_name)
-            values (?, ?)
-        """, userId, type);
+                    insert into users_type (user_id, type_name)
+                    values (?, ?)
+                """, userId, type);
     }
 
     public void bulkInsertNeeds(Long userId, List<Need> needs) {
