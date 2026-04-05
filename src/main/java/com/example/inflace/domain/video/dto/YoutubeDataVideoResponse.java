@@ -17,7 +17,8 @@ public record YoutubeDataVideoResponse(
             String publishedAt,
             String description,
             Thumbnails thumbnails,
-            List<String> tags
+            List<String> tags,
+            String categoryId
     ) {
     }
 

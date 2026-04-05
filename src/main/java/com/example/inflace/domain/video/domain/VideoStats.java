@@ -55,6 +55,34 @@ public class VideoStats extends BaseEntity {
     @Column(name = "unsubscribed_viewer_percentage")
     private Double unsubscribedViewerPercentage;
 
+    public void update(Long viewCount, Long likeCount, Long commentCount, Long shareCount,
+                       Long subscribersGained, Double ctr, Double avgWatchDuration,
+                       Double averageViewPercentage, Double relativeRetentionPerformance,
+                       LocalDateTime collectedAt) {
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
+        this.commentCount = commentCount;
+        this.shareCount = shareCount;
+        this.subscribersGained = subscribersGained;
+        this.ctr = ctr;
+        this.avgWatchDuration = avgWatchDuration;
+        this.averageViewPercentage = averageViewPercentage;
+        this.relativeRetentionPerformance = relativeRetentionPerformance;
+        this.collectedAt = collectedAt;
+    }
+
+    public void updateRelativeRetention(Double relativeRetentionPerformance) {
+        this.relativeRetentionPerformance = relativeRetentionPerformance;
+    }
+
+    public void updateUnsubscribed(Long unsubscribedViewCount) {
+        this.unsubscribedViewCount = unsubscribedViewCount;
+        // metrics로 안옴, 직접 계산
+        this.unsubscribedViewerPercentage = (this.viewCount != null && this.viewCount > 0)
+                ? (unsubscribedViewCount.doubleValue() / this.viewCount) * 100
+                : null;
+    }
+
     @Builder
     public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr,
                       Double avgWatchDuration, LocalDateTime collectedAt, Long subscribersGained,
