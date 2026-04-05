@@ -21,10 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.example.inflace.global.util.AnalyticsParser.toDouble;
 import static com.example.inflace.global.util.AnalyticsParser.toLong;
@@ -53,6 +54,11 @@ public class VideoSyncService {
     private final YoutubeAnalyticsService youtubeAnalyticsService;
     private final YoutubeAnalyticsApiClient youtubeAnalyticsApiClient;
 
+    /**
+     * 일반 stats 요청 로직
+     * @param userId
+     * @param videoId
+     */
     @Transactional
     public void syncStats(long userId, long videoId) {
         Video video = findVideoWithOwnership(userId, videoId);
@@ -84,10 +90,8 @@ public class VideoSyncService {
         Optional<VideoStats> existing = videoStatsRepository.findByVideo(video);
         if (existing.isPresent()) {
             existing.get().update(viewCount, likeCount, commentCount, shareCount, subscribersGained,
-                    annotationClickThroughRate, avgWatchDuration, averageViewPercentage, existing.get().getRelativeRetentionPerformance(),
-                    LocalDateTime.now());
+                    annotationClickThroughRate, avgWatchDuration, averageViewPercentage, LocalDateTime.now());
         } else {
-            log.info("저장하는 로직");
             videoStatsRepository.save(VideoStats.builder()
                     .video(video)
                     .viewCount(viewCount)
@@ -103,6 +107,11 @@ public class VideoSyncService {
         }
     }
 
+    /**
+     * retention 관련 요청 로직
+     * @param userId
+     * @param videoId
+     */
     @Transactional
     public void syncRetention(long userId, long videoId) {
         Video video = findVideoWithOwnership(userId, videoId);
@@ -119,12 +128,6 @@ public class VideoSyncService {
         YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
 
         if (response.rows() == null || response.rows().size() != 100) {
-            throw new ApiException(ErrorDefine.RETENTION_INVALID);
-        }
-
-        log.info("Retention rows size: {}", response.rows().size());
-
-        if (response.rows() == null || response.rows().isEmpty()) {
             throw new ApiException(ErrorDefine.RETENTION_INVALID);
         }
 
@@ -156,6 +159,11 @@ public class VideoSyncService {
         audienceRetentionRepository.saveAll(retentions);
     }
 
+    /**
+     * unsubscribed 관련 로직, analytics에서 동작 안함, channel 기준으로만 unsubscribed가 가능한건지, video 단일 기준도 가능한건지 확인 필요..
+     * @param userId
+     * @param videoId
+     */
     @Transactional
     public void syncUnsubscribedStats(long userId, long videoId) {
         Video video = findVideoWithOwnership(userId, videoId);
@@ -215,10 +223,11 @@ public class VideoSyncService {
     }
 
     private Map<String, Integer> buildIndexMap(List<YoutubeAnalyticsVideoResponse.ColumnHeader> headers) {
-        Map<String, Integer> map = new HashMap<>();
-        for (int i = 0; i < headers.size(); i++) {
-            map.put(headers.get(i).name(), i);
-        }
-        return map;
+        return IntStream.range(0, headers.size())
+                .boxed()
+                .collect(Collectors.toMap(
+                        i -> headers.get(i).name(),
+                        i -> i
+                ));
     }
 }

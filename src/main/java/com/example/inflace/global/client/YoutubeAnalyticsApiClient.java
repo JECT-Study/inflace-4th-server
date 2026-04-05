@@ -9,6 +9,7 @@ import com.example.inflace.global.properties.YoutubeProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -53,17 +54,15 @@ public class YoutubeAnalyticsApiClient {
 
         URI uri = builder.build().toUri();
 
-        log.info("Requesting YouTube Analytics URI: {}", uri);
-
         return restClient.get()
                 .uri(uri)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(googleId))
                 .retrieve()
-                .onStatus(status -> status.is4xxClientError(), (req, res) -> {
+                .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
                     log.error("YouTube API 4xx error: {}", new String(res.getBody().readAllBytes()));
-                    throw new ApiException(ErrorDefine.YOUTUBE_API_ERROR);
+                    throw new ApiException(ErrorDefine.YOUTUBE_API_ERROR);  // 오류 추적이 어려워서 외부 api 통신 에러 로그 추가
                 })
-                .onStatus(status -> status.is5xxServerError(), (req, res) -> {
+                .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
                     log.error("YouTube API 5xx error: {}", new String(res.getBody().readAllBytes()));
                     throw new ApiException(ErrorDefine.YOUTUBE_API_ERROR);
                 })

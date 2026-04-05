@@ -57,8 +57,7 @@ public class VideoStats extends BaseEntity {
 
     public void update(Long viewCount, Long likeCount, Long commentCount, Long shareCount,
                        Long subscribersGained, Double ctr, Double avgWatchDuration,
-                       Double averageViewPercentage, Double relativeRetentionPerformance,
-                       LocalDateTime collectedAt) {
+                       Double averageViewPercentage, LocalDateTime collectedAt) {
         this.viewCount = viewCount;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
@@ -67,7 +66,6 @@ public class VideoStats extends BaseEntity {
         this.ctr = ctr;
         this.avgWatchDuration = avgWatchDuration;
         this.averageViewPercentage = averageViewPercentage;
-        this.relativeRetentionPerformance = relativeRetentionPerformance;
         this.collectedAt = collectedAt;
     }
 
@@ -77,7 +75,7 @@ public class VideoStats extends BaseEntity {
 
     public void updateUnsubscribed(Long unsubscribedViewCount) {
         this.unsubscribedViewCount = unsubscribedViewCount;
-        // metrics로 안옴, 직접 계산
+        // viewerPercentage는 Analytics API metrics 미지원 → viewCount 기반으로 직접 계산
         this.unsubscribedViewerPercentage = (this.viewCount != null && this.viewCount > 0)
                 ? (unsubscribedViewCount.doubleValue() / this.viewCount) * 100
                 : null;

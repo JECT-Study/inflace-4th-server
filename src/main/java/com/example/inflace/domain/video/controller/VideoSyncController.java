@@ -25,7 +25,7 @@ public class VideoSyncController {
     ) {
         videoSyncService.syncStats(authUser.userId(), videoId);
         videoSyncService.syncRetention(authUser.userId(), videoId);
-        videoSyncService.syncUnsubscribedStats(authUser.userId(), videoId);
+//        videoSyncService.syncUnsubscribedStats(authUser.userId(), videoId);
         return new BaseResponse<>(null);
     }
 }
