@@ -81,11 +81,17 @@ public class VideoStats extends BaseEntity {
                 : null;
     }
 
+    @Column(name = "vph")
+    private Double vph;
+
+    @Column(name = "outlier_score")
+    private Double outlierScore;
+
     @Builder
     public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr,
                       Double avgWatchDuration, LocalDateTime collectedAt, Long subscribersGained,
                       Long unsubscribedViewCount, Double averageViewPercentage, Double relativeRetentionPerformance,
-                      Double unsubscribedViewerPercentage) {
+                      Double unsubscribedViewerPercentage, Double vph, Double outlierScore) {
         this.video = video;
         this.viewCount = viewCount;
         this.likeCount = likeCount;
@@ -99,5 +105,7 @@ public class VideoStats extends BaseEntity {
         this.averageViewPercentage = averageViewPercentage;
         this.relativeRetentionPerformance = relativeRetentionPerformance;
         this.unsubscribedViewerPercentage = unsubscribedViewerPercentage;
+        this.vph = vph;
+        this.outlierScore = outlierScore;
     }
 }
