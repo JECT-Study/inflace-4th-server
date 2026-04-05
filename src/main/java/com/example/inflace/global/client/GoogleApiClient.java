@@ -22,11 +22,15 @@ public class GoogleApiClient {
     private final GoogleProperties googleProperties;
 
     public GoogleTokenResponse getToken(String code) {
+        return getToken(code, googleProperties.redirectUri());
+    }
+
+    public GoogleTokenResponse getToken(String code, String redirectUri) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("code", code);
         params.add("client_id", googleProperties.clientId());
         params.add("client_secret", googleProperties.clientSecret());
-        params.add("redirect_uri", googleProperties.redirectUri());
+        params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code");
 
         return restClient.post()

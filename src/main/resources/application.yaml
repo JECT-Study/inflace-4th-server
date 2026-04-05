@@ -34,3 +34,5 @@ youtube:
   analytics-api:
     base-url: ${ANALYTICS_API_URL}
     access-token: ${ANALYTICS_TEST_ACCESS_TOKEN}
+  oauth:
+    redirect-uri: ${YOUTUBE_REDIRECT_URI}
