@@ -9,6 +9,9 @@ import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 
+import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
+import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
+
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.config.AuthUser;
@@ -77,5 +80,26 @@ public class ChannelController implements ChannelApi{
             @PathVariable Long channelId
     ) {
         return new BaseResponse<>(channelService.getSubscriberDistribution(channelId));
+    }
+
+    @GetMapping("/{channelId}/videos")
+    public BaseResponse<ChannelVideosResponse> getChannelVideos(
+            @PathVariable Long channelId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "LATEST") String sort,
+            @RequestParam(defaultValue = "ALL") String format,
+            @RequestParam(required = false) Boolean isAd,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "12") Integer size
+    ) {
+        return new BaseResponse<>(channelService.getChannelVideos(channelId, keyword, sort, format, isAd, cursor, size));
+    }
+
+    @GetMapping("/{channelId}/subscriber-trend")
+    public BaseResponse<ChannelSubscriberTrendResponse> getSubscriberTrend(
+            @PathVariable Long channelId,
+            @RequestParam(defaultValue = "30D") String range
+    ) {
+        return new BaseResponse<>(channelService.getSubscriberTrend(channelId, range));
     }
 }
