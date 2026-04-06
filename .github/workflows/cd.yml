@@ -40,8 +40,8 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |   # 버전 안정성을 위해 sha 태그로 관리                         
-            youngh1p/inflace:${{ github.sha }}
-            youngh1p/inflace:latest
+            youcastle/inflace:${{ github.sha }}
+            youcastle/inflace:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
