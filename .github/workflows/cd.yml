@@ -66,7 +66,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: IMAGE_TAG,DB_URL,DB_USERNAME,DB_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,DATA_API_KEY,DATA_API_URL,ANALYTICS_API_URL,JWT_EXPIRATION,JWT_SECRET
           script: |
-            docker pull youngh1p/inflace:$IMAGE_TAG
+            docker pull youcastle/inflace:$IMAGE_TAG
             docker stop inflace || true
             docker rm inflace || true
             docker run -d --name inflace -p 8080:8080 \
@@ -81,4 +81,4 @@ jobs:
               -e ANALYTICS_API_URL=$ANALYTICS_API_URL \
               -e JWT_EXPIRATION=$JWT_EXPIRATION \
               -e JWT_SECRET=$JWT_SECRET \
-              youngh1p/inflace:$IMAGE_TAG
+              youcastle/inflace:$IMAGE_TAG
