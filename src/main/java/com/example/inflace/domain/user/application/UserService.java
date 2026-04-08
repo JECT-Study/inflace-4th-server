@@ -5,8 +5,10 @@ import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.user.domain.entity.User;
+import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.infra.UserCommandRepository;
 import com.example.inflace.domain.user.infra.UserReadRepository;
+import com.example.inflace.domain.user.infra.UserRegistrationResult;
 import com.example.inflace.domain.user.presentation.OnboardingRequest;
 import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
 import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
@@ -33,8 +35,16 @@ public class UserService {
     private final VideoRepository videoRepository;
 
     @Transactional
-    public long registerIfNotExists(String sub, String name, String email, String profileImage) {
-        return userCommandRepository.insertIfNotExists(sub, name, email, profileImage);
+    public UserRegistrationResult registerIfNotExists(String sub, String name, String email, String profileImage, Plan plan) {
+        return userCommandRepository.insertIfNotExists(sub, name, email, profileImage, plan);
+    }
+
+    @Transactional
+    public void withdraw(long userId) {
+        if (!userReadRepository.existsById(userId)) {
+            throw new ApiException(ErrorDefine.USER_NOT_FOUND);
+        }
+        userCommandRepository.deleteUser(userId);
     }
 
     @Transactional(readOnly = true)

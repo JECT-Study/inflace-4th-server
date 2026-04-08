@@ -33,4 +33,11 @@ public interface UserApi {
     )
     @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
     BaseResponse<UserChannelMainResponse> getUserChannelMain(@AuthenticationPrincipal AuthUser authUser);
+
+    @Operation(
+            summary = "회원 탈퇴",
+            description = "현재 로그인된 유저를 영구 삭제합니다 (복구 불가)"
+    )
+    @ApiErrorDefines(ErrorDefine.USER_NOT_FOUND)
+    ResponseEntity<BaseResponse<Void>> withdraw(@AuthenticationPrincipal AuthUser authUser);
 }

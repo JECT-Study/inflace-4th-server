@@ -10,10 +10,13 @@ public enum ErrorDefine {
     INVALID_ARGUMENT("COMMON_400", HttpStatus.BAD_REQUEST, "Bad Request: Invalid Arguments"),
     AUTH_UNSUPPORTED_PROVIDER("AUTH_401", HttpStatus.BAD_REQUEST, "Bad Request: Unsupported OAuth Provider"),
     AUTH_FORBIDDEN("AUTH_403", HttpStatus.FORBIDDEN, "Forbidden: No permission to access this resource"),
+    INVALID_REFRESH_TOKEN("AUTH_401_REFRESH", HttpStatus.UNAUTHORIZED, "Unauthorized: Invalid or expired refresh token"),
+    REFRESH_TOKEN_NOT_FOUND("AUTH_401_MISSING", HttpStatus.UNAUTHORIZED, "Unauthorized: Refresh token not found"),
 
     // USER
     USER_NOT_FOUND("USER_404", HttpStatus.NOT_FOUND, "Not Found: User not found"),
     ONBOARDING_INVALID_REQUEST("USER_400", HttpStatus.BAD_REQUEST, "Bad Request: Role and need are required"),
+    USER_ALREADY_DELETED("USER_404_DELETED", HttpStatus.NOT_FOUND, "Not Found: User already deleted"),
 
     // VIDEO
     VIDEO_NOT_FOUND("VIDEO_404", HttpStatus.NOT_FOUND, "Not Found: Video not found"),
