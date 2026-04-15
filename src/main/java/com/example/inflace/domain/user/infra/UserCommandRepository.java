@@ -24,13 +24,12 @@ public class UserCommandRepository {
         values (?, ?, ?, ?, ?)
         on conflict (provider_id)
         do update set provider_id = excluded.provider_id
-        returning user_id, (xmax = 0) as inserted
+        returning user_id
     """, sub, name, email, profileImage, plan.name());
 
         Long userId = ((Number) result.get("user_id")).longValue();
-        boolean isNew = (Boolean) result.get("inserted");
 
-        return new UserRegistrationResult(userId, isNew);
+        return new UserRegistrationResult(userId);
     }
 
     public void deleteUser(long userId) {
@@ -53,6 +52,13 @@ public class UserCommandRepository {
                     ps.setLong(1, userId);
                     ps.setString(2, need.name());
                 }
+        );
+    }
+
+    public void updateOnboardingCompleted(long userId) {
+        jdbcTemplate.update(
+                "update users set onboarding_completed = true where user_id = ?",
+                userId
         );
     }
 }

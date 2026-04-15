@@ -7,6 +7,7 @@ public record OAuthUserInfo(
         String name,
         String email,
         String picture,
-        Plan plan
+        Plan plan,
+        String accessToken
 ) {
 }

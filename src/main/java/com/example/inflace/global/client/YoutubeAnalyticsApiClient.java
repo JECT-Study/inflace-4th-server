@@ -28,7 +28,7 @@ public class YoutubeAnalyticsApiClient {
     private final YoutubeProperties youtubeProperties;
     private final GoogleAccessTokenStore googleAccessTokenStore;
 
-    public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(String googleId, YoutubeAnalyticsVideoRequest request) {
+    public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(long userId, YoutubeAnalyticsVideoRequest request) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(youtubeProperties.analyticsApi().baseUrl())
                 .path(ANALYTICS_PATH)
@@ -56,7 +56,7 @@ public class YoutubeAnalyticsApiClient {
 
         return restClient.get()
                 .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(googleId))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(userId))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
                     log.error("YouTube API 4xx error: {}", new String(res.getBody().readAllBytes()));

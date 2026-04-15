@@ -13,7 +13,14 @@ public record YoutubeDataChannelResponse(
     public record Snippet(
             String title,
             String publishedAt,
-            String country
+            String country,
+            Thumbnails thumbnails
+    ){}
+    public record Thumbnails(
+            ThumbnailUrl high
+    ){}
+    public record ThumbnailUrl(
+            String url
     ){}
     public record Statistics(
        String subscriberCount,

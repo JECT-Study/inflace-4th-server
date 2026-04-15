@@ -5,6 +5,7 @@ import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.properties.YoutubeProperties;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -49,5 +50,21 @@ public class YoutubeDataApiClient {
                 .uri(uri)
                 .retrieve()
                 .body(YoutubeDataVideoResponse.class);
+    }
+
+    public YoutubeDataChannelResponse getMyChannel(String accessToken) {
+        URI uri = UriComponentsBuilder
+                .fromUriString(youtubeProperties.dataApi().baseUrl())
+                .path(CHANNELS_PATH)
+                .queryParam("part", "snippet")
+                .queryParam("mine", "true")
+                .build()
+                .toUri();
+
+        return restClient.get()
+                .uri(uri)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .body(YoutubeDataChannelResponse.class);
     }
 }

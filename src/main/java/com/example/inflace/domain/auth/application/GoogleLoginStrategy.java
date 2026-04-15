@@ -19,6 +19,6 @@ public class GoogleLoginStrategy implements OAuthLoginStrategy {
         GoogleTokenResponse token = googleApiClient.getToken(code);
         GoogleUserInfoResponse userInfo = googleApiClient.getUserInfo(token.accessToken());
 
-        return new OAuthUserInfo(userInfo.sub(), userInfo.name(), userInfo.email(), userInfo.picture(), Plan.FREE);
+        return new OAuthUserInfo(userInfo.sub(), userInfo.name(), userInfo.email(), userInfo.picture(), Plan.FREE, token.accessToken());
     }
 }

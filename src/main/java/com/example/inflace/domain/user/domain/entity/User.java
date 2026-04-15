@@ -38,6 +38,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Plan plan;
 
+    @Column(name = "onboarding_completed", nullable = false, columnDefinition = "boolean default false")
+    private boolean isOnboardingCompleted;
+
     @Builder
     public User(String name, String profileImage, String email,
                 String providerId, Plan plan) {
@@ -46,5 +49,9 @@ public class User {
         this.email = email;
         this.providerId = providerId;
         this.plan = plan;
+    }
+
+    public void completeOnboarding() {
+        this.isOnboardingCompleted = true;
     }
 }

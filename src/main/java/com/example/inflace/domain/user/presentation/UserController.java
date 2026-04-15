@@ -54,6 +54,16 @@ public class UserController implements UserApi {
     }
 
     @Override
+    @PostMapping("/youtube/link")
+    public BaseResponse<YoutubeChannelLinkResponse> linkYoutubeChannel(
+            @AuthenticationPrincipal AuthUser authUser) {
+        if (authUser == null) {
+            throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
+        }
+        return new BaseResponse<>(userService.linkYoutubeChannel(authUser.userId()));
+    }
+
+    @Override
     @DeleteMapping("/delete")
     public ResponseEntity<BaseResponse<Void>> withdraw(
             @AuthenticationPrincipal AuthUser authUser) {

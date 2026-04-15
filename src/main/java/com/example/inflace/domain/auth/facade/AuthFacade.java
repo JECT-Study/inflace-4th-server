@@ -3,7 +3,10 @@ package com.example.inflace.domain.auth.facade;
 import com.example.inflace.domain.auth.application.OAuthStrategyRouter;
 import com.example.inflace.domain.auth.presentation.dto.OAuthUserInfo;
 import com.example.inflace.domain.auth.presentation.dto.TokenData;
+import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
 import com.example.inflace.domain.auth.util.RefreshTokenStore;
+import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.application.UserService;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.user.infra.UserReadRepository;
@@ -14,6 +17,8 @@ import com.example.inflace.global.exception.ErrorDefine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AuthFacade {
@@ -23,6 +28,8 @@ public class AuthFacade {
     private final UserReadRepository userReadRepository;
     private final JwtProvider jwtProvider;
     private final RefreshTokenStore refreshTokenStore;
+    private final GoogleAccessTokenStore googleAccessTokenStore;
+    private final ChannelRepository channelRepository;
 
     public TokenData login(String provider, String code) {
         OAuthUserInfo userInfo = oAuthStrategyRouter.getStrategy(provider).getUserInfo(code);
@@ -35,15 +42,25 @@ public class AuthFacade {
                 userInfo.plan()
         );
 
+        User user = userReadRepository.findById(result.userId())
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        Optional<Channel> channelOpt = channelRepository.findByUser_Id(result.userId());
         String accessToken = jwtProvider.createAccessToken(
                 result.userId(),
                 userInfo.picture(),
-                result.isNewUser(),
-                userInfo.plan()
+                userInfo.plan(),
+                channelOpt.map(Channel::getName).orElse(null),
+                channelOpt.map(Channel::getProfileImage).orElse(null),
+                user.isOnboardingCompleted()
         );
         String refreshToken = jwtProvider.createRefreshToken(result.userId());
 
         refreshTokenStore.save(result.userId(), refreshToken);
+
+        if (userInfo.accessToken() != null) {
+            googleAccessTokenStore.save(result.userId(), userInfo.accessToken());
+        }
 
         return new TokenData(accessToken, refreshToken);
     }
@@ -67,7 +84,15 @@ public class AuthFacade {
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
 
 
-        String newAccessToken = jwtProvider.createAccessToken(userId, user.getProfileImage(), false, user.getPlan());
+        Optional<Channel> channelOpt = channelRepository.findByUser_Id(userId);
+        String newAccessToken = jwtProvider.createAccessToken(
+                userId,
+                user.getProfileImage(),
+                user.getPlan(),
+                channelOpt.map(Channel::getName).orElse(null),
+                channelOpt.map(Channel::getProfileImage).orElse(null),
+                user.isOnboardingCompleted()
+        );
         String newRefreshToken = jwtProvider.createRefreshToken(userId);
         refreshTokenStore.save(userId, newRefreshToken);
 

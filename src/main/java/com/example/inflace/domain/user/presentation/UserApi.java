@@ -35,6 +35,13 @@ public interface UserApi {
     BaseResponse<UserChannelMainResponse> getUserChannelMain(@AuthenticationPrincipal AuthUser authUser);
 
     @Operation(
+            summary = "유튜브 채널 연동",
+            description = "구글 OAuth 코드를 통해 유튜브 채널 정보를 가져와 유저에 저장합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.YOUTUBE_TOKEN_NOT_FOUND, ErrorDefine.YOUTUBE_CHANNEL_NOT_FOUND})
+    BaseResponse<YoutubeChannelLinkResponse> linkYoutubeChannel(@AuthenticationPrincipal AuthUser authUser);
+
+    @Operation(
             summary = "회원 탈퇴",
             description = "현재 로그인된 유저를 영구 삭제합니다 (복구 불가)"
     )

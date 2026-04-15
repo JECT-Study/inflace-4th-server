@@ -38,16 +38,25 @@ public class Channel extends BaseEntity {
     @Column(name = "channel_handle")
     private String channelHandle;
 
+    @Column(name = "profile_image")
+    private String profileImage;
+
     @Column(name = "entered_at")
     private LocalDateTime enteredAt;
 
     @Builder
-    public Channel(User user, String name, String youtubeChannelId, String[] category, String channelHandle, LocalDateTime enteredAt) {
+    public Channel(User user, String name, String youtubeChannelId, String[] category, String channelHandle, String profileImage, LocalDateTime enteredAt) {
         this.user = user;
         this.name = name;
         this.youtubeChannelId = youtubeChannelId;
         this.category = category;
         this.channelHandle = channelHandle;
+        this.profileImage = profileImage;
         this.enteredAt = enteredAt;
+    }
+
+    public void updateProfile(String name, String profileImage) {
+        this.name = name;
+        this.profileImage = profileImage;
     }
 }

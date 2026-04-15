@@ -29,6 +29,8 @@ public enum ErrorDefine {
     CHANNEL_STATS_NOT_FOUND("CHANNEL_STATS_404", HttpStatus.NOT_FOUND, " Not Found: Channel Stats not found"),
 
     //ETC
+    YOUTUBE_TOKEN_NOT_FOUND("YOUTUBE_401", HttpStatus.UNAUTHORIZED, "Unauthorized: YouTube access token not found. Please link your YouTube account first"),
+    YOUTUBE_CHANNEL_NOT_FOUND("YOUTUBE_404", HttpStatus.NOT_FOUND, "Not Found: YouTube channel not found"),
     YOUTUBE_API_ERROR("YOUTUBE_500", HttpStatus.INTERNAL_SERVER_ERROR, "YouTube API Error");
 
     private final String errorCode;

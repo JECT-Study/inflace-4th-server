@@ -18,11 +18,13 @@ public class JwtProvider {
 
     private static final String CLAIM_PROFILE_IMAGE = "profileImage";
     private static final String CLAIM_PLAN = "plan";
-    private static final String CLAIM_IS_NEW_USER = "isNewUser";
+    private static final String CLAIM_YOUTUBE_CHANNEL_NAME = "youtubeChannelName";
+    private static final String CLAIM_YOUTUBE_CHANNEL_PROFILE_IMAGE = "youtubeChannelProfileImage";
+    private static final String CLAIM_IS_ONBOARDING_COMPLETED = "isOnboardingCompleted";
 
     private final JwtProperties jwtProperties;
 
-    public String createAccessToken(long userId, String profileImage, boolean isNewUser, Plan plan) {
+    public String createAccessToken(long userId, String profileImage, Plan plan, String youtubeChannelName, String youtubeChannelProfileImage, boolean isOnboardingCompleted) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(String.valueOf(userId))
@@ -30,7 +32,9 @@ public class JwtProvider {
                 .expiration(new Date(now.getTime() + jwtProperties.expiration()))
                 .claim(CLAIM_PROFILE_IMAGE, profileImage)
                 .claim(CLAIM_PLAN, plan)
-                .claim(CLAIM_IS_NEW_USER, isNewUser)
+                .claim(CLAIM_YOUTUBE_CHANNEL_NAME, youtubeChannelName)
+                .claim(CLAIM_YOUTUBE_CHANNEL_PROFILE_IMAGE, youtubeChannelProfileImage)
+                .claim(CLAIM_IS_ONBOARDING_COMPLETED, isOnboardingCompleted)
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -57,8 +61,16 @@ public class JwtProvider {
         return parseClaims(token).get(CLAIM_PLAN, String.class);
     }
 
-    public boolean getIsNewUser(String token) {
-        Boolean value = parseClaims(token).get(CLAIM_IS_NEW_USER, Boolean.class);
+    public String getYoutubeChannelName(String token) {
+        return parseClaims(token).get(CLAIM_YOUTUBE_CHANNEL_NAME, String.class);
+    }
+
+    public String getYoutubeChannelProfileImage(String token) {
+        return parseClaims(token).get(CLAIM_YOUTUBE_CHANNEL_PROFILE_IMAGE, String.class);
+    }
+
+    public boolean getIsOnboardingCompleted(String token) {
+        Boolean value = parseClaims(token).get(CLAIM_IS_ONBOARDING_COMPLETED, Boolean.class);
         return Boolean.TRUE.equals(value);
     }
 

@@ -9,14 +9,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class GoogleAccessTokenStore {
-    private final Map<String, String> tokenStore = new ConcurrentHashMap<>();
+    private final Map<Long, String> tokenStore = new ConcurrentHashMap<>();
 
-    public void save(String googleId, String accessToken) {
-        tokenStore.put(googleId, accessToken);
+    public void save(long userId, String accessToken) {
+        tokenStore.put(userId, accessToken);
     }
 
-    public String getAccessToken(String googleId) {
-        String token = tokenStore.get(googleId);
+    public String getAccessToken(long userId) {
+        String token = tokenStore.get(userId);
         if (token == null) {
             throw new ApiException(ErrorDefine.INVALID_HEADER_ERROR);
         }

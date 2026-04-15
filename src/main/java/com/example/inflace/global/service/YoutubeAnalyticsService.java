@@ -22,9 +22,9 @@ public class YoutubeAnalyticsService {
 
     private final YoutubeAnalyticsApiClient youtubeAnalyticsApiClient;
 
-    public Map<String, Object> query(String googleId, YoutubeAnalyticsVideoRequest request) {
+    public Map<String, Object> query(long userId, YoutubeAnalyticsVideoRequest request) {
 
-        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
+        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(userId, request);
 
         if (response.rows() == null || response.rows().isEmpty()) {
             return Map.of();

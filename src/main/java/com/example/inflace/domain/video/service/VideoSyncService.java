@@ -1,7 +1,5 @@
 package com.example.inflace.domain.video.service;
 
-import com.example.inflace.domain.user.domain.entity.User;
-import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.video.domain.AudienceRetention;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoStats;
@@ -50,7 +48,6 @@ public class VideoSyncService {
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
     private final AudienceRetentionRepository audienceRetentionRepository;
-    private final UserReadRepository userReadRepository;
     private final YoutubeAnalyticsService youtubeAnalyticsService;
     private final YoutubeAnalyticsApiClient youtubeAnalyticsApiClient;
 
@@ -62,7 +59,6 @@ public class VideoSyncService {
     @Transactional
     public void syncStats(long userId, long videoId) {
         Video video = findVideoWithOwnership(userId, videoId);
-        String googleId = getGoogleId(userId);
 
         YoutubeAnalyticsVideoRequest request = new YoutubeAnalyticsVideoRequest(
                 video.getCreatedAt().toLocalDate(),
@@ -72,7 +68,7 @@ public class VideoSyncService {
                 "video"
         );
 
-        Map<String, Object> data = youtubeAnalyticsService.query(googleId, request);
+        Map<String, Object> data = youtubeAnalyticsService.query(userId, request);
 
         if (data.isEmpty()) {
             return;
@@ -115,7 +111,6 @@ public class VideoSyncService {
     @Transactional
     public void syncRetention(long userId, long videoId) {
         Video video = findVideoWithOwnership(userId, videoId);
-        String googleId = getGoogleId(userId);
 
         YoutubeAnalyticsVideoRequest request = new YoutubeAnalyticsVideoRequest(
                 video.getCreatedAt().toLocalDate(),
@@ -125,7 +120,7 @@ public class VideoSyncService {
                 "elapsedVideoTimeRatio"
         );
 
-        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
+        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(userId, request);
 
         if (response.rows() == null || response.rows().size() != 100) {
             throw new ApiException(ErrorDefine.RETENTION_INVALID);
@@ -167,7 +162,6 @@ public class VideoSyncService {
     @Transactional
     public void syncUnsubscribedStats(long userId, long videoId) {
         Video video = findVideoWithOwnership(userId, videoId);
-        String googleId = getGoogleId(userId);
 
         Optional<VideoStats> existing = videoStatsRepository.findByVideo(video);
         if (existing.isEmpty()) {
@@ -182,7 +176,7 @@ public class VideoSyncService {
                 "subscribedStatus"
         );
 
-        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
+        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(userId, request);
 
         log.info("columnHeaders: {}", response.columnHeaders());
         log.info("rows: {}", response.rows());
@@ -214,12 +208,6 @@ public class VideoSyncService {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
         return video;
-    }
-
-    private String getGoogleId(long userId) {
-        User user = userReadRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
-        return user.getProviderId();
     }
 
     private Map<String, Integer> buildIndexMap(List<YoutubeAnalyticsVideoResponse.ColumnHeader> headers) {
