@@ -25,6 +25,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -106,17 +109,51 @@ public class UserService {
         YoutubeDataChannelResponse.Item item = channelResponse.items().get(0);
         String channelName = item.snippet().title();
         String profileImage = item.snippet().thumbnails().high().url();
+        String youtubeChannelId = item.id();
+        String channelHandle = item.snippet().customUrl();
+        LocalDateTime enteredAt = item.snippet().publishedAt() != null
+                ? LocalDateTime.ofInstant(Instant.parse(item.snippet().publishedAt()), ZoneOffset.UTC)
+                : null;
+        Long subscriberCount = item.statistics() != null && item.statistics().subscriberCount() != null
+                ? Long.parseLong(item.statistics().subscriberCount())
+                : null;
+        Long totalViewCount = item.statistics() != null && item.statistics().viewCount() != null
+                ? Long.parseLong(item.statistics().viewCount())
+                : null;
+        String[] categories = item.topicDetails() != null && item.topicDetails().topicCategories() != null
+                ? item.topicDetails().topicCategories().stream()
+                        .map(url -> url.substring(url.lastIndexOf('/') + 1).replace('_', ' '))
+                        .toArray(String[]::new)
+                : null;
 
         Optional<Channel> existingChannel = channelRepository.findByUser_Id(userId);
+        Channel channel;
         if (existingChannel.isPresent()) {
-            existingChannel.get().updateProfile(channelName, profileImage);
+            channel = existingChannel.get();
+            channel.updateAll(channelName, profileImage, youtubeChannelId, channelHandle, categories, enteredAt);
         } else {
             User user = userReadRepository.findById(userId)
                     .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
-            channelRepository.save(Channel.builder()
+            channel = channelRepository.save(Channel.builder()
                     .user(user)
                     .name(channelName)
                     .profileImage(profileImage)
+                    .youtubeChannelId(youtubeChannelId)
+                    .channelHandle(channelHandle)
+                    .category(categories)
+                    .enteredAt(enteredAt)
+                    .build());
+        }
+
+        Optional<ChannelStats> existingStats = channelStatsRepository.findByChannel_Id(channel.getId());
+        if (existingStats.isPresent()) {
+            existingStats.get().updateBasicStats(subscriberCount, totalViewCount, LocalDateTime.now());
+        } else {
+            channelStatsRepository.save(ChannelStats.builder()
+                    .channel(channel)
+                    .subscriberCount(subscriberCount)
+                    .totalViewCount(totalViewCount)
+                    .collectedAt(LocalDateTime.now())
                     .build());
         }
 

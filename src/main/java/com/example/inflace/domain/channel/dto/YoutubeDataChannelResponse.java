@@ -8,10 +8,15 @@ public record YoutubeDataChannelResponse(
     public record Item(
             String id,
             Snippet snippet,
-            Statistics statistics
+            Statistics statistics,
+            TopicDetails topicDetails
+    ){}
+    public record TopicDetails(
+            List<String> topicCategories
     ){}
     public record Snippet(
             String title,
+            String customUrl,
             String publishedAt,
             String country,
             Thumbnails thumbnails

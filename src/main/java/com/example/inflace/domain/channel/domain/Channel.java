@@ -59,4 +59,13 @@ public class Channel extends BaseEntity {
         this.name = name;
         this.profileImage = profileImage;
     }
+
+    public void updateAll(String name, String profileImage, String youtubeChannelId, String channelHandle, String[] category, LocalDateTime enteredAt) {
+        this.name = name;
+        this.profileImage = profileImage;
+        this.youtubeChannelId = youtubeChannelId;
+        this.channelHandle = channelHandle;
+        this.category = category;
+        this.enteredAt = enteredAt;
+    }
 }

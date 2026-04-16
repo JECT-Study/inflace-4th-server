@@ -67,4 +67,10 @@ public class ChannelStats extends BaseEntity {
         this.audienceCountry = audienceCountry;
         this.collectedAt = collectedAt;
     }
+
+    public void updateBasicStats(Long subscriberCount, Long totalViewCount, LocalDateTime collectedAt) {
+        this.subscriberCount = subscriberCount;
+        this.totalViewCount = totalViewCount;
+        this.collectedAt = collectedAt;
+    }
 }

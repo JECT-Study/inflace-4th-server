@@ -56,7 +56,7 @@ public class YoutubeDataApiClient {
         URI uri = UriComponentsBuilder
                 .fromUriString(youtubeProperties.dataApi().baseUrl())
                 .path(CHANNELS_PATH)
-                .queryParam("part", "snippet")
+                .queryParam("part", "snippet,statistics,topicDetails")
                 .queryParam("mine", "true")
                 .build()
                 .toUri();
