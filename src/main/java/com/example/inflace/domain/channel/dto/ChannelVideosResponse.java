@@ -14,7 +14,9 @@ public record ChannelVideosResponse(
             LocalDateTime publishedAt,
             Long viewCount,
             Long likeCount,
-            Long commentCount
+            Long commentCount,
+            Double duration,
+            Boolean isShort
     ) {
     }
 
