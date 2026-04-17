@@ -1,16 +1,16 @@
 spring:
-  config:
-    import: optional:file:.env[.properties]
+  profiles:
+    default: local
+    active: local
   application:
     name: inflace
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: update
-
+      ddl-auto: validate
+  flyway:
+    baseline-on-migrate: true
+    out-of-order: true
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -22,10 +22,6 @@ google:
   client-id: ${GOOGLE_CLIENT_ID}
   client-secret: ${GOOGLE_CLIENT_SECRET}
   redirect-uri: ${GOOGLE_REDIRECT_URI}
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
 
 youtube:
   data-api:
