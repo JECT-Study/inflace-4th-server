@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.11'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.google.cloud.tools.jib' version '3.4.4'
 }
 
 group = 'com.example'
@@ -41,10 +42,68 @@ dependencies {
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
 
+    // flyway
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
+    // docker-compose.yaml
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+
     // jsonb를 사용하기 위해 추가
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.15.2'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+def githubSha = System.getenv('GITHUB_SHA')
+def dockerhubUsername = System.getenv('DOCKERHUB_USERNAME')
+def dockerhubToken = System.getenv('DOCKERHUB_TOKEN')
+
+jib {
+    from {
+        image = 'eclipse-temurin:25-jre'
+        platforms {
+            platform {
+                architecture = 'arm64'
+                os = 'linux'
+            }
+        }
+    }
+
+    to {
+        image = 'youcastle/inflace'
+        tags = (githubSha ? ['latest', githubSha] : ['latest']) as Set
+
+        if (dockerhubUsername && dockerhubToken) {
+            auth {
+                username = dockerhubUsername
+                password = dockerhubToken
+            }
+        }
+    }
+
+    container {
+        ports = ['8080']
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+        jvmFlags = [
+                '-XX:MaxRAMPercentage=80.0',
+                '-Duser.timezone=Asia/Seoul'
+        ]
+        environment = [
+                'TZ': 'Asia/Seoul'
+        ]
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.name.toLowerCase().contains('jib') }) {
+        if (!githubSha) {
+            throw new GradleException('GITHUB_SHA is required for jib task')
+        }
+        if (!dockerhubUsername || !dockerhubToken) {
+            throw new GradleException('DOCKERHUB_USERNAME and DOCKERHUB_TOKEN are required for jib task')
+        }
+    }
 }
