@@ -1,0 +1,32 @@
+version: "3.9" # Docker Compose 파일 버전
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: inflace-postgres-17
+    restart: always
+    environment:
+      POSTGRES_USER: inflace
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: inflace
+    ports:
+      - "15500:5432"
+    volumes:
+      - ./docker/postgres_data:/var/lib/postgresql/data
+    networks:
+      - home_network
+
+  valkey:
+    image: 'bitnami/valkey:latest'
+    restart: always
+    ports:
+      - '15501:6379'
+    environment:
+      - VALKEY_PASSWORD=password
+    volumes:
+      - ./docker/valkey_data:/bitnami/valkey/data
+    networks:
+      - home_network
+
+networks:
+  home_network:
