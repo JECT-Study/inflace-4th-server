@@ -8,12 +8,15 @@ public record ChannelVideoRow(
         String title,
         String thumbnailUrl,
         LocalDateTime publishedAt,
+        Double duration,
+        Boolean isShort,
         Long viewCount,
         Long likeCount,
         Long commentCount,
         Double ctr,
         Double vph,
         Double outlierScore
+
 ) {
     public ChannelVideosResponse.ChannelVideoItem toItem() {
         return new ChannelVideosResponse.ChannelVideoItem(
@@ -23,7 +26,9 @@ public record ChannelVideoRow(
                 publishedAt,
                 viewCount,
                 likeCount,
-                commentCount
+                commentCount,
+                duration,
+                isShort
         );
     }
 
