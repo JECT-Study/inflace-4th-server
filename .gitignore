@@ -23,3 +23,7 @@
 # claude
 .claude/
 CLAUDE.md
+
+### Docker Data ###
+docker/valkey_data/**
+docker/postgres_data/**
