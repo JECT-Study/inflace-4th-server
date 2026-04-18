@@ -22,7 +22,7 @@ public class YoutubeLoginStrategy implements OAuthLoginStrategy {
     public OAuthUserInfo getUserInfo(String code) {
         GoogleTokenResponse token = googleApiClient.getToken(code, youtubeProperties.oauth().redirectUri());
         GoogleUserInfoResponse userInfo = googleApiClient.getUserInfo(token.accessToken());
-        googleAccessTokenStore.save(userInfo.email(), token.accessToken());
+        googleAccessTokenStore.save(userInfo.email(), token.accessToken(), token.expiresIn());
 
         return new OAuthUserInfo(userInfo.sub(), userInfo.name(), userInfo.email(), userInfo.picture(), Plan.FREE);
     }
