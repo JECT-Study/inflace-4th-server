@@ -11,3 +11,18 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
+
+redis:
+  host: ${INFLACE_VALKEY_URL}
+  port: ${INFLACE_VALKEY_PORT}
+  password: ${INFLACE_VALKEY_PASSWORD:}
+  database: 0
+
+cookie:
+  same-site: None
+  secure: true
+
+cors:
+  allowed:
+    origins:
+      - https://inflace.site
