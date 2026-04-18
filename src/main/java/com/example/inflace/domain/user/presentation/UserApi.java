@@ -17,7 +17,7 @@ public interface UserApi {
             summary = "온보딩",
             description = "유저 역할과 필요 항목을 저장합니다."
     )
-    ResponseEntity<BaseResponse> onboarding(@AuthenticationPrincipal AuthUser authUser,
+    BaseResponse<Void> onboarding(@AuthenticationPrincipal AuthUser authUser,
                                             @RequestBody OnboardingRequest request);
 
     @Operation(
