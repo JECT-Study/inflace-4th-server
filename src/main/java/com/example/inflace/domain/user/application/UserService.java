@@ -17,21 +17,28 @@ import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
+import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoRequest;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.config.JwtProvider;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.service.YoutubeAnalyticsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -44,6 +51,7 @@ public class UserService {
     private final VideoRepository videoRepository;
     private final GoogleAccessTokenStore googleAccessTokenStore;
     private final YoutubeDataApiClient youtubeDataApiClient;
+    private final YoutubeAnalyticsService youtubeAnalyticsService;
     private final JwtProvider jwtProvider;
 
     @Transactional
@@ -156,6 +164,96 @@ public class UserService {
                     .collectedAt(LocalDateTime.now())
                     .build());
         }
+
+        // Analytics API로 추가 채널 통계 수집 (각 항목 독립 수집)
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(28);
+
+        Long subscriberViewCount = null;
+        Double avgEngagementRate = null;
+        Map<String, Double> audienceGender = null;
+        Map<String, Double> audienceAge = null;
+        Map<String, Double> audienceCountry = null;
+
+        try {
+            Map<String, Object> subscriberViewData = youtubeAnalyticsService.query(userId,
+                    new YoutubeAnalyticsVideoRequest(startDate, endDate,
+                            List.of("views"), null, null, "subscribedStatus==SUBSCRIBED"));
+            if (!subscriberViewData.isEmpty()) {
+                subscriberViewCount = ((Number) subscriberViewData.get("views")).longValue();
+            }
+        } catch (Exception e) {
+            log.warn("구독자 조회수 수집 실패 (데이터 부족 또는 API 오류): userId={}, error={}", userId, e.getMessage());
+        }
+
+        try {
+            Map<String, Object> engagementData = youtubeAnalyticsService.query(userId,
+                    new YoutubeAnalyticsVideoRequest(startDate, endDate,
+                            List.of("views", "likes", "comments", "shares"), null, null, null));
+            if (!engagementData.isEmpty()) {
+                double views = ((Number) engagementData.get("views")).doubleValue();
+                double likes = ((Number) engagementData.getOrDefault("likes", 0)).doubleValue();
+                double comments = ((Number) engagementData.getOrDefault("comments", 0)).doubleValue();
+                double shares = ((Number) engagementData.getOrDefault("shares", 0)).doubleValue();
+                if (views > 0) {
+                    avgEngagementRate = (likes + comments + shares) / views * 100;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("평균 참여율 수집 실패 (데이터 부족 또는 API 오류): userId={}, error={}", userId, e.getMessage());
+        }
+
+        try {
+            List<Map<String, Object>> genderRows = youtubeAnalyticsService.queryAllRows(userId,
+                    new YoutubeAnalyticsVideoRequest(startDate, endDate,
+                            List.of("viewerPercentage"), null, "gender", null));
+            if (!genderRows.isEmpty()) {
+                Map<String, Double> genderMap = new HashMap<>();
+                for (Map<String, Object> row : genderRows) {
+                    genderMap.put((String) row.get("gender"),
+                            ((Number) row.get("viewerPercentage")).doubleValue());
+                }
+                audienceGender = genderMap;
+            }
+        } catch (Exception e) {
+            log.warn("성별 분포 수집 실패 (시청자 데이터 부족 또는 API 오류): userId={}, error={}", userId, e.getMessage());
+        }
+
+        try {
+            List<Map<String, Object>> ageRows = youtubeAnalyticsService.queryAllRows(userId,
+                    new YoutubeAnalyticsVideoRequest(startDate, endDate,
+                            List.of("viewerPercentage"), null, "ageGroup", null));
+            if (!ageRows.isEmpty()) {
+                Map<String, Double> ageMap = new HashMap<>();
+                for (Map<String, Object> row : ageRows) {
+                    ageMap.put((String) row.get("ageGroup"),
+                            ((Number) row.get("viewerPercentage")).doubleValue());
+                }
+                audienceAge = ageMap;
+            }
+        } catch (Exception e) {
+            log.warn("연령 분포 수집 실패 (시청자 데이터 부족 또는 API 오류): userId={}, error={}", userId, e.getMessage());
+        }
+
+        try {
+            List<Map<String, Object>> countryRows = youtubeAnalyticsService.queryAllRows(userId,
+                    new YoutubeAnalyticsVideoRequest(startDate, endDate,
+                            List.of("views"), null, "country", null));
+            if (!countryRows.isEmpty()) {
+                Map<String, Double> countryMap = new HashMap<>();
+                for (Map<String, Object> row : countryRows) {
+                    countryMap.put((String) row.get("country"),
+                            ((Number) row.get("views")).doubleValue());
+                }
+                audienceCountry = countryMap;
+            }
+        } catch (Exception e) {
+            log.warn("국가 분포 수집 실패 (시청자 데이터 부족 또는 API 오류): userId={}, error={}", userId, e.getMessage());
+        }
+
+        ChannelStats stats = channelStatsRepository.findByChannel_Id(channel.getId())
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+        stats.updateAnalyticsStats(subscriberViewCount, avgEngagementRate, audienceGender, audienceAge, audienceCountry);
 
         User updatedUser = userReadRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));

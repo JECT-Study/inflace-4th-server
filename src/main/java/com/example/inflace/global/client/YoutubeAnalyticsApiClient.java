@@ -41,15 +41,22 @@ public class YoutubeAnalyticsApiClient {
             builder.queryParam("dimensions", request.dimensions());
         }
 
-        if (request.youtubeVideoId() != null) {
-            String filterValue = "video==" + request.youtubeVideoId();
-
-            // 시청 유지율(elapsedVideoTimeRatio) 조회 시 필수 필터 추가
-            if ("elapsedVideoTimeRatio".equals(request.dimensions())) {
-                filterValue += ";audienceType==ORGANIC";
+        if (request.youtubeVideoId() != null || request.filters() != null) {
+            StringBuilder filterBuilder = new StringBuilder();
+            if (request.youtubeVideoId() != null) {
+                filterBuilder.append("video==").append(request.youtubeVideoId());
+                // 시청 유지율(elapsedVideoTimeRatio) 조회 시 필수 필터 추가
+                if ("elapsedVideoTimeRatio".equals(request.dimensions())) {
+                    filterBuilder.append(";audienceType==ORGANIC");
+                }
             }
-
-            builder.queryParam("filters", filterValue);
+            if (request.filters() != null) {
+                if (!filterBuilder.isEmpty()) {
+                    filterBuilder.append(";");
+                }
+                filterBuilder.append(request.filters());
+            }
+            builder.queryParam("filters", filterBuilder.toString());
         }
 
         URI uri = builder.build().toUri();

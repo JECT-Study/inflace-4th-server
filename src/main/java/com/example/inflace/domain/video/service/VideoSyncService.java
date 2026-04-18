@@ -65,7 +65,8 @@ public class VideoSyncService {
                 LocalDate.now().minusDays(3),
                 STATS_METRICS,
                 video.getYoutubeVideoId(),
-                "video"
+                "video",
+                null
         );
 
         Map<String, Object> data = youtubeAnalyticsService.query(userId, request);
@@ -117,7 +118,8 @@ public class VideoSyncService {
                 LocalDate.now().minusDays(3),
                 RETENTION_METRICS,
                 video.getYoutubeVideoId(),
-                "elapsedVideoTimeRatio"
+                "elapsedVideoTimeRatio",
+                null
         );
 
         YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(userId, request);
@@ -173,7 +175,8 @@ public class VideoSyncService {
                 LocalDate.now().minusDays(3),
                 UNSUBSCRIBED_METRICS,
                 video.getYoutubeVideoId(),
-                "subscribedStatus"
+                "subscribedStatus",
+                null
         );
 
         YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(userId, request);

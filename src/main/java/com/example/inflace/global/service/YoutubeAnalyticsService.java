@@ -54,4 +54,27 @@ public class YoutubeAnalyticsService {
                         e -> row.get(e.getValue())
                 ));
     }
+
+    public List<Map<String, Object>> queryAllRows(long userId, YoutubeAnalyticsVideoRequest request) {
+        YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(userId, request);
+
+        if (response.rows() == null || response.rows().isEmpty()) {
+            return List.of();
+        }
+
+        Map<String, Integer> columnIndex = IntStream.range(0, response.columnHeaders().size())
+                .boxed()
+                .collect(Collectors.toMap(
+                        i -> response.columnHeaders().get(i).name(),
+                        i -> i
+                ));
+
+        return response.rows().stream()
+                .map(row -> columnIndex.entrySet().stream()
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> row.get(e.getValue())
+                        )))
+                .collect(Collectors.toList());
+    }
 }

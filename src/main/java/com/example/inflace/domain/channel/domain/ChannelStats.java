@@ -73,4 +73,18 @@ public class ChannelStats extends BaseEntity {
         this.totalViewCount = totalViewCount;
         this.collectedAt = collectedAt;
     }
+
+    public void updateAnalyticsStats(
+            Long subscriberViewCount,
+            Double avgEngagementRate,
+            Map<String, Double> audienceGender,
+            Map<String, Double> audienceAge,
+            Map<String, Double> audienceCountry
+    ) {
+        this.subscriberViewCount = subscriberViewCount;
+        this.avgEngagementRate = avgEngagementRate;
+        this.audienceGender = audienceGender;
+        this.audienceAge = audienceAge;
+        this.audienceCountry = audienceCountry;
+    }
 }
