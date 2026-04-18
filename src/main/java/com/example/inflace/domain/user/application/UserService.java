@@ -14,6 +14,7 @@ import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
 import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.repository.VideoRepository;
+import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import lombok.RequiredArgsConstructor;
@@ -47,12 +48,12 @@ public class UserService {
         userCommandRepository.deleteUser(userId);
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public YoutubeLinkedResponse isYoutubeLinked(long userId) {
         return new YoutubeLinkedResponse(channelRepository.existsByUser_Id(userId));
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public UserChannelMainResponse getMainChannelInfo(long userId) {
         User user = userReadRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));

@@ -28,6 +28,7 @@ import com.example.inflace.domain.video.dto.VideoType;
 import com.example.inflace.domain.video.repository.VideoQueryRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
+import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -51,7 +52,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ChannelService {
 
     private final YoutubeDataApiClient youtubeDataApiClient;
@@ -62,7 +62,7 @@ public class ChannelService {
     private final VideoStatsRepository videoStatsRepository;
     private final ChannelStatsHistoryRepository channelStatsHistoryRepository;
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelTopVideosResponse getTopVideos(Long channelId, String contentType) {
         validateChannelExists(channelId);
 
@@ -84,7 +84,7 @@ public class ChannelService {
         return new ChannelTopVideosResponse(items);
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelEngagementRateResponse getEngagementRateVideos(Long channelId) {
         validateChannelExists(channelId);
 
@@ -99,7 +99,7 @@ public class ChannelService {
         return new ChannelEngagementRateResponse(new ChannelEngagementRateResponse.Summary(longFormAverage, shortFormAverage), items);
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelNewSubscriberResponse getNewSubscriberVideos(Long channelId) {
         validateChannelExists(channelId);
 
@@ -121,7 +121,7 @@ public class ChannelService {
         return new ChannelNewSubscriberResponse(items);
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelKpiResponse getChannelKpi(Long channelId) {
         validateChannelExists(channelId);
 
@@ -143,7 +143,7 @@ public class ChannelService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelTopMainVideosResponse getMainTopVideos(long userId, Long channelId) {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
@@ -181,7 +181,7 @@ public class ChannelService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelSubscriberDistributionResponse getSubscriberDistribution(Long channelId) {
         validateChannelExists(channelId);
 
@@ -192,7 +192,7 @@ public class ChannelService {
     }
 
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelVideosResponse getChannelVideos(
             Long channelId,
             String keyword,
@@ -231,7 +231,7 @@ public class ChannelService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ChannelSubscriberTrendResponse getSubscriberTrend(Long channelId, String rangeValue) {
         validateChannelExists(channelId);
 

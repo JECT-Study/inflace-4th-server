@@ -7,6 +7,7 @@ import com.example.inflace.domain.video.dto.*;
 import com.example.inflace.domain.video.repository.AudienceRetentionRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
+import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +18,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class VideoService {
 
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
     private final AudienceRetentionRepository audienceRetentionRepository;
 
+    @ReadOnlyTransactional
     public VideoMetaResponse getVideoMeta(long userId, Long videoId) {
         // 영상 목록에서 클릭 후 이동, 외부 API 필요하지 않음
         Video video = videoRepository.findById(videoId)
@@ -35,6 +36,7 @@ public class VideoService {
         return VideoMetaResponse.from(video);
     }
 
+    @ReadOnlyTransactional
     public VideoStatsResponse getVideoStats(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
@@ -48,6 +50,7 @@ public class VideoService {
         return VideoStatsResponse.from(videoStats, 0L, 0L);
     }
 
+    @ReadOnlyTransactional
     public AudienceRetentionResponse getRetention(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
@@ -64,6 +67,7 @@ public class VideoService {
         return AudienceRetentionResponse.from(retentionList, duration);
     }
 
+    @ReadOnlyTransactional
     public DropPointsResponse getDropPoints(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
@@ -86,6 +90,7 @@ public class VideoService {
         return DropPointsResponse.from(retentionList, duration);
     }
 
+    @ReadOnlyTransactional
     public RetentionSummaryResponse getRetentionSummary(long userId, Long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));

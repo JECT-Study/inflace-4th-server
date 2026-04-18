@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: inflace
+  datasource:
+    url: jdbc:postgresql://localhost:15500/inflace
+    username: inflace
+    password: password
+  docker:
+    compose:
+      file: spring-boot-docker-compose.yml
+      lifecycle-management: start_only
+jwt:
+  secret: temp-secret-key-for-local-dev-1234567890-abcdef
+  expiration: 7200000
