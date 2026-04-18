@@ -1,14 +1,14 @@
 package com.example.inflace.domain.video.domain;
 
 import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.global.entity.BaseEntity;
-import io.hypersistence.utils.hibernate.type.array.StringArrayType;
+import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "video")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Video extends BaseEntity {
+public class Video extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "video_id")
@@ -42,11 +42,11 @@ public class Video extends BaseEntity {
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
-    @Type(value = StringArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "hashtags", columnDefinition = "text[]")
     private String[] hashtags;
 
-    @Type(value = StringArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "category", columnDefinition = "text[]")
     private String[] category;
 
