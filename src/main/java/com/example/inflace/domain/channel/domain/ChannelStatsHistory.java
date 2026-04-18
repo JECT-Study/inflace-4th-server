@@ -1,6 +1,6 @@
 package com.example.inflace.domain.channel.domain;
 
-import com.example.inflace.global.entity.BaseEntity;
+import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "channel_stats_history")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChannelStatsHistory extends BaseEntity {
+public class ChannelStatsHistory extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "channel_stats_history_id")

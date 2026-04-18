@@ -1,6 +1,6 @@
 package com.example.inflace.domain.channel.domain;
 
-import com.example.inflace.global.entity.BaseEntity;
+import com.example.inflace.global.entity.BaseTimeEntity;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -16,7 +16,7 @@ import java.util.Map;
 @Table(name = "channel_stats")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChannelStats extends BaseEntity {
+public class ChannelStats extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "channel_stats_id")
