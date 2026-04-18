@@ -17,19 +17,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        var mapping = registry.addMapping("/**")
-                .allowedMethods("*")
-                .allowedHeaders("*")
-                .exposedHeaders(HttpHeaders.AUTHORIZATION);
-
         List<String> origins = corsAllowedOriginsProperties.getOrigins();
         if (origins == null || origins.isEmpty()) {
-            mapping.allowedOriginPatterns("*");
-            mapping.allowCredentials(false);
-            return;
+            throw new IllegalStateException("cors.allowed.origins must not be empty");
         }
 
-        mapping.allowedOrigins(origins.toArray(String[]::new));
-        mapping.allowCredentials(true);
+        registry.addMapping("/**")
+                .allowedMethods("*")
+                .allowedHeaders("*")
+                .exposedHeaders(HttpHeaders.AUTHORIZATION)
+                .allowedOrigins(origins.toArray(String[]::new))
+                .allowCredentials(true);
     }
 }
