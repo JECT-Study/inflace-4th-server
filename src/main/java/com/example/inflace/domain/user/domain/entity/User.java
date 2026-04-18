@@ -1,29 +1,29 @@
 package com.example.inflace.domain.user.domain.entity;
 
 import com.example.inflace.domain.user.domain.enums.Plan;
+import com.example.inflace.global.entity.SoftDeleteTimeEntity;
+import com.example.inflace.global.util.UuidV7Generator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends SoftDeleteTimeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long id;
+    @Column(name = "user_id", nullable = false, unique = true)
+    private UUID id;
 
     private String name;
 
@@ -36,15 +36,25 @@ public class User {
     private String providerId;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "plan")
     private Plan plan;
 
-    @Builder
-    public User(String name, String profileImage, String email,
-                String providerId, Plan plan) {
-        this.name = name;
-        this.profileImage = profileImage;
-        this.email = email;
-        this.providerId = providerId;
-        this.plan = plan;
+    public static User of(
+            String name,
+            String profileImage,
+            String email,
+            String providerId,
+            Plan plan
+    ) {
+        User user = new User();
+
+        user.id = UuidV7Generator.next();
+        user.name = name;
+        user.profileImage = profileImage;
+        user.email = email;
+        user.providerId = providerId;
+        user.plan = plan;
+
+        return user;
     }
 }

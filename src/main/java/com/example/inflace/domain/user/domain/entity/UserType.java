@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users_type")
+@Table(name = "user_type")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserType {
@@ -17,16 +17,19 @@ public class UserType {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type_name")
-    private UserRole typeName;
+    @Column(name = "role", nullable = false)
+    private UserRole role;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Builder
-    public UserType(UserRole typeName, User user) {
-        this.typeName = typeName;
-        this.user = user;
+    public static UserType of(UserRole role, User user) {
+        UserType userType = new UserType();
+
+        userType.role = role;
+        userType.user = user;
+
+        return userType;
     }
 }

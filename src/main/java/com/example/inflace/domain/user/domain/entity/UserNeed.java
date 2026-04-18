@@ -19,6 +19,7 @@ public class UserNeed {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "need")
     private Need need;
 
     @ManyToOne(fetch = FetchType.LAZY)
