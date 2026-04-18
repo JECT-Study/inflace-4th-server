@@ -50,7 +50,7 @@ public class UserCommandRepository {
 
     public void bulkInsertNeeds(UUID userId, List<Need> needs) {
         jdbcTemplate.batchUpdate(
-                "insert into users_need (user_id, need) values (?, ?)",
+                "insert into user_need (user_id, need) values (?, ?)",
                 needs,
                 needs.size(),
                 (ps, need) -> {

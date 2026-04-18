@@ -21,7 +21,7 @@ public class UserType {
     private UserRole role;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     public static UserType of(UserRole role, User user) {
