@@ -19,7 +19,7 @@ jobs:
             let reviewers = [];
 
             if (branch === 'develop' || branch === 'main') {
-              reviewers = ['youcastle03','HwangRock','sunJ0120'].filter(u => u !== author);
+              reviewers = ['youcastle03','HwangRock','HanYoonSoo'].filter(u => u !== author);
             }
 
             if (reviewers.length > 0) {
