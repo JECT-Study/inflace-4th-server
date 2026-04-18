@@ -1,4 +1,6 @@
 package com.example.inflace.global.config;
 
-public record AuthUser(long userId) {
+import java.util.UUID;
+
+public record AuthUser(UUID userId) {
 }
