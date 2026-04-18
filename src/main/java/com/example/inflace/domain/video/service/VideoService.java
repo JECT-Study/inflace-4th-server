@@ -10,11 +10,13 @@ import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +27,8 @@ public class VideoService {
     private final AudienceRetentionRepository audienceRetentionRepository;
 
     @ReadOnlyTransactional
-    public VideoMetaResponse getVideoMeta(long userId, Long videoId) {
+    public VideoMetaResponse getVideoMeta(Long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         // 영상 목록에서 클릭 후 이동, 외부 API 필요하지 않음
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
@@ -37,7 +40,8 @@ public class VideoService {
     }
 
     @ReadOnlyTransactional
-    public VideoStatsResponse getVideoStats(long userId, Long videoId) {
+    public VideoStatsResponse getVideoStats(Long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
@@ -51,7 +55,8 @@ public class VideoService {
     }
 
     @ReadOnlyTransactional
-    public AudienceRetentionResponse getRetention(long userId, Long videoId) {
+    public AudienceRetentionResponse getRetention(Long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
@@ -68,7 +73,8 @@ public class VideoService {
     }
 
     @ReadOnlyTransactional
-    public DropPointsResponse getDropPoints(long userId, Long videoId) {
+    public DropPointsResponse getDropPoints(Long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
@@ -91,7 +97,8 @@ public class VideoService {
     }
 
     @ReadOnlyTransactional
-    public RetentionSummaryResponse getRetentionSummary(long userId, Long videoId) {
+    public RetentionSummaryResponse getRetentionSummary(Long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
 
@@ -103,8 +110,8 @@ public class VideoService {
         return RetentionSummaryResponse.from(videoStats);
     }
 
-    private void validateVideoOwnership(Video video, long userId) {
-        if (video.getChannel().getUser().getId() != userId) {
+    private void validateVideoOwnership(Video video, UUID userId) {
+        if (!video.getChannel().getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
     }

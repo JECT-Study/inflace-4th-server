@@ -17,12 +17,14 @@ import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -41,22 +43,21 @@ public class UserService {
     }
 
     @Transactional
-    public void withdraw(long userId) {
-        if (!userReadRepository.existsById(userId)) {
-            throw new ApiException(ErrorDefine.USER_NOT_FOUND);
-        }
+    public void withdraw() {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         userCommandRepository.deleteUser(userId);
     }
 
     @ReadOnlyTransactional
-    public YoutubeLinkedResponse isYoutubeLinked(long userId) {
+    public YoutubeLinkedResponse isYoutubeLinked() {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         return new YoutubeLinkedResponse(channelRepository.existsByUser_Id(userId));
     }
 
     @ReadOnlyTransactional
-    public UserChannelMainResponse getMainChannelInfo(long userId) {
-        User user = userReadRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+    public UserChannelMainResponse getMainChannelInfo() {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        User user = userReadRepository.getReferenceById(userId);
 
         Channel channel = channelRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
@@ -84,7 +85,8 @@ public class UserService {
     }
 
     @Transactional
-    public void onboarding(long userId, OnboardingRequest request) {
+    public void onboarding(OnboardingRequest request) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
 
         if (request.role() == null || request.need() == null || request.need().isEmpty()) {
             throw new ApiException(ErrorDefine.ONBOARDING_INVALID_REQUEST);

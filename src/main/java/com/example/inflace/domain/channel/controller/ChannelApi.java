@@ -12,13 +12,11 @@ import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 
-import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -30,7 +28,7 @@ public interface ChannelApi {
             description = "쇼츠/일반 구분 없이 채널의 인기 Top 5 영상을 조회합니다."
     )
     @ApiErrorDefines({ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
-    BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(@AuthenticationPrincipal AuthUser authUser, @PathVariable Long channelId);
+    BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(@PathVariable Long channelId);
 
     @Operation(
             summary = "인기 급상승 영상 Top 5",

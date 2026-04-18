@@ -32,6 +32,7 @@ import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.security.util.SecurityUtils;
 import com.example.inflace.global.util.AnalyticsCalculator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -144,7 +146,8 @@ public class ChannelService {
     }
 
     @ReadOnlyTransactional
-    public ChannelTopMainVideosResponse getMainTopVideos(long userId, Long channelId) {
+    public ChannelTopMainVideosResponse getMainTopVideos(Long channelId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
 
@@ -163,8 +166,8 @@ public class ChannelService {
         return new ChannelTopMainVideosResponse(items);
     }
 
-    private void validateChannelOwnership(Channel channel, long userId) {
-        if (channel.getUser().getId() != userId) {
+    private void validateChannelOwnership(Channel channel, UUID userId) {
+        if (!channel.getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
     }

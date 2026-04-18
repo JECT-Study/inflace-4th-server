@@ -13,6 +13,7 @@ import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.global.client.YoutubeAnalyticsApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.security.util.SecurityUtils;
 import com.example.inflace.global.service.YoutubeAnalyticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -60,7 +62,8 @@ public class VideoSyncService {
      * @param videoId
      */
     @Transactional
-    public void syncStats(long userId, long videoId) {
+    public void syncStats(long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = findVideoWithOwnership(userId, videoId);
         String googleId = getGoogleId(userId);
 
@@ -113,7 +116,8 @@ public class VideoSyncService {
      * @param videoId
      */
     @Transactional
-    public void syncRetention(long userId, long videoId) {
+    public void syncRetention(long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = findVideoWithOwnership(userId, videoId);
         String googleId = getGoogleId(userId);
 
@@ -165,7 +169,8 @@ public class VideoSyncService {
      * @param videoId
      */
     @Transactional
-    public void syncUnsubscribedStats(long userId, long videoId) {
+    public void syncUnsubscribedStats(long videoId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = findVideoWithOwnership(userId, videoId);
         String googleId = getGoogleId(userId);
 
@@ -207,18 +212,17 @@ public class VideoSyncService {
         existing.get().updateUnsubscribed(unsubscribedViewCount);
     }
 
-    private Video findVideoWithOwnership(long userId, long videoId) {
+    private Video findVideoWithOwnership(UUID userId, long videoId) {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_NOT_FOUND));
-        if (video.getChannel().getUser().getId() != userId) {
+        if (!video.getChannel().getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
         return video;
     }
 
-    private String getGoogleId(long userId) {
-        User user = userReadRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+    private String getGoogleId(UUID userId) {
+        User user = userReadRepository.getReferenceById(userId);
         return user.getProviderId();
     }
 

@@ -6,10 +6,8 @@ import com.example.inflace.domain.video.dto.RetentionSummaryResponse;
 import com.example.inflace.domain.video.dto.VideoMetaResponse;
 import com.example.inflace.domain.video.dto.VideoStatsResponse;
 import com.example.inflace.domain.video.service.VideoService;
-import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,51 +19,36 @@ public class VideoController implements VideoApi {
 
     @Override
     @GetMapping("/{videoId}")
-    public BaseResponse<VideoMetaResponse> getVideoMeta(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long videoId
-    ) {
-        VideoMetaResponse response = videoService.getVideoMeta(authUser.userId(), videoId);
+    public BaseResponse<VideoMetaResponse> getVideoMeta(@PathVariable Long videoId) {
+        VideoMetaResponse response = videoService.getVideoMeta(videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/stats")
-    public BaseResponse<VideoStatsResponse> getVideoStats(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long videoId
-    ) {
-        VideoStatsResponse response = videoService.getVideoStats(authUser.userId(), videoId);
+    public BaseResponse<VideoStatsResponse> getVideoStats(@PathVariable Long videoId) {
+        VideoStatsResponse response = videoService.getVideoStats(videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/retention")
-    public BaseResponse<AudienceRetentionResponse> getRetention(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long videoId
-    ) {
-        AudienceRetentionResponse response = videoService.getRetention(authUser.userId(), videoId);
+    public BaseResponse<AudienceRetentionResponse> getRetention(@PathVariable Long videoId) {
+        AudienceRetentionResponse response = videoService.getRetention(videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/retention/drop-points")
-    public BaseResponse<DropPointsResponse> getDropPoints(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long videoId
-    ) {
-        DropPointsResponse response = videoService.getDropPoints(authUser.userId(), videoId);
+    public BaseResponse<DropPointsResponse> getDropPoints(@PathVariable Long videoId) {
+        DropPointsResponse response = videoService.getDropPoints(videoId);
         return new BaseResponse<>(response);
     }
 
     @Override
     @GetMapping("/{videoId}/retention/summary")
-    public BaseResponse<RetentionSummaryResponse> getRetentionSummary(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long videoId
-    ) {
-        RetentionSummaryResponse response = videoService.getRetentionSummary(authUser.userId(), videoId);
+    public BaseResponse<RetentionSummaryResponse> getRetentionSummary(@PathVariable Long videoId) {
+        RetentionSummaryResponse response = videoService.getRetentionSummary(videoId);
         return new BaseResponse<>(response);
     }
 }
