@@ -1,9 +1,13 @@
 package com.example.inflace.domain.user.presentation;
 
 import com.example.inflace.domain.user.application.UserService;
+import com.example.inflace.global.config.AuthUser;
+import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,9 +24,11 @@ public class UserController implements UserApi {
 
     @Override
     @PostMapping("/onboarding")
-    public ResponseEntity<BaseResponse> onboarding(@RequestBody OnboardingRequest request) {
+    public BaseResponse<Void>  onboarding(
+            @RequestBody OnboardingRequest request
+    ) {
         userService.onboarding(request);
-        return ResponseEntity.ok(BaseResponse.success());
+        return BaseResponse.success();
     }
 
     @Override
