@@ -1,4 +1,4 @@
-create table video_stats (
+create table if not exists video_stats (
     video_stats_id bigserial primary key,
     video_id bigint not null,
     view_count bigint,

@@ -1,4 +1,4 @@
-create table user_type (
+create table if not exists user_type (
     id bigserial primary key,
     role varchar(255) not null,
     user_id uuid,

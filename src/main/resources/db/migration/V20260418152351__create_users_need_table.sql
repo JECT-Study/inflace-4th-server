@@ -1,4 +1,4 @@
-create table users_need (
+create table if not exists users_need (
     need_id bigserial primary key,
     need varchar(255),
     user_id uuid,

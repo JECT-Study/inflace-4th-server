@@ -1,4 +1,4 @@
-create table audience_retention (
+create table if not exists audience_retention (
     audience_retention_id bigserial primary key,
     video_id bigint not null,
     time_ratio double precision,

@@ -1,4 +1,4 @@
-create table channel (
+create table if not exists channel (
     channel_id bigserial primary key,
     user_id uuid not null,
     name varchar(255),

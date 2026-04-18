@@ -1,4 +1,4 @@
-create table users (
+create table if not exists users (
     user_id uuid primary key,
     name varchar(255),
     profile_image varchar(255),

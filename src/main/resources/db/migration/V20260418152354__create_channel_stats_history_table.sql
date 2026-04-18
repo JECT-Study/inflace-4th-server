@@ -1,4 +1,4 @@
-create table channel_stats_history (
+create table if not exists channel_stats_history (
     channel_stats_history_id bigserial primary key,
     channel_id bigint not null,
     subscriber_count bigint,
