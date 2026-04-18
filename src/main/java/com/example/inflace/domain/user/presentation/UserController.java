@@ -24,11 +24,11 @@ public class UserController implements UserApi {
 
     @Override
     @PostMapping("/onboarding")
-    public ResponseEntity<BaseResponse> onboarding(
+    public BaseResponse<Void>  onboarding(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody OnboardingRequest request) {
         userService.onboarding(authUser.userId(), request);
-        return ResponseEntity.ok(BaseResponse.success());
+        return BaseResponse.success();
     }
 
     @Override
