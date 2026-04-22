@@ -88,6 +88,7 @@ jib {
     }
 
     container {
+        mainClass = 'com.example.inflace.InflaceApplication'
         ports = ['8080']
         creationTime = 'USE_CURRENT_TIMESTAMP'
         jvmFlags = [
