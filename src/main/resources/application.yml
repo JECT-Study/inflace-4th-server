@@ -1,9 +1,11 @@
 spring:
   profiles:
     default: local
-    active: local
   application:
     name: inflace
+  docker:
+    compose:
+      enabled: false
   jpa:
     open-in-view: false
     hibernate:

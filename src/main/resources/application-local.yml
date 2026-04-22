@@ -7,6 +7,7 @@ spring:
     password: password
   docker:
     compose:
+      enabled: true
       file: spring-boot-docker-compose.yml
       lifecycle-management: start_only
 jwt:
