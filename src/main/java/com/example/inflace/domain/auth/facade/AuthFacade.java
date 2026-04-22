@@ -1,12 +1,12 @@
 package com.example.inflace.domain.auth.facade;
 
 import com.example.inflace.domain.auth.application.OAuthStrategyRouter;
-import com.example.inflace.domain.auth.presentation.dto.OAuthUserInfo;
-import com.example.inflace.domain.auth.presentation.dto.TokenData;
+import com.example.inflace.domain.auth.presentation.dto.*;
 import com.example.inflace.domain.auth.service.AuthTokenRedisService;
+import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.dto.UserChannelDetailsResponse;
+import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.application.UserService;
-import com.example.inflace.domain.user.domain.entity.User;
-import com.example.inflace.domain.user.domain.enums.UserRole;
 import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.user.infra.UserRegistrationResult;
 import com.example.inflace.global.exception.ApiException;
@@ -27,9 +27,10 @@ public class AuthFacade {
     private final UserReadRepository userReadRepository;
     private final JwtProvider jwtProvider;
     private final AuthTokenRedisService authTokenRedisService;
+    private final ChannelRepository channelRepository;
 
-    public TokenData login(String provider, String code) {
-        OAuthUserInfo userInfo = oAuthStrategyRouter.getStrategy(provider).getUserInfo(code);
+    public AuthFacadeLoginResponse login(LoginRequest request) {
+        OAuthUserInfo userInfo = oAuthStrategyRouter.getStrategy(request.provider()).getUserInfo(request.code());
 
         UserRegistrationResult result = userService.registerIfNotExists(
                 userInfo.sub(),
@@ -38,20 +39,21 @@ public class AuthFacade {
                 userInfo.picture(),
                 userInfo.plan()
         );
-        UserRole userType = userReadRepository.findUserRoleByUserId(result.userId()).orElse(null);
 
-        String accessToken = jwtProvider.createAccessToken(
-                result.userId(),
-                userInfo.picture(),
-                result.isNewUser(),
-                userInfo.plan(),
-                userType
-        );
-        String refreshToken = jwtProvider.createRefreshToken(result.userId());
+        UserDetailsResponse userDetails = userService.getUserDetails(result.userId());
+
+        Channel channel = channelRepository.findByUser_Id(userDetails.id()).orElse(null);
+
+        String accessToken = jwtProvider.createAccessToken(userDetails.id(), userDetails.userRoles());
+        String refreshToken = jwtProvider.createRefreshToken(userDetails.id());
 
         authTokenRedisService.saveRefreshToken(result.userId(), refreshToken, jwtProvider.getRefreshTokenExpirationMillis());
 
-        return new TokenData(accessToken, refreshToken);
+        return AuthFacadeLoginResponse.of(
+                new TokenData(accessToken, refreshToken),
+                userDetails,
+                channel != null ? UserChannelDetailsResponse.from(channel) : null
+        );
     }
 
     public void logout(String accessToken) {
@@ -77,17 +79,9 @@ public class AuthFacade {
             throw new ApiException(ErrorDefine.INVALID_REFRESH_TOKEN);
         }
 
-        User user = userReadRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
-        UserRole userType = userReadRepository.findUserRoleByUserId(userId).orElse(null);
+        UserDetailsResponse userDetails = userService.getUserDetails(userId);
 
-        String newAccessToken = jwtProvider.createAccessToken(
-                userId,
-                user.getProfileImage(),
-                false,
-                user.getPlan(),
-                userType
-        );
+        String newAccessToken = jwtProvider.createAccessToken(userDetails.id(), userDetails.userRoles());
         String newRefreshToken = jwtProvider.createRefreshToken(userId);
         authTokenRedisService.saveRefreshToken(userId, newRefreshToken, jwtProvider.getRefreshTokenExpirationMillis());
 

@@ -1,11 +1,13 @@
 package com.example.inflace.domain.user.application;
 
+import com.example.inflace.domain.auth.presentation.dto.UserDetailsResponse;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.user.domain.enums.Plan;
+import com.example.inflace.domain.user.domain.enums.UserRole;
 import com.example.inflace.domain.user.infra.UserCommandRepository;
 import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.user.infra.UserRegistrationResult;
@@ -40,6 +42,15 @@ public class UserService {
     @Transactional
     public UserRegistrationResult registerIfNotExists(String sub, String name, String email, String profileImage, Plan plan) {
         return userCommandRepository.insertIfNotExists(sub, name, email, profileImage, plan);
+    }
+
+    @ReadOnlyTransactional
+    public UserDetailsResponse getUserDetails(UUID userId) {
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+        List<UserRole> userRoles = userReadRepository.findUserRolesByUserId(userId);
+
+        return UserDetailsResponse.of(user, userRoles);
     }
 
     @Transactional
@@ -88,11 +99,7 @@ public class UserService {
     public void onboarding(OnboardingRequest request) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
 
-        if (request.role() == null || request.need() == null || request.need().isEmpty()) {
-            throw new ApiException(ErrorDefine.ONBOARDING_INVALID_REQUEST);
-        }
-
-        userCommandRepository.insertUserType(userId, request.role().name());
-        userCommandRepository.bulkInsertNeeds(userId, request.need());
+        userCommandRepository.insertUserTypes(userId, request.roles());
+        userCommandRepository.insertNeeds(userId, request.needs());
     }
 }

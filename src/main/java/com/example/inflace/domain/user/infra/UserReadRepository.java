@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 public interface UserReadRepository extends JpaRepository<User, UUID> {
@@ -22,5 +22,5 @@ public interface UserReadRepository extends JpaRepository<User, UUID> {
             from UserType ut
             where ut.user.id = :userId
             """)
-    Optional<UserRole> findUserRoleByUserId(@Param("userId") UUID userId);
+    List<UserRole> findUserRolesByUserId(@Param("userId") UUID userId);
 }

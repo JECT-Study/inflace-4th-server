@@ -101,12 +101,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private List<GrantedAuthority> buildAuthorities(String token) {
-        UserRole userRole = jwtProvider.getUserRole(token);
-        if (userRole == null) {
+        List<UserRole> userRoles = jwtProvider.getUserRoles(token);
+        if (userRoles.isEmpty()) {
             return List.of();
         }
 
-        return List.of(new SimpleGrantedAuthority(userRole.toSpringRole()));
+        return userRoles.stream()
+                .map(UserRole::toSpringRole)
+                .map(SimpleGrantedAuthority::new)
+                .map(GrantedAuthority.class::cast)
+                .toList();
     }
 
     private void validateUserExists(UUID userId) {

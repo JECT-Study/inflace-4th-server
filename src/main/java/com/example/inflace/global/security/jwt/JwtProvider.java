@@ -1,6 +1,5 @@
 package com.example.inflace.global.security.jwt;
 
-import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.domain.enums.UserRole;
 import com.example.inflace.global.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
@@ -12,34 +11,35 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class JwtProvider {
 
-    private static final String CLAIM_PROFILE_IMAGE = "profileImage";
-    private static final String CLAIM_PLAN = "plan";
-    private static final String CLAIM_IS_NEW_USER = "isNewUser";
     private static final String CLAIM_USER_TYPE = "userType";
     private static final long REFRESH_TOKEN_EXPIRATION_MILLIS = Duration.ofDays(14).toMillis();
 
     private final JwtProperties jwtProperties;
 
-    public String createAccessToken(UUID userId, String profileImage, boolean isNewUser, Plan plan, UserRole userType) {
+    public String createAccessToken(UUID userId, List<UserRole> userRoles) {
         Date now = new Date();
         var builder = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + jwtProperties.expiration()))
-                .claim(CLAIM_PROFILE_IMAGE, profileImage)
-                .claim(CLAIM_PLAN, plan)
-                .claim(CLAIM_IS_NEW_USER, isNewUser)
                 .signWith(getSigningKey());
 
-        if (userType != null) {
-            builder.claim(CLAIM_USER_TYPE, userType.name());
+        if (userRoles != null && !userRoles.isEmpty()) {
+            builder.claim(
+                    CLAIM_USER_TYPE,
+                    userRoles.stream()
+                            .map(UserRole::name)
+                            .toList()
+            );
         }
 
         return builder.compact();
@@ -63,29 +63,24 @@ public class JwtProvider {
         return UUID.fromString(subject);
     }
 
-    public String getProfileImage(String token) {
-        return parseClaims(token).get(CLAIM_PROFILE_IMAGE, String.class);
-    }
-
-    public String getPlan(String token) {
-        return parseClaims(token).get(CLAIM_PLAN, String.class);
-    }
-
-    public boolean getIsNewUser(String token) {
-        Boolean value = parseClaims(token).get(CLAIM_IS_NEW_USER, Boolean.class);
-        return Boolean.TRUE.equals(value);
-    }
-
-    public String getUserType(String token) {
-        return parseClaims(token).get(CLAIM_USER_TYPE, String.class);
-    }
-
-    public UserRole getUserRole(String token) {
-        String userType = getUserType(token);
-        if (userType == null || userType.isBlank()) {
-            return null;
+    public List<String> getUserTypes(String token) {
+        Object claim = parseClaims(token).get(CLAIM_USER_TYPE);
+        if (claim == null) {
+            return List.of();
         }
-        return UserRole.valueOf(userType);
+        if (claim instanceof Collection<?> collection) {
+            return collection.stream()
+                    .map(String::valueOf)
+                    .toList();
+        }
+        return List.of(String.valueOf(claim));
+    }
+
+    public List<UserRole> getUserRoles(String token) {
+        return getUserTypes(token).stream()
+                .filter(userType -> userType != null && !userType.isBlank())
+                .map(UserRole::valueOf)
+                .toList();
     }
 
     public boolean isValid(String token) {
