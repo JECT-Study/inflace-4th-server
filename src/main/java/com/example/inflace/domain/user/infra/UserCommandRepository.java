@@ -2,6 +2,7 @@ package com.example.inflace.domain.user.infra;
 
 import com.example.inflace.domain.user.domain.enums.Need;
 import com.example.inflace.domain.user.domain.enums.Plan;
+import com.example.inflace.domain.user.domain.enums.UserRole;
 import com.example.inflace.global.util.UuidV7Generator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -41,14 +42,19 @@ public class UserCommandRepository {
         jdbcTemplate.update("delete from users where user_id = ?", userId);
     }
 
-    public void insertUserType(UUID userId, String type) {
-        jdbcTemplate.update("""
-                    insert into user_type (user_id, role)
-                    values (?, ?)
-                """, userId, type);
+    public void insertUserTypes(UUID userId, List<UserRole> roles) {
+        jdbcTemplate.batchUpdate(
+                "insert into user_type (user_id, role) values (?, ?)",
+                roles,
+                roles.size(),
+                (ps, role) -> {
+                    ps.setObject(1, userId);
+                    ps.setString(2, role.name());
+                }
+        );
     }
 
-    public void bulkInsertNeeds(UUID userId, List<Need> needs) {
+    public void insertNeeds(UUID userId, List<Need> needs) {
         jdbcTemplate.batchUpdate(
                 "insert into user_need (user_id, need) values (?, ?)",
                 needs,

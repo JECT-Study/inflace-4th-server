@@ -5,6 +5,7 @@ import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +26,7 @@ public class UserController implements UserApi {
     @Override
     @PostMapping("/onboarding")
     public BaseResponse<Void>  onboarding(
-            @RequestBody OnboardingRequest request
+            @Valid @RequestBody OnboardingRequest request
     ) {
         userService.onboarding(request);
         return BaseResponse.success();
