@@ -45,7 +45,6 @@ public class AuthController implements AuthApi {
                 .body(new BaseResponse<>(new LoginResponse(
                         response.tokenData().accessToken(),
                         response.userDetails(),
-                        response.isOnboardingCompleted(),
                         response.userChannelDetails()
                         )
                     )
