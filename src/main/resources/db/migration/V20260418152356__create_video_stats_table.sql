@@ -1,0 +1,22 @@
+create table if not exists video_stats (
+    video_stats_id bigserial primary key,
+    video_id bigint not null,
+    view_count bigint,
+    like_count bigint,
+    comment_count bigint,
+    share_count bigint,
+    ctr double precision,
+    avg_watch_duration double precision,
+    collected_at timestamp(6),
+    subscribers_gained bigint,
+    unsubscribed_view_count bigint,
+    average_view_percentage double precision,
+    relative_retention_performance double precision,
+    unsubscribed_viewer_percentage double precision,
+    vph double precision,
+    outlier_score double precision,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    constraint fk_video_stats_video foreign key (video_id) references video (video_id),
+    constraint uk_video_stats_video_id unique (video_id)
+);

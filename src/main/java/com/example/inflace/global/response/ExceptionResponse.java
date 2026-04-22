@@ -18,6 +18,11 @@ public class ExceptionResponse {
         this.message = errorDefine.getMessage();
     }
 
+    public ExceptionResponse(ErrorDefine errorDefine, String message) {
+        this.code = errorDefine.getErrorCode();
+        this.message = message != null ? message : errorDefine.getMessage();
+    }
+
     public ExceptionResponse(Exception e) {
         this.code = Integer.toString(HttpStatus.INTERNAL_SERVER_ERROR.value());
         this.message = e.getMessage();

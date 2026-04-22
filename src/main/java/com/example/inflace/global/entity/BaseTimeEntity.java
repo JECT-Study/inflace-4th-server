@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity {  // 직접 인스턴스화 방지를 위해 추상 클래스 설정
+public abstract class BaseTimeEntity {  // 직접 인스턴스화 방지를 위해 추상 클래스 설정
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users_need")
+@Table(name = "user_need")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserNeed {
@@ -19,10 +19,11 @@ public class UserNeed {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "need")
     private Need need;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Builder

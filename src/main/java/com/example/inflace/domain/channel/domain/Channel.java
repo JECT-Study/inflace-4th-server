@@ -1,14 +1,14 @@
 package com.example.inflace.domain.channel.domain;
 
 import com.example.inflace.domain.user.domain.entity.User;
-import com.example.inflace.global.entity.BaseEntity;
-import io.hypersistence.utils.hibernate.type.array.StringArrayType;
+import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -16,14 +16,14 @@ import java.time.LocalDateTime;
 @Table(name = "channel")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Channel extends BaseEntity {
+public class Channel extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "channel_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     private String name;
@@ -31,7 +31,7 @@ public class Channel extends BaseEntity {
     @Column(name = "youtube_channel_id")
     private String youtubeChannelId;
 
-    @Type(value = StringArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "category", columnDefinition = "text[]")
     private String[] category;
 

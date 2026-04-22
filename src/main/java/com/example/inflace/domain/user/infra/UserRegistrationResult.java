@@ -1,4 +1,6 @@
 package com.example.inflace.domain.user.infra;
 
-public record UserRegistrationResult(long userId, boolean isNewUser) {
+import java.util.UUID;
+
+public record UserRegistrationResult(UUID userId, boolean isNewUser) {
 }

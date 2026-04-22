@@ -4,8 +4,9 @@ import com.example.inflace.domain.channel.domain.Channel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ChannelRepository extends JpaRepository<Channel, Long> {
-    boolean existsByUser_Id(long userId);
-    Optional<Channel> findByUser_Id(long userId);
+    boolean existsByUser_Id(UUID userId);
+    Optional<Channel> findByUser_Id(UUID userId);
 }

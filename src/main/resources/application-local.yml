@@ -10,5 +10,20 @@ spring:
       file: spring-boot-docker-compose.yml
       lifecycle-management: start_only
 jwt:
-  secret: temp-secret-key-for-local-dev-1234567890-abcdef
+  secret: dGVtcC1zZWNyZXQta2V5LWZvci1sb2NhbC1kZXYtMTIzNDU2Nzg5MC1hYmNkZWY=
   expiration: 7200000
+
+redis:
+  host: localhost
+  port: 15501
+  password: password
+  database: 0
+
+cookie:
+  same-site: Lax
+  secure: false
+
+cors:
+  allowed:
+    origins:
+      - http://localhost:3000

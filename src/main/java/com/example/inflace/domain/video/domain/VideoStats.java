@@ -1,6 +1,6 @@
 package com.example.inflace.domain.video.domain;
 
-import com.example.inflace.global.entity.BaseEntity;
+import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "video_stats")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class VideoStats extends BaseEntity {
+public class VideoStats extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "video_stats_id")

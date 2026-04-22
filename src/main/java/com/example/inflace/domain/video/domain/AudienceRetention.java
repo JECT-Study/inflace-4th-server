@@ -1,6 +1,6 @@
 package com.example.inflace.domain.video.domain;
 
-import com.example.inflace.global.entity.BaseEntity;
+import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "audience_retention")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AudienceRetention extends BaseEntity {
+public class AudienceRetention extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "audience_retention_id")

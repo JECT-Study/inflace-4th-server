@@ -49,6 +49,9 @@ dependencies {
     // docker-compose.yaml
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // jsonb를 사용하기 위해 추가
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.15.2'
 }
