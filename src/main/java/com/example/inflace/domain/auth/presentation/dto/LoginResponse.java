@@ -5,7 +5,6 @@ import com.example.inflace.domain.channel.dto.UserChannelDetailsResponse;
 public record LoginResponse(
         String accessToken,
         UserDetailsResponse userDetails,
-        boolean isOnboardingCompleted,
         UserChannelDetailsResponse userChannelDetails
 ) {
 }
