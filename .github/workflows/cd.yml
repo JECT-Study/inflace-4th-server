@@ -18,6 +18,9 @@ env:
   ANALYTICS_API_URL: ${{ secrets.ANALYTICS_API_URL }}
   JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  INFLACE_VALKEY_URL: ${{ secrets.INFLACE_VALKEY_URL }}
+  INFLACE_VALKEY_PORT: ${{ secrets.INFLACE_VALKEY_PORT }}
+
 
 jobs:
   deploy:
@@ -65,7 +68,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: IMAGE_TAG,ENVIRONMENT,DB_URL,DB_USERNAME,DB_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,DATA_API_KEY,DATA_API_URL,ANALYTICS_API_URL,JWT_EXPIRATION,JWT_SECRET
+          envs: IMAGE_TAG,ENVIRONMENT,DB_URL,DB_USERNAME,DB_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,DATA_API_KEY,DATA_API_URL,ANALYTICS_API_URL,JWT_EXPIRATION,JWT_SECRET,INFLACE_VALKEY_PORT,INFLACE_VALKEY_URL
           script: |
             docker pull youcastle/inflace:$IMAGE_TAG
             docker stop inflace || true
@@ -83,4 +86,6 @@ jobs:
               -e ANALYTICS_API_URL=$ANALYTICS_API_URL \
               -e JWT_EXPIRATION=$JWT_EXPIRATION \
               -e JWT_SECRET=$JWT_SECRET \
+              -e INFLACE_VALKEY_PORT=$INFLACE_VALKEY_PORT \
+              -e INFLACE_VALKEY_URL=$INFLACE_VALKEY_URL \
               youcastle/inflace:$IMAGE_TAG
