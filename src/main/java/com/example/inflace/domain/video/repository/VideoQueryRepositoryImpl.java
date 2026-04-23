@@ -60,6 +60,7 @@ public class VideoQueryRepositoryImpl implements VideoQueryRepository {
                         video.publishedAt,
                         video.duration,
                         video.isShort,
+                        video.isAdvertisement,
                         stats.viewCount.coalesce(0L),
                         stats.likeCount.coalesce(0L),
                         stats.commentCount.coalesce(0L),

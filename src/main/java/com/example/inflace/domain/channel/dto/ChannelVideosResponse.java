@@ -16,7 +16,8 @@ public record ChannelVideosResponse(
             Long likeCount,
             Long commentCount,
             Double duration,
-            Boolean isShort
+            Boolean isShort,
+            Boolean isAd
     ) {
     }
 
