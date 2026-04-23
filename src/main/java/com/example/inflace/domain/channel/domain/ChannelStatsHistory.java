@@ -7,16 +7,23 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "channel_stats_history")
+@Table(
+        name = "channel_stats_history",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_channel_stats_history_channel_date",
+                columnNames = {"channel_id", "snapshot_date"}
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChannelStatsHistory extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "channel_stats_history_id")
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,13 +33,26 @@ public class ChannelStatsHistory extends BaseTimeEntity {
     @Column(name = "subscriber_count")
     private Long subscriberCount;
 
-    @Column(name = "recorded_date")
-    private LocalDateTime recordedDate;
+    @Column(name = "total_view_count")
+    private Long totalViewCount;
+
+    @Column(name = "video_count")
+    private Long videoCount;
+
+    @Column(name = "snapshot_date")
+    private LocalDate snapshotDate;
+
+    @Column(name = "collected_at", nullable = false)
+    private LocalDateTime collectedAt;
 
     @Builder
-    public ChannelStatsHistory(Channel channel, Long subscriberCount, LocalDateTime recordedDate) {
+    public ChannelStatsHistory(Channel channel, LocalDate snapshotDate, Long subscriberCount,
+                               Long totalViewCount, Long videoCount, LocalDateTime collectedAt) {
         this.channel = channel;
+        this.snapshotDate = snapshotDate;
         this.subscriberCount = subscriberCount;
-        this.recordedDate = recordedDate;
+        this.totalViewCount = totalViewCount;
+        this.videoCount = videoCount;
+        this.collectedAt = collectedAt;
     }
 }

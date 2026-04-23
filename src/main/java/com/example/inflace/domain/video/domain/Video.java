@@ -1,25 +1,30 @@
 package com.example.inflace.domain.video.domain;
 
 import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.domain.YoutubeCategory;
 import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "video")
+@Table(
+        name = "video",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_video_youtube_video",
+                columnNames = "youtube_video_id"
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Video extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "video_id")
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,30 +36,20 @@ public class Video extends BaseTimeEntity {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
-    private Double duration;
+    @Column(name = "duration_seconds")
+    private Integer durationSeconds;
 
     @Column(name = "is_short")
     private boolean isShort;
 
-    @Column(name = "rising_score")
-    private Double risingScore;
-
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "hashtags", columnDefinition = "text[]")
-    private String[] hashtags;
-
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "category", columnDefinition = "text[]")
-    private String[] category;
+    @Column(name = "category_id")
+    private Integer categoryId;
 
     @Column(name = "youtube_video_id")
     private String youtubeVideoId;
-
-    @Column(name = "video_url")
-    private String videoUrl;
 
     private String description;
 
@@ -62,21 +57,18 @@ public class Video extends BaseTimeEntity {
     private boolean isAdvertisement;
 
     @Builder
-    public Video(Channel channel, String title, String thumbnailUrl, Double duration, boolean isShort, Double risingScore,
-                 LocalDateTime publishedAt, String[] hashtags, String youtubeVideoId, String videoUrl, String description,
-                 boolean isAdvertisement) {
+    public Video(Channel channel, Integer categoryId, String youtubeVideoId, String title, String description,
+                 String thumbnailUrl, Integer durationSeconds, boolean isShort, boolean isAdvertisement,
+                 LocalDateTime publishedAt) {
         this.channel = channel;
-        this.title = title;
-        this.thumbnailUrl = thumbnailUrl;
-        this.duration = duration;
-        this.isShort = isShort;
-        this.risingScore = risingScore;
-        this.publishedAt = publishedAt;
-        this.hashtags = hashtags;
-        this.category = category;
+        this.categoryId = categoryId;
         this.youtubeVideoId = youtubeVideoId;
-        this.videoUrl = videoUrl;
+        this.title = title;
         this.description = description;
+        this.thumbnailUrl = thumbnailUrl;
+        this.durationSeconds = durationSeconds;
+        this.isShort = isShort;
         this.isAdvertisement = isAdvertisement;
+        this.publishedAt = publishedAt;
     }
 }

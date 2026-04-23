@@ -1,25 +1,28 @@
 package com.example.inflace.domain.channel.domain;
 
 import com.example.inflace.global.entity.BaseTimeEntity;
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Entity
-@Table(name = "channel_stats")
+@Table(
+        name = "channel_stats",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_channel_stats_channel",
+                columnNames = "channel_id"
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChannelStats extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "channel_stats_id")
+    @Column(name = "id")
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -32,39 +35,32 @@ public class ChannelStats extends BaseTimeEntity {
     @Column(name = "total_view_count")
     private Long totalViewCount;
 
-    @Column(name = "subscriber_view_count")
-    private Long subscriberViewCount;
+    @Column(name = "total_video_count")
+    private Long totalVideoCount;
 
-    @Column(name = "avg_engagement_rate")
-    private Double avgEngagementRate;
+    @Column(name = "recent_upload_count_30d")
+    private Integer recentUploadCount30d;
 
-    @Type(JsonBinaryType.class)
-    @Column(name = "audience_gender", columnDefinition = "jsonb")
-    private Map<String, Double> audienceGender;
+    @Column(name = "avg_views_recent_n")
+    private Double avgViewsRecentN;
 
-    @Type(JsonBinaryType.class)
-    @Column(name = "audience_age", columnDefinition = "jsonb")
-    private Map<String, Double> audienceAge;
-
-    @Type(JsonBinaryType.class)
-    @Column(name = "audience_country", columnDefinition = "jsonb")
-    private Map<String, Double> audienceCountry;
+    @Column(name = "avg_engagement_rate_recent_n")
+    private Double avgEngagementRateRecentN;
 
     @Column(name = "collected_at")
     private LocalDateTime collectedAt;
 
     @Builder
-    public ChannelStats(Channel channel, Long subscriberCount, Long totalViewCount, Long subscriberViewCount,
-                        Double avgEngagementRate, Map<String, Double> audienceGender, Map<String, Double> audienceAge,
-                        Map<String, Double> audienceCountry, LocalDateTime collectedAt) {
+    public ChannelStats(Channel channel, Long subscriberCount, Long totalViewCount, Long totalVideoCount,
+                        Integer recentUploadCount30d, Double avgViewsRecentN,
+                        Double avgEngagementRateRecentN, LocalDateTime collectedAt) {
         this.channel = channel;
         this.subscriberCount = subscriberCount;
         this.totalViewCount = totalViewCount;
-        this.subscriberViewCount = subscriberViewCount;
-        this.avgEngagementRate = avgEngagementRate;
-        this.audienceGender = audienceGender;
-        this.audienceAge = audienceAge;
-        this.audienceCountry = audienceCountry;
+        this.totalVideoCount = totalVideoCount;
+        this.recentUploadCount30d = recentUploadCount30d;
+        this.avgViewsRecentN = avgViewsRecentN;
+        this.avgEngagementRateRecentN = avgEngagementRateRecentN;
         this.collectedAt = collectedAt;
     }
 }

@@ -1,10 +1,8 @@
-package com.example.inflace.domain.user.domain.entity;
+package com.example.inflace.domain.video.domain;
 
-import com.example.inflace.domain.user.domain.enums.UserRole;
+import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,33 +17,23 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
-        name = "user_type",
+        name = "video_tag",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_user_type_user_role",
-                columnNames = {"user_id", "role"}
+                name = "uk_video_tag",
+                columnNames = {"video_id", "tag"}
         )
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserType {
+public class VideoTag extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private UserRole role;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "video_id", nullable = false)
+    private Video video;
 
-    public static UserType of(UserRole role, User user) {
-        UserType userType = new UserType();
-
-        userType.role = role;
-        userType.user = user;
-
-        return userType;
-    }
+    @Column(name = "tag", nullable = false)
+    private String tag;
 }
