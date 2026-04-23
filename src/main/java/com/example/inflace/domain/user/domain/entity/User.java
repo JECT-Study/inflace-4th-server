@@ -8,18 +8,22 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_users_provider_id",
+                columnNames = "provider_id"
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends SoftDeleteTimeEntity {
@@ -41,9 +45,6 @@ public class User extends SoftDeleteTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "plan")
     private Plan plan;
-
-    @OneToMany(mappedBy = "user")
-    private List<UserType> userTypes = new ArrayList<>();
 
     public static User of(
             String name,

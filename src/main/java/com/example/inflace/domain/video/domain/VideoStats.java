@@ -7,13 +7,19 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "video_stats")
+@Table(
+        name = "video_stats",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_video_stats_video",
+                columnNames = "video_id"
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VideoStats extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "video_stats_id")
+    @Column(name = "id")
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -29,56 +35,14 @@ public class VideoStats extends BaseTimeEntity {
     @Column(name = "comment_count")
     private Long commentCount;
 
-    @Column(name = "share_count")
-    private Long shareCount;
-
-    private Double ctr;
-
-    @Column(name = "avg_watch_duration")
-    private Double avgWatchDuration;
-
     @Column(name = "collected_at")
     private LocalDateTime collectedAt;
 
-    @Column(name = "subscribers_gained")
-    private Long subscribersGained;
-
-    @Column(name = "unsubscribed_view_count")
-    private Long unsubscribedViewCount;
-
-    @Column(name = "average_view_percentage")
-    private Double averageViewPercentage;
-
-    @Column(name = "relative_retention_performance")
-    private Double relativeRetentionPerformance;
-
-    @Column(name = "unsubscribed_viewer_percentage")
-    private Double unsubscribedViewerPercentage;
-
-    public void update(Long viewCount, Long likeCount, Long commentCount, Long shareCount,
-                       Long subscribersGained, Double ctr, Double avgWatchDuration,
-                       Double averageViewPercentage, LocalDateTime collectedAt) {
+    public void update(Long viewCount, Long likeCount, Long commentCount, LocalDateTime collectedAt) {
         this.viewCount = viewCount;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
-        this.shareCount = shareCount;
-        this.subscribersGained = subscribersGained;
-        this.ctr = ctr;
-        this.avgWatchDuration = avgWatchDuration;
-        this.averageViewPercentage = averageViewPercentage;
         this.collectedAt = collectedAt;
-    }
-
-    public void updateRelativeRetention(Double relativeRetentionPerformance) {
-        this.relativeRetentionPerformance = relativeRetentionPerformance;
-    }
-
-    public void updateUnsubscribed(Long unsubscribedViewCount) {
-        this.unsubscribedViewCount = unsubscribedViewCount;
-        // viewerPercentage는 Analytics API metrics 미지원 → viewCount 기반으로 직접 계산
-        this.unsubscribedViewerPercentage = (this.viewCount != null && this.viewCount > 0)
-                ? (unsubscribedViewCount.doubleValue() / this.viewCount) * 100
-                : null;
     }
 
     @Column(name = "vph")
@@ -87,25 +51,19 @@ public class VideoStats extends BaseTimeEntity {
     @Column(name = "outlier_score")
     private Double outlierScore;
 
+    @Column(name = "rising_score")
+    private Double risingScore;
+
     @Builder
-    public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount, Long shareCount, Double ctr,
-                      Double avgWatchDuration, LocalDateTime collectedAt, Long subscribersGained,
-                      Long unsubscribedViewCount, Double averageViewPercentage, Double relativeRetentionPerformance,
-                      Double unsubscribedViewerPercentage, Double vph, Double outlierScore) {
+    public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount,
+                      Double vph, Double outlierScore, Double risingScore, LocalDateTime collectedAt) {
         this.video = video;
         this.viewCount = viewCount;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
-        this.shareCount = shareCount;
-        this.ctr = ctr;
-        this.avgWatchDuration = avgWatchDuration;
-        this.collectedAt = collectedAt;
-        this.subscribersGained = subscribersGained;
-        this.unsubscribedViewCount = unsubscribedViewCount;
-        this.averageViewPercentage = averageViewPercentage;
-        this.relativeRetentionPerformance = relativeRetentionPerformance;
-        this.unsubscribedViewerPercentage = unsubscribedViewerPercentage;
         this.vph = vph;
         this.outlierScore = outlierScore;
+        this.risingScore = risingScore;
+        this.collectedAt = collectedAt;
     }
 }

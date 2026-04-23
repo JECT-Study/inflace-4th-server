@@ -7,19 +7,23 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "channel")
+@Table(
+        name = "channel",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_channel_user_youtube",
+                columnNames = {"user_id", "youtube_channel_id"}
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Channel extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "channel_id")
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,23 +35,27 @@ public class Channel extends BaseTimeEntity {
     @Column(name = "youtube_channel_id")
     private String youtubeChannelId;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "category", columnDefinition = "text[]")
-    private String[] category;
-
     @Column(name = "channel_handle")
     private String channelHandle;
 
-    @Column(name = "entered_at")
-    private LocalDateTime enteredAt;
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
+    @Column(name = "uploads_playlist_id")
+    private String uploadsPlaylistId;
+
+    @Column(name = "youtube_published_at")
+    private LocalDateTime youtubePublishedAt;
 
     @Builder
-    public Channel(User user, String name, String youtubeChannelId, String[] category, String channelHandle, LocalDateTime enteredAt) {
+    public Channel(User user, String name, String youtubeChannelId, String channelHandle,
+                   String profileImageUrl, String uploadsPlaylistId, LocalDateTime youtubePublishedAt) {
         this.user = user;
         this.name = name;
         this.youtubeChannelId = youtubeChannelId;
-        this.category = category;
         this.channelHandle = channelHandle;
-        this.enteredAt = enteredAt;
+        this.profileImageUrl = profileImageUrl;
+        this.uploadsPlaylistId = uploadsPlaylistId;
+        this.youtubePublishedAt = youtubePublishedAt;
     }
 }
