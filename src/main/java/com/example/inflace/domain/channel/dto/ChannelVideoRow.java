@@ -10,6 +10,7 @@ public record ChannelVideoRow(
         LocalDateTime publishedAt,
         Double duration,
         Boolean isShort,
+        Boolean isAd,
         Long viewCount,
         Long likeCount,
         Long commentCount,
@@ -28,7 +29,8 @@ public record ChannelVideoRow(
                 likeCount,
                 commentCount,
                 duration,
-                isShort
+                isShort,
+                isAd
         );
     }
 

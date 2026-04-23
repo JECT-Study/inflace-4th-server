@@ -30,15 +30,15 @@ public class ApiResponseDefinesCustomizer implements OperationCustomizer {
         ApiResponses responses = operation.getResponses();
 
         // 200 성공 응답
-        Schema<?> successSchema = new Schema<>()
-                .addProperty("isSuccess", new Schema<>().type("boolean").example(true))
-                .addProperty("responseDto", new Schema<>().type("object").nullable(true))
-                .addProperty("error", new Schema<>().type("object").nullable(true));
-
-        responses.addApiResponse("200", new ApiResponse()
-                .description("성공")
-                .content(new Content().addMediaType("application/json",
-                        new MediaType().schema(successSchema))));
+//        Schema<?> successSchema = new Schema<>()
+//                .addProperty("isSuccess", new Schema<>().type("boolean").example(true))
+//                .addProperty("responseDto", new Schema<>().type("object").nullable(true))
+//                .addProperty("error", new Schema<>().type("object").nullable(true));
+//
+//        responses.addApiResponse("200", new ApiResponse()
+//                .description("성공")
+//                .content(new Content().addMediaType("application/json",
+//                        new MediaType().schema(successSchema))));
 
         // 에러 응답 (ErrorDefine의 httpStatus별 그룹핑)
         Map<Integer, List<ErrorDefine>> grouped = Arrays.stream(annotation.value())
