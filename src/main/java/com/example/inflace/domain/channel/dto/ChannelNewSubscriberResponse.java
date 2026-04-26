@@ -25,7 +25,8 @@ public record ChannelNewSubscriberResponse(
                     video.getTitle(),
                     video.getThumbnailUrl(),
                     stats != null ? stats.getViewCount() : 0L,
-                    analytics != null ? analytics.getSubscribersGained() : 0L,
+                    analytics != null && analytics.getSubscribersGained() != null
+                            ? analytics.getSubscribersGained() : 0L,
                     analytics != null && analytics.getUnsubscribedViewerPercentage() != null
                             ? analytics.getUnsubscribedViewerPercentage() : 0.0,
                     analytics != null && analytics.getAverageViewPercentage() != null
