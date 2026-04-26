@@ -2,7 +2,10 @@ package com.example.inflace.domain.user.application;
 
 import com.example.inflace.domain.auth.presentation.dto.UserDetailsResponse;
 import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
+import com.example.inflace.domain.channel.domain.YoutubeCategory;
+import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.user.domain.entity.User;
@@ -24,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +38,7 @@ public class UserService {
     private final UserReadRepository userReadRepository;
     private final UserCommandRepository userCommandRepository;
     private final ChannelRepository channelRepository;
+    private final ChannelCategoryRepository channelCategoryRepository;
     private final ChannelStatsRepository channelStatsRepository;
     private final VideoRepository videoRepository;
 
@@ -78,16 +81,17 @@ public class UserService {
 
         List<Video> videos = videoRepository.findByChannelId(channel.getId());
 
-        List<String> category = channel.getCategory() != null
-                ? Arrays.asList(channel.getCategory())
-                : null;
+        List<String> categories = channelCategoryRepository.findAllByChannel_Id(channel.getId()).stream()
+                .map(ChannelCategory::getCategory)
+                .map(YoutubeCategory::getTitle)
+                .toList();
 
         return new UserChannelMainResponse(
                 user.getProfileImage(),
                 channel.getName(),
                 YOUTUBE_STUDIO_URL_PREFIX + channel.getYoutubeChannelId(),
                 channel.getChannelHandle(),
-                category,
+                categories,
                 channel.getYoutubePublishedAt(),
                 channelStats.getSubscriberCount(),
                 (long) videos.size(),

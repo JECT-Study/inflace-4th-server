@@ -58,9 +58,4 @@ public class Channel extends BaseTimeEntity {
         this.uploadsPlaylistId = uploadsPlaylistId;
         this.youtubePublishedAt = youtubePublishedAt;
     }
-
-    @Transient
-    public String[] getCategory() {
-        return null;
-    }
 }

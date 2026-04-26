@@ -1,7 +1,6 @@
 package com.example.inflace.domain.video.domain;
 
 import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.domain.channel.domain.YoutubeCategory;
 import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
