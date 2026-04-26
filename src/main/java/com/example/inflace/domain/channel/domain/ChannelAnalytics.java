@@ -26,8 +26,8 @@ import java.util.Map;
 @Table(
         name = "channel_analytics",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_channel_analytics_channel_period",
-                columnNames = {"channel_id", "start_date", "end_date"}
+                name = "uk_channel_analytics_channel",
+                columnNames = "channel_id"
         )
 )
 @Getter
