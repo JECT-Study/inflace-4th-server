@@ -14,9 +14,10 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             select v
             from Video v
             left join VideoStats vs on vs.video = v
+            left join VideoAnalytics va on va.video = v
             where v.channel.id = :channelId
               and v.isShort = :isShort
-            order by coalesce(v.risingScore, 0) desc, coalesce(vs.ctr, 0) desc, v.id desc
+            order by coalesce(vs.risingScore, 0) desc, coalesce(va.ctr, 0) desc, v.id desc
             """)
     List<Video> findTopVideos(
             @Param("channelId") Long channelId,
@@ -27,9 +28,9 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     @Query("""
        select v
        from Video v
-       left join VideoStats vs on vs.video = v
+       left join VideoAnalytics va on va.video = v
        where v.channel.id = :channelId
-       order by coalesce(vs.unsubscribedViewerPercentage, 0) desc, v.id desc
+       order by coalesce(va.unsubscribedViewerPercentage, 0) desc, v.id desc
     """)
     List<Video> findTopNewSubscriberVideos(
             @Param("channelId") Long channelId,
@@ -40,8 +41,9 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             select v
             from Video v
             left join VideoStats vs on vs.video = v
+            left join VideoAnalytics va on va.video = v
             where v.channel.id = :channelId
-            order by coalesce(v.risingScore, 0) desc, coalesce(vs.ctr, 0) desc, v.id desc
+            order by coalesce(vs.risingScore, 0) desc, coalesce(va.ctr, 0) desc, v.id desc
             """)
     List<Video> findAllTopVideos(@Param("channelId") Long channelId, Limit limit);
 

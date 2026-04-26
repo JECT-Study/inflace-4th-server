@@ -2,11 +2,15 @@ package com.example.inflace.domain.video.service;
 
 import com.example.inflace.domain.video.domain.AudienceRetention;
 import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
+import com.example.inflace.domain.video.domain.VideoTag;
 import com.example.inflace.domain.video.dto.*;
 import com.example.inflace.domain.video.repository.AudienceRetentionRepository;
+import com.example.inflace.domain.video.repository.VideoAnalyticsRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
+import com.example.inflace.domain.video.repository.VideoTagRepository;
 import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -24,6 +28,8 @@ public class VideoService {
 
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
+    private final VideoAnalyticsRepository videoAnalyticsRepository;
+    private final VideoTagRepository videoTagRepository;
     private final AudienceRetentionRepository audienceRetentionRepository;
 
     @ReadOnlyTransactional
@@ -36,7 +42,11 @@ public class VideoService {
         // 소유자 확인
         validateVideoOwnership(video, userId);
 
-        return VideoMetaResponse.from(video);
+        List<String> hashtags = videoTagRepository.findAllByVideoId(videoId).stream()
+                .map(VideoTag::getTag)
+                .toList();
+
+        return VideoMetaResponse.from(video, hashtags);
     }
 
     @ReadOnlyTransactional
@@ -48,10 +58,11 @@ public class VideoService {
         // 소유자 확인
         validateVideoOwnership(video, userId);
 
-        VideoStats videoStats = videoStatsRepository.findByVideo(video)
+        VideoStats videoStats = videoStatsRepository.findByVideoId(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
+        VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId).orElse(null);
 
-        return VideoStatsResponse.from(videoStats, 0L, 0L);
+        return VideoStatsResponse.from(videoStats, videoAnalytics, 0L, 0L);
     }
 
     @ReadOnlyTransactional
@@ -68,7 +79,7 @@ public class VideoService {
             throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
         }
 
-        double duration = video.getDuration() != null ? video.getDuration() : 0.0;
+        double duration = video.getDurationSeconds() != null ? video.getDurationSeconds().doubleValue() : 0.0;
         return AudienceRetentionResponse.from(retentionList, duration);
     }
 
@@ -80,7 +91,7 @@ public class VideoService {
 
         validateVideoOwnership(video, userId);
 
-        Double duration = video.getDuration();
+        Double duration = video.getDurationSeconds() != null ? video.getDurationSeconds().doubleValue() : null;
         if (duration == null || duration == 0) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
@@ -104,10 +115,11 @@ public class VideoService {
 
         validateVideoOwnership(video, userId);
 
-        VideoStats videoStats = videoStatsRepository.findByVideo(video)
+        VideoStats videoStats = videoStatsRepository.findByVideoId(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
+        VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId).orElse(null);
 
-        return RetentionSummaryResponse.from(videoStats);
+        return RetentionSummaryResponse.from(videoStats, videoAnalytics);
     }
 
     private void validateVideoOwnership(Video video, UUID userId) {

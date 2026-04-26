@@ -88,7 +88,7 @@ public class UserService {
                 YOUTUBE_STUDIO_URL_PREFIX + channel.getYoutubeChannelId(),
                 channel.getChannelHandle(),
                 category,
-                channel.getEnteredAt(),
+                channel.getYoutubePublishedAt(),
                 channelStats.getSubscriberCount(),
                 (long) videos.size(),
                 channel.getUpdatedAt()

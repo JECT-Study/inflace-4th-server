@@ -1,6 +1,7 @@
 package com.example.inflace.domain.channel.dto;
 
 import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 import java.util.List;
 
@@ -17,18 +18,18 @@ public record ChannelNewSubscriberResponse(
             Double newSubscriberRatio,
             Double retentionRate
     ) {
-        public static NewSubscriberVideo from(int rank, Video video, VideoStats stats) {
+        public static NewSubscriberVideo from(int rank, Video video, VideoStats stats, VideoAnalytics analytics) {
             return new NewSubscriberVideo(
                     rank,
                     video.getId(),
                     video.getTitle(),
                     video.getThumbnailUrl(),
                     stats != null ? stats.getViewCount() : 0L,
-                    stats != null ? stats.getSubscribersGained() : 0L,
-                    stats != null && stats.getUnsubscribedViewerPercentage() != null
-                            ? stats.getUnsubscribedViewerPercentage() : 0.0,
-                    stats != null && stats.getAverageViewPercentage() != null
-                            ? stats.getAverageViewPercentage() : 0.0
+                    analytics != null ? analytics.getSubscribersGained() : 0L,
+                    analytics != null && analytics.getUnsubscribedViewerPercentage() != null
+                            ? analytics.getUnsubscribedViewerPercentage() : 0.0,
+                    analytics != null && analytics.getAverageViewPercentage() != null
+                            ? analytics.getAverageViewPercentage() : 0.0
             );
         }
     }
