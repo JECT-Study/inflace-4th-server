@@ -133,15 +133,15 @@ public class AnalyticsCalculator {
      * 시간 포맷 변환
      *
      * @param timeRatio 0.01 ~ 1.00
-     * @param duration  영상 길이 (초)
+     * @param durationSeconds 영상 길이 (초)
      * @return "m:ss" 형태 문자열
      */
-    public static String formatTime(double timeRatio, double duration) {
-        if (duration <= 0 || timeRatio < 0) {
+    public static String formatTime(double timeRatio, int durationSeconds) {
+        if (durationSeconds <= 0 || timeRatio < 0) {
             return "0:00";
         }
 
-        int total = (int) Math.round(timeRatio * duration);
+        int total = (int) Math.round(timeRatio * durationSeconds);
         return String.format("%d:%02d", total / 60, total % 60);
     }
 }

@@ -79,8 +79,8 @@ public class VideoService {
             throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
         }
 
-        double duration = video.getDurationSeconds() != null ? video.getDurationSeconds().doubleValue() : 0.0;
-        return AudienceRetentionResponse.from(retentionList, duration);
+        int durationSeconds = video.getDurationSeconds() != null ? video.getDurationSeconds() : 0;
+        return AudienceRetentionResponse.from(retentionList, durationSeconds);
     }
 
     @ReadOnlyTransactional
@@ -91,8 +91,8 @@ public class VideoService {
 
         validateVideoOwnership(video, userId);
 
-        Double duration = video.getDurationSeconds() != null ? video.getDurationSeconds().doubleValue() : null;
-        if (duration == null || duration == 0) {
+        Integer durationSeconds = video.getDurationSeconds();
+        if (durationSeconds == null || durationSeconds == 0) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
 
@@ -104,7 +104,7 @@ public class VideoService {
             throw new ApiException(ErrorDefine.RETENTION_INVALID);
         }
 
-        return DropPointsResponse.from(retentionList, duration);
+        return DropPointsResponse.from(retentionList, durationSeconds);
     }
 
     @ReadOnlyTransactional
