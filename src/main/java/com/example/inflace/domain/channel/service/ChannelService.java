@@ -193,7 +193,7 @@ public class ChannelService {
         ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
         ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
 
         return ChannelSubscriberPatternResponse.from(
                 channelStats.getTotalViewCount(),
@@ -206,7 +206,7 @@ public class ChannelService {
         validateChannelExists(channelId);
 
         ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
 
         return ChannelSubscriberDistributionResponse.from(
                 channelAnalytics.getAudienceGender(),
