@@ -192,7 +192,7 @@ public class ChannelService {
 
         ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
-        ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findTopByChannel_IdOrderByEndDateDesc(channelId)
+        ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
 
         return ChannelSubscriberPatternResponse.from(
@@ -205,7 +205,7 @@ public class ChannelService {
     public ChannelSubscriberDistributionResponse getSubscriberDistribution(Long channelId) {
         validateChannelExists(channelId);
 
-        ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findTopByChannel_IdOrderByEndDateDesc(channelId)
+        ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
 
         return ChannelSubscriberDistributionResponse.from(
