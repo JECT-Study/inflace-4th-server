@@ -48,7 +48,7 @@ public class VideoSyncService {
     );
 
     private static final List<String> UNSUBSCRIBED_METRICS = List.of(
-            "views"
+            "views", "viewerPercentage"
     );
 
     private final VideoRepository videoRepository;
@@ -228,8 +228,9 @@ public class VideoSyncService {
         }
 
         Long unsubscribedViewCount = toLong(unsubscribedRow.get(indexMap.get("views")));
+        Double unsubscribedViewerPercentage = toDouble(unsubscribedRow.get(indexMap.get("viewerPercentage")));
 
-        existing.get().updateUnsubscribed(unsubscribedViewCount);
+        existing.get().updateUnsubscribed(unsubscribedViewCount, unsubscribedViewerPercentage);
     }
 
     private Video findVideoWithOwnership(UUID userId, long videoId) {

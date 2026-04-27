@@ -91,26 +91,14 @@ public class VideoAnalytics extends BaseTimeEntity {
         this.avgWatchDuration = avgWatchDuration;
         this.averageViewPercentage = averageViewPercentage;
         this.collectedAt = collectedAt;
-        recalculateUnsubscribedViewerPercentage();
     }
 
     public void updateRelativeRetention(Double relativeRetentionPerformance) {
         this.relativeRetentionPerformance = relativeRetentionPerformance;
     }
 
-    public void updateUnsubscribed(Long unsubscribedViewCount) {
+    public void updateUnsubscribed(Long unsubscribedViewCount, Double unsubscribedViewerPercentage) {
         this.unsubscribedViewCount = unsubscribedViewCount;
-        recalculateUnsubscribedViewerPercentage();
-    }
-
-    private void recalculateUnsubscribedViewerPercentage() {
-        if (unsubscribedViewCount == null || shareCount == null) {
-            return;
-        }
-        if (shareCount == 0L) {
-            this.unsubscribedViewerPercentage = 0.0;
-            return;
-        }
-        this.unsubscribedViewerPercentage = (unsubscribedViewCount * 100.0) / shareCount;
+        this.unsubscribedViewerPercentage = unsubscribedViewerPercentage;
     }
 }
