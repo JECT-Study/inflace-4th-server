@@ -8,7 +8,7 @@ public record ChannelVideoRow(
         String title,
         String thumbnailUrl,
         LocalDateTime publishedAt,
-        Double duration,
+        Integer durationSeconds,
         Boolean isShort,
         Boolean isAd,
         Long viewCount,
@@ -28,7 +28,7 @@ public record ChannelVideoRow(
                 viewCount,
                 likeCount,
                 commentCount,
-                duration,
+                durationSeconds,
                 isShort,
                 isAd
         );

@@ -63,4 +63,8 @@ public class ChannelStats extends BaseTimeEntity {
         this.avgEngagementRateRecentN = avgEngagementRateRecentN;
         this.collectedAt = collectedAt;
     }
+
+    public Double getAvgEngagementRate() {
+        return avgEngagementRateRecentN;
+    }
 }

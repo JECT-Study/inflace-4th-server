@@ -17,11 +17,11 @@ public record AudienceRetentionResponse(
     ) {
     }
 
-    public static AudienceRetentionResponse from(List<AudienceRetention> retentionList, double duration) {
+    public static AudienceRetentionResponse from(List<AudienceRetention> retentionList, int durationSeconds) {
         List<RetentionData> data = new ArrayList<>();
         for (int i = 0; i < retentionList.size(); i++) {
             AudienceRetention r = retentionList.get(i);
-            String displayTime = AnalyticsCalculator.formatTime(r.getTimeRatio(), duration);
+            String displayTime = AnalyticsCalculator.formatTime(r.getTimeRatio(), durationSeconds);
             boolean isDrop = i > 0 &&
                     retentionList.get(i - 1).getRetentionRate() - r.getRetentionRate() >= 0.05;
             data.add(new RetentionData(r.getTimeRatio(), r.getRetentionRate(), displayTime, isDrop));

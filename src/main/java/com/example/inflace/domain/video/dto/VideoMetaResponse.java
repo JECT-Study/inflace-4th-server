@@ -3,7 +3,6 @@ package com.example.inflace.domain.video.dto;
 import com.example.inflace.domain.video.domain.Video;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 public record VideoMetaResponse(
@@ -14,16 +13,14 @@ public record VideoMetaResponse(
         String description,
         List<String> hashtags
 ) {
-    public static VideoMetaResponse from(Video video) {
+    public static VideoMetaResponse from(Video video, List<String> hashtags) {
         return new VideoMetaResponse(
                 video.getThumbnailUrl(),
                 video.getVideoUrl(),
                 video.getTitle(),
                 video.getPublishedAt(),
                 video.getDescription(),
-                video.getHashtags() != null
-                        ? Arrays.stream(video.getHashtags()).toList()
-                        : List.of()
+                hashtags != null ? hashtags : List.of()
         );
     }
 }

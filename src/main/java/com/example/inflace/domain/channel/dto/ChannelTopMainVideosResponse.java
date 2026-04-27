@@ -1,6 +1,7 @@
 package com.example.inflace.domain.channel.dto;
 
 import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.global.util.AnalyticsCalculator;
 
@@ -23,7 +24,7 @@ public record ChannelTopMainVideosResponse(
             LocalDateTime publishedAt,
             Double ctr
     ) {
-        public static ChannelTopMainVideo of(long rank, Video video, VideoStats stats) {
+        public static ChannelTopMainVideo of(long rank, Video video, VideoStats stats, VideoAnalytics analytics) {
             long viewCount = 0L;
             long likeCount = 0L;
             long commentCount = 0L;
@@ -34,9 +35,11 @@ public record ChannelTopMainVideosResponse(
                 viewCount = Objects.requireNonNullElse(stats.getViewCount(), 0L);
                 likeCount = Objects.requireNonNullElse(stats.getLikeCount(), 0L);
                 commentCount = Objects.requireNonNullElse(stats.getCommentCount(), 0L);
-                ctr = Objects.requireNonNullElse(stats.getCtr(), 0.0);
                 engagementRate = AnalyticsCalculator.engagementRate(
                         stats.getLikeCount(), stats.getCommentCount(), stats.getViewCount());
+            }
+            if (analytics != null) {
+                ctr = Objects.requireNonNullElse(analytics.getCtr(), 0.0);
             }
 
             return new ChannelTopMainVideo(rank, video.getId(), video.getTitle(), video.getThumbnailUrl(),

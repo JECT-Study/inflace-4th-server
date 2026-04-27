@@ -1,6 +1,5 @@
 package com.example.inflace.domain.channel.dto;
 
-import com.example.inflace.domain.channel.domain.ChannelStats;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,11 +17,15 @@ public record ChannelSubscriberDistributionResponse(
             Double percentage
     ) {
     }
-    public static ChannelSubscriberDistributionResponse from(ChannelStats channelStats) {
+    public static ChannelSubscriberDistributionResponse from(
+            Map<String, Double> audienceGender,
+            Map<String, Double> audienceAge,
+            Map<String, Double> audienceCountry
+    ) {
         return new ChannelSubscriberDistributionResponse(
-                toItems(channelStats.getAudienceGender(), DistributionType.GENDER),
-                toItems(channelStats.getAudienceAge(), DistributionType.AGE),
-                toCountryItems(channelStats.getAudienceCountry())
+                toItems(audienceGender, DistributionType.GENDER),
+                toItems(audienceAge, DistributionType.AGE),
+                toCountryItems(audienceCountry)
         );
     }
 

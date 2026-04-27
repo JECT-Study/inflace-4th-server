@@ -1,5 +1,6 @@
 package com.example.inflace.domain.video.dto;
 
+import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 
 public record RetentionSummaryResponse(RetentionData retentionData) {
@@ -10,11 +11,11 @@ public record RetentionSummaryResponse(RetentionData retentionData) {
     ) {
     }
 
-    public static RetentionSummaryResponse from(VideoStats stats) {
+    public static RetentionSummaryResponse from(VideoStats stats, VideoAnalytics analytics) {
         return new RetentionSummaryResponse(
                 new RetentionData(
-                        stats.getAvgWatchDuration(),
-                        stats.getRelativeRetentionPerformance()
+                        analytics != null ? analytics.getAvgWatchDuration() : null,
+                        analytics != null ? analytics.getRelativeRetentionPerformance() : null
                 )
         );
     }

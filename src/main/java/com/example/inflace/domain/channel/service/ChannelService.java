@@ -1,9 +1,10 @@
 package com.example.inflace.domain.channel.service;
 
 import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.domain.ChannelAnalytics;
 import com.example.inflace.domain.channel.domain.ChannelStats;
-import com.example.inflace.domain.channel.domain.ChannelStatsHistory;
 import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
+import com.example.inflace.domain.channel.domain.SubscriberLog;
 import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
@@ -19,13 +20,16 @@ import com.example.inflace.domain.channel.dto.ChannelVideosRequest;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
-import com.example.inflace.domain.channel.repository.ChannelStatsHistoryRepository;
+import com.example.inflace.domain.channel.repository.ChannelAnalyticsRepository;
+import com.example.inflace.domain.channel.repository.SubscriberLogRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.domain.video.dto.VideoType;
 import com.example.inflace.domain.video.repository.VideoQueryRepository;
+import com.example.inflace.domain.video.repository.VideoAnalyticsRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.global.annotation.ReadOnlyTransactional;
@@ -61,8 +65,10 @@ public class ChannelService {
     private final VideoRepository videoRepository;
     private final VideoQueryRepository videoQueryRepository;
     private final ChannelStatsRepository channelStatsRepository;
+    private final ChannelAnalyticsRepository channelAnalyticsRepository;
     private final VideoStatsRepository videoStatsRepository;
-    private final ChannelStatsHistoryRepository channelStatsHistoryRepository;
+    private final VideoAnalyticsRepository videoAnalyticsRepository;
+    private final SubscriberLogRepository subscriberLogRepository;
 
     @ReadOnlyTransactional
     public ChannelTopVideosResponse getTopVideos(Long channelId, String contentType) {
@@ -82,7 +88,8 @@ public class ChannelService {
         );
 
         Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
-        List<ChannelTopVideosResponse.ChannelTopVideo> items = mapTopVideos(videos, videoStatsMap);
+        Map<Long, VideoAnalytics> videoAnalyticsMap = getVideoAnalyticsMap(videos);
+        List<ChannelTopVideosResponse.ChannelTopVideo> items = mapTopVideos(videos, videoStatsMap, videoAnalyticsMap);
         return new ChannelTopVideosResponse(items);
     }
 
@@ -111,12 +118,14 @@ public class ChannelService {
         );
 
         Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
+        Map<Long, VideoAnalytics> videoAnalyticsMap = getVideoAnalyticsMap(videos);
         List<NewSubscriberVideo> items = new ArrayList<>();
 
         int rank = 1;
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
-            items.add(ChannelNewSubscriberResponse.NewSubscriberVideo.from(rank, video, videoStats));
+            VideoAnalytics videoAnalytics = videoAnalyticsMap.get(video.getId());
+            items.add(ChannelNewSubscriberResponse.NewSubscriberVideo.from(rank, video, videoStats, videoAnalytics));
             rank++;
         }
 
@@ -140,7 +149,7 @@ public class ChannelService {
         return ChannelKpiResponse.from(
                 channelStats.getTotalViewCount(),
                 channelStats.getAvgEngagementRate(),
-                calculateAverageRetentionRate(videos, videoStatsMap),
+                calculateAverageRetentionRate(videos, getVideoAnalyticsMap(videos)),
                 weeklyUploadCount
         );
     }
@@ -155,11 +164,17 @@ public class ChannelService {
 
         List<Video> videos = videoRepository.findAllTopVideos(channelId, Limit.of(5));
         Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
+        Map<Long, VideoAnalytics> videoAnalyticsMap = getVideoAnalyticsMap(videos);
         List<ChannelTopMainVideosResponse.ChannelTopMainVideo> items = new ArrayList<>();
         long rank = 1;
 
         for (Video video : videos) {
-            items.add(ChannelTopMainVideosResponse.ChannelTopMainVideo.of(rank, video, videoStatsMap.get(video.getId())));
+            items.add(ChannelTopMainVideosResponse.ChannelTopMainVideo.of(
+                    rank,
+                    video,
+                    videoStatsMap.get(video.getId()),
+                    videoAnalyticsMap.get(video.getId())
+            ));
             rank++;
         }
 
@@ -177,10 +192,12 @@ public class ChannelService {
 
         ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+        ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
 
         return ChannelSubscriberPatternResponse.from(
                 channelStats.getTotalViewCount(),
-                channelStats.getSubscriberViewCount()
+                channelAnalytics.getSubscriberViewCount()
         );
     }
 
@@ -188,10 +205,14 @@ public class ChannelService {
     public ChannelSubscriberDistributionResponse getSubscriberDistribution(Long channelId) {
         validateChannelExists(channelId);
 
-        ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
+        ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
 
-        return ChannelSubscriberDistributionResponse.from(channelStats);
+        return ChannelSubscriberDistributionResponse.from(
+                channelAnalytics.getAudienceGender(),
+                channelAnalytics.getAudienceAge(),
+                channelAnalytics.getAudienceCountry()
+        );
     }
 
 
@@ -239,7 +260,7 @@ public class ChannelService {
         validateChannelExists(channelId);
 
         ChannelSubscriberTrendRange range = ChannelSubscriberTrendRange.from(rangeValue);
-        ChannelStatsHistory latestHistory = channelStatsHistoryRepository
+        SubscriberLog latestHistory = subscriberLogRepository
                 .findTopByChannel_IdOrderByRecordedDateDesc(channelId)
                 .orElse(null);
 
@@ -247,17 +268,17 @@ public class ChannelService {
             return new ChannelSubscriberTrendResponse(range.value(), List.of());
         }
 
-        LocalDate endDate = latestHistory.getRecordedDate().toLocalDate();
+        LocalDate endDate = latestHistory.getRecordedDate();
         LocalDate startDate = range.startDate(endDate);
 
-        List<ChannelStatsHistory> histories = new ArrayList<>(channelStatsHistoryRepository.findHistoriesInRange(
+        List<SubscriberLog> histories = new ArrayList<>(subscriberLogRepository.findLogsInRange(
                 channelId,
-                startDate.atStartOfDay(),
-                endDate.plusDays(1).atStartOfDay().minusNanos(1)
+                startDate,
+                endDate
         ));
 
-        channelStatsHistoryRepository
-                .findTopByChannel_IdAndRecordedDateBeforeOrderByRecordedDateDesc(channelId, startDate.atStartOfDay())
+        subscriberLogRepository
+                .findTopByChannel_IdAndRecordedDateBeforeOrderByRecordedDateDesc(channelId, startDate)
                 .ifPresent(histories::add);
 
         List<ChannelSubscriberTrendResponse.Point> points = buildSubscriberTrendPoints(histories, range, startDate, endDate);
@@ -281,7 +302,7 @@ public class ChannelService {
             videoIds.add(video.getId());
         }
 
-        List<VideoStats> videoStatsList = videoStatsRepository.findAllByVideoIds(videoIds);
+        List<VideoStats> videoStatsList = videoStatsRepository.findAllByVideoIdIn(videoIds);
         Map<Long, VideoStats> videoStatsMap = new HashMap<>();
         for (VideoStats videoStats : videoStatsList) {
             videoStatsMap.put(videoStats.getVideo().getId(), videoStats);
@@ -290,13 +311,37 @@ public class ChannelService {
         return videoStatsMap;
     }
 
-    private List<ChannelTopVideosResponse.ChannelTopVideo> mapTopVideos(List<Video> videos, Map<Long, VideoStats> videoStatsMap) {
+    private Map<Long, VideoAnalytics> getVideoAnalyticsMap(List<Video> videos) {
+        if (videos.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> videoIds = new ArrayList<>();
+        for (Video video : videos) {
+            videoIds.add(video.getId());
+        }
+
+        List<VideoAnalytics> videoAnalyticsList = videoAnalyticsRepository.findAllByVideoIdIn(videoIds);
+        Map<Long, VideoAnalytics> videoAnalyticsMap = new HashMap<>();
+        for (VideoAnalytics videoAnalytics : videoAnalyticsList) {
+            videoAnalyticsMap.put(videoAnalytics.getVideo().getId(), videoAnalytics);
+        }
+
+        return videoAnalyticsMap;
+    }
+
+    private List<ChannelTopVideosResponse.ChannelTopVideo> mapTopVideos(
+            List<Video> videos,
+            Map<Long, VideoStats> videoStatsMap,
+            Map<Long, VideoAnalytics> videoAnalyticsMap
+    ) {
         List<ChannelTopVideosResponse.ChannelTopVideo> items = new ArrayList<>();
         int rank = 1;
 
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
-            items.add(ChannelTopVideosResponse.ChannelTopVideo.from(rank, video, videoStats));
+            VideoAnalytics videoAnalytics = videoAnalyticsMap.get(video.getId());
+            items.add(ChannelTopVideosResponse.ChannelTopVideo.from(rank, video, videoStats, videoAnalytics));
             rank++;
         }
 
@@ -384,17 +429,17 @@ public class ChannelService {
     }
 
     //채널 참여율 평균 구하기
-    private double calculateAverageRetentionRate(List<Video> videos, Map<Long, VideoStats> videoStatsMap) {
+    private double calculateAverageRetentionRate(List<Video> videos, Map<Long, VideoAnalytics> videoAnalyticsMap) {
         double totalAverageViewPercentage = 0.0;
         int count = 0;
 
         for (Video video : videos) {
-            VideoStats videoStats = videoStatsMap.get(video.getId());
-            if (videoStats == null || videoStats.getAverageViewPercentage() == null) {
+            VideoAnalytics videoAnalytics = videoAnalyticsMap.get(video.getId());
+            if (videoAnalytics == null || videoAnalytics.getAverageViewPercentage() == null) {
                 continue;
             }
 
-            totalAverageViewPercentage += videoStats.getAverageViewPercentage();
+            totalAverageViewPercentage += videoAnalytics.getAverageViewPercentage();
             count++;
         }
 
@@ -403,14 +448,14 @@ public class ChannelService {
 
     //하루 1건 저장을 전제로 조회된 히스토리를 LocalDate -> subscriberCount 형태의 정렬된 맵으로 만든다.
     private List<ChannelSubscriberTrendResponse.Point> buildSubscriberTrendPoints(
-            List<ChannelStatsHistory> histories,
+            List<SubscriberLog> histories,
             ChannelSubscriberTrendRange range,
             LocalDate startDate,
             LocalDate endDate
     ) {
         NavigableMap<LocalDate, Long> subscriberCountByDate = new TreeMap<>();
-        for (ChannelStatsHistory history : histories) {
-            subscriberCountByDate.put(history.getRecordedDate().toLocalDate(), history.getSubscriberCount());
+        for (SubscriberLog history : histories) {
+            subscriberCountByDate.put(history.getRecordedDate(), history.getSubscriberCount());
         }
 
         List<LocalDate> pointDates = createPointDates(range, startDate, endDate);

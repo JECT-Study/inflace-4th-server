@@ -1,7 +1,6 @@
 package com.example.inflace.domain.video.domain;
 
 import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.domain.channel.domain.YoutubeCategory;
 import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -71,4 +70,10 @@ public class Video extends BaseTimeEntity {
         this.isAdvertisement = isAdvertisement;
         this.publishedAt = publishedAt;
     }
+
+    @Transient
+    public String getVideoUrl() {
+        return youtubeVideoId != null ? "https://www.youtube.com/watch?v=" + youtubeVideoId : null;
+    }
+
 }

@@ -4,10 +4,12 @@ import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.video.domain.AudienceRetention;
 import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoRequest;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoResponse;
 import com.example.inflace.domain.video.repository.AudienceRetentionRepository;
+import com.example.inflace.domain.video.repository.VideoAnalyticsRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.global.client.YoutubeAnalyticsApiClient;
@@ -46,11 +48,12 @@ public class VideoSyncService {
     );
 
     private static final List<String> UNSUBSCRIBED_METRICS = List.of(
-            "views"
+            "views", "viewerPercentage"
     );
 
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
+    private final VideoAnalyticsRepository videoAnalyticsRepository;
     private final AudienceRetentionRepository audienceRetentionRepository;
     private final UserReadRepository userReadRepository;
     private final YoutubeAnalyticsService youtubeAnalyticsService;
@@ -90,22 +93,40 @@ public class VideoSyncService {
         Double averageViewPercentage = toDouble(data.get("averageViewPercentage"));
         Double annotationClickThroughRate = toDouble(data.get("annotationClickThroughRate"));
 
-        Optional<VideoStats> existing = videoStatsRepository.findByVideo(video);
-        if (existing.isPresent()) {
-            existing.get().update(viewCount, likeCount, commentCount, shareCount, subscribersGained,
-                    annotationClickThroughRate, avgWatchDuration, averageViewPercentage, LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+
+        Optional<VideoStats> existingStats = videoStatsRepository.findByVideoId(videoId);
+        if (existingStats.isPresent()) {
+            existingStats.get().update(viewCount, likeCount, commentCount, now);
         } else {
             videoStatsRepository.save(VideoStats.builder()
                     .video(video)
                     .viewCount(viewCount)
                     .likeCount(likeCount)
                     .commentCount(commentCount)
+                    .collectedAt(now)
+                    .build());
+        }
+
+        Optional<VideoAnalytics> existingAnalytics = videoAnalyticsRepository.findByVideoId(videoId);
+        if (existingAnalytics.isPresent()) {
+            existingAnalytics.get().update(
+                    shareCount,
+                    subscribersGained,
+                    annotationClickThroughRate,
+                    avgWatchDuration,
+                    averageViewPercentage,
+                    now
+            );
+        } else {
+            videoAnalyticsRepository.save(VideoAnalytics.builder()
+                    .video(video)
                     .shareCount(shareCount)
                     .subscribersGained(subscribersGained)
-                    .avgWatchDuration(avgWatchDuration)
                     .ctr(annotationClickThroughRate)
+                    .avgWatchDuration(avgWatchDuration)
                     .averageViewPercentage(averageViewPercentage)
-                    .collectedAt(LocalDateTime.now())
+                    .collectedAt(now)
                     .build());
         }
     }
@@ -155,9 +176,8 @@ public class VideoSyncService {
                 .average()
                 .orElse(0.0);
 
-        // VideoStats에 업데이트
-        videoStatsRepository.findByVideo(video).ifPresent(stats ->
-                stats.updateRelativeRetention(relativeRetentionAvg)
+        videoAnalyticsRepository.findByVideoId(videoId).ifPresent(analytics ->
+                analytics.updateRelativeRetention(relativeRetentionAvg)
         );
 
         audienceRetentionRepository.saveAll(retentions);
@@ -174,7 +194,7 @@ public class VideoSyncService {
         Video video = findVideoWithOwnership(userId, videoId);
         String googleId = getGoogleId(userId);
 
-        Optional<VideoStats> existing = videoStatsRepository.findByVideo(video);
+        Optional<VideoAnalytics> existing = videoAnalyticsRepository.findByVideoId(videoId);
         if (existing.isEmpty()) {
             return;
         }
@@ -208,8 +228,9 @@ public class VideoSyncService {
         }
 
         Long unsubscribedViewCount = toLong(unsubscribedRow.get(indexMap.get("views")));
+        Double unsubscribedViewerPercentage = toDouble(unsubscribedRow.get(indexMap.get("viewerPercentage")));
 
-        existing.get().updateUnsubscribed(unsubscribedViewCount);
+        existing.get().updateUnsubscribed(unsubscribedViewCount, unsubscribedViewerPercentage);
     }
 
     private Video findVideoWithOwnership(UUID userId, long videoId) {

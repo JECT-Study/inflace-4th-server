@@ -6,6 +6,7 @@ import com.example.inflace.domain.channel.dto.enums.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
 import com.example.inflace.domain.channel.dto.ChannelVideosRequest;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse.ChannelVideoItem;
+import com.example.inflace.domain.video.domain.QVideoAnalytics;
 import com.example.inflace.domain.video.domain.QVideo;
 import com.example.inflace.domain.video.domain.QVideoStats;
 import com.querydsl.core.BooleanBuilder;
@@ -28,6 +29,7 @@ public class VideoQueryRepositoryImpl implements VideoQueryRepository {
     public ChannelVideoSliceResult findChannelVideos(Long channelId, ChannelVideosRequest request) {
         QVideo video = QVideo.video;
         QVideoStats stats = QVideoStats.videoStats;
+        QVideoAnalytics analytics = QVideoAnalytics.videoAnalytics;
 
         BooleanBuilder predicate = new BooleanBuilder();
         predicate.and(video.channel.id.eq(channelId));
@@ -58,18 +60,19 @@ public class VideoQueryRepositoryImpl implements VideoQueryRepository {
                         video.title,
                         video.thumbnailUrl,
                         video.publishedAt,
-                        video.duration,
+                        video.durationSeconds,
                         video.isShort,
                         video.isAdvertisement,
                         stats.viewCount.coalesce(0L),
                         stats.likeCount.coalesce(0L),
                         stats.commentCount.coalesce(0L),
-                        stats.ctr.coalesce(0.0),
+                        analytics.ctr.coalesce(0.0),
                         stats.vph.coalesce(0.0),
                         stats.outlierScore.coalesce(0.0)
                 ))
                 .from(video)
                 .leftJoin(stats).on(stats.video.id.eq(video.id))
+                .leftJoin(analytics).on(analytics.video.id.eq(video.id))
                 .where(predicate)
                 .orderBy(buildOrderSpecifiers(request.sort(), video, stats))
                 .limit(request.size() + 1L)
