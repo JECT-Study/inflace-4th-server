@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.dto;
+package com.example.inflace.domain.channel.dto.response;
 
 import com.example.inflace.domain.channel.domain.Channel;
 
