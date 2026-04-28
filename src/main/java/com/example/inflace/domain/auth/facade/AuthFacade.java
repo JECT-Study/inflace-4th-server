@@ -4,7 +4,7 @@ import com.example.inflace.domain.auth.application.OAuthStrategyRouter;
 import com.example.inflace.domain.auth.presentation.dto.*;
 import com.example.inflace.domain.auth.service.AuthTokenRedisService;
 import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.domain.channel.dto.UserChannelDetailsResponse;
+import com.example.inflace.domain.channel.dto.response.UserChannelDetailsResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.application.UserService;
 import com.example.inflace.domain.user.infra.UserReadRepository;
@@ -13,10 +13,9 @@ import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.security.jwt.JwtProvider;
 import com.example.inflace.global.security.util.SecurityUtils;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor

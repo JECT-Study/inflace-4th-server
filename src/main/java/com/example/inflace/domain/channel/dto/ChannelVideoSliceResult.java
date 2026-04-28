@@ -1,6 +1,6 @@
 package com.example.inflace.domain.channel.dto;
 
-import com.example.inflace.domain.channel.dto.ChannelVideosResponse.ChannelVideoItem;
+import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse.ChannelVideoItem;
 import java.util.List;
 
 public record ChannelVideoSliceResult(
@@ -9,4 +9,3 @@ public record ChannelVideoSliceResult(
         boolean hasNext
 ) {
 }
-

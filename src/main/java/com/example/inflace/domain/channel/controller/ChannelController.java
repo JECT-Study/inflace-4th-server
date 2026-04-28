@@ -1,19 +1,15 @@
 package com.example.inflace.domain.channel.controller;
 
-import com.example.inflace.domain.channel.dto.ChannelEngagementRateResponse;
-import com.example.inflace.domain.channel.dto.ChannelKpiResponse;
-import com.example.inflace.domain.channel.dto.ChannelNewSubscriberResponse;
-
-import com.example.inflace.domain.channel.dto.ChannelTopMainVideosResponse;
-
-import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionResponse;
-import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
-
-import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
-import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
-
+import com.example.inflace.domain.channel.dto.response.ChannelEngagementRateResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelKpiResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelNewSubscriberResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelSubscriberDistributionResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelSubscriberPatternResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelSubscriberTrendResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelTopMainVideosResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelTopVideosResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse;
 import com.example.inflace.domain.channel.service.ChannelService;
-import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/channels")
-public class ChannelController implements ChannelApi{
+public class ChannelController implements ChannelApi {
 
     private final ChannelService channelService;
 
