@@ -90,7 +90,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                     row.get(channel.name),
                     row.get(channel.channelHandle),
                     row.get(channel.profileImageUrl),
-                    categoryMap.get(channelId),
+                    categoryMap.getOrDefault(channelId, List.of()),
                     row.get(channelStats.subscriberCount),
                     row.get(channelStats.avgEngagementRateRecent),
                     row.get(channelStats.avgViewsRecent),
@@ -198,6 +198,10 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
     }
 
     private BooleanBuilder buildChannelNameContains(String channelName) {
+        if (channelName == null || channelName.isBlank()) {
+            return null;
+        }
+
         return QueryDSLBooleanUtils.nullSafeBuilder(() -> channel.name.containsIgnoreCase(channelName));
     }
 
@@ -233,18 +237,34 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
     }
 
     private BooleanBuilder buildEngagementRateFrom(Double engagementRateFrom) {
+        if (engagementRateFrom == null) {
+            return null;
+        }
+
         return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.avgEngagementRateRecent.goe(engagementRateFrom));
     }
 
     private BooleanBuilder buildEngagementRateTo(Double engagementRateTo) {
+        if (engagementRateTo == null) {
+            return null;
+        }
+
         return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.avgEngagementRateRecent.loe(engagementRateTo));
     }
 
     private BooleanBuilder buildSubscriberFrom(Long subscriberFrom) {
+        if (subscriberFrom == null) {
+            return null;
+        }
+
         return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.subscriberCount.goe(subscriberFrom));
     }
 
     private BooleanBuilder buildSubscriberTo(Long subscriberTo) {
+        if (subscriberTo == null) {
+            return null;
+        }
+
         return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.subscriberCount.loe(subscriberTo));
     }
 

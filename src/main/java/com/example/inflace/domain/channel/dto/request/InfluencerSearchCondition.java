@@ -1,9 +1,10 @@
 package com.example.inflace.domain.channel.dto.request;
 
 import com.example.inflace.global.enums.SortOrder;
+import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ErrorDefine;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.List;
 
 public record InfluencerSearchCondition(
@@ -107,6 +108,10 @@ public record InfluencerSearchCondition(
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
 
+        if (pageSize < 1) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
+
         if (uploadPeriod != null && !uploadPeriod.isBlank()) {
             InfluencerUploadPeriod.from(uploadPeriod);
         }
@@ -116,6 +121,8 @@ public record InfluencerSearchCondition(
         if (outlierRange != null && !outlierRange.isBlank()) {
             InfluencerVideoOutlierRange.from(outlierRange);
         }
+
+        validateCursor();
     }
 
     public InfluencerUploadPeriod uploadPeriodEnum() {
@@ -138,5 +145,32 @@ public record InfluencerSearchCondition(
 
     public boolean hasEngagementCursor() {
         return lastEngagementSortRate != null && lastChannelId != null;
+    }
+
+    private void validateCursor() {
+        InfluencerSortCriteria activeSortCriteria = sortCriteria == null || sortCriteria.isBlank()
+                ? InfluencerSortCriteria.ENGAGEMENT_RATE
+                : InfluencerSortCriteria.from(sortCriteria);
+
+        switch (activeSortCriteria) {
+            case SUBSCRIBER -> {
+                boolean hasAnySubscriberCursor = lastSubscriberSortCount != null || lastChannelId != null;
+                if (hasAnySubscriberCursor && hasSubscriberCursor()) {
+                    return;
+                }
+                if (hasAnySubscriberCursor) {
+                    throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+                }
+            }
+            case ENGAGEMENT_RATE -> {
+                boolean hasAnyEngagementCursor = lastEngagementSortRate != null || lastChannelId != null;
+                if (hasAnyEngagementCursor && hasEngagementCursor()) {
+                    return;
+                }
+                if (hasAnyEngagementCursor) {
+                    throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+                }
+            }
+        }
     }
 }

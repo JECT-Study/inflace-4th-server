@@ -2,7 +2,6 @@ package com.example.inflace.global.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.domain.Slice;
-
 import java.util.List;
 
 public record SliceResponse<T>(
@@ -29,13 +28,16 @@ public record SliceResponse<T>(
             String sortCriteria,
             String sortOrder
     ) {
+        boolean sorted = slice.getSort().isSorted()
+                || (sortCriteria != null && !sortCriteria.isBlank() && sortOrder != null && !sortOrder.isBlank());
+
         return new SliceResponse<>(
                 slice.getContent(),
                 slice.getSize(),
                 slice.hasNext(),
                 slice.getNumberOfElements(),
                 slice.isEmpty(),
-                CustomSort.of(slice.getSort().isSorted(), sortCriteria, sortOrder)
+                CustomSort.of(sorted, sortCriteria, sortOrder)
         );
     }
 }
