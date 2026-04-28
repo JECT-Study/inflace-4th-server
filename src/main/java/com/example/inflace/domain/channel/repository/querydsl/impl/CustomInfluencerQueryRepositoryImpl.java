@@ -9,7 +9,6 @@ import com.example.inflace.domain.channel.dto.request.InfluencerVideoOutlierRang
 import com.example.inflace.domain.channel.dto.response.InfluencerSearchResponse;
 import com.example.inflace.domain.channel.repository.querydsl.CustomInfluencerQueryRepository;
 import com.example.inflace.domain.video.domain.QVideo;
-import com.example.inflace.domain.video.domain.QVideoStats;
 import com.example.inflace.global.enums.SortOrder;
 import com.example.inflace.global.util.QueryDSLBooleanUtils;
 import com.querydsl.core.BooleanBuilder;
@@ -254,18 +253,9 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             return null;
         }
 
-        QVideo videoSubQuery = new QVideo("videoSubQuery");
-        QVideoStats videoStatsSubQuery = new QVideoStats("videoStatsSubQuery");
-
-        return QueryDSLBooleanUtils.nullSafeBuilder(() -> JPAExpressions
-                .selectOne()
-                .from(videoSubQuery)
-                .join(videoStatsSubQuery).on(videoStatsSubQuery.video.id.eq(videoSubQuery.id))
-                .where(
-                        videoSubQuery.channel.id.eq(channel.id),
-                        videoStatsSubQuery.outlierScore.goe(outlierRange.minValueInclusive())
-                )
-                .exists());
+        return QueryDSLBooleanUtils.nullSafeBuilder(
+                () -> channelStats.avgOutlierScoreRecentExcludingTop5Pct.goe(outlierRange.minValueInclusive())
+        );
     }
 
     private BooleanBuilder buildUploadPeriodPredicate(InfluencerUploadPeriod uploadPeriod) {
