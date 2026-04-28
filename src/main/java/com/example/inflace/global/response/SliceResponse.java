@@ -3,6 +3,7 @@ package com.example.inflace.global.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.domain.Slice;
 import java.util.List;
+import org.springframework.util.StringUtils;
 
 public record SliceResponse<T>(
         @Schema(description = "현재 페이지 데이터 목록")
@@ -29,7 +30,7 @@ public record SliceResponse<T>(
             String sortOrder
     ) {
         boolean sorted = slice.getSort().isSorted()
-                || (sortCriteria != null && !sortCriteria.isBlank() && sortOrder != null && !sortOrder.isBlank());
+                || (StringUtils.hasText(sortCriteria) && StringUtils.hasText(sortOrder));
 
         return new SliceResponse<>(
                 slice.getContent(),

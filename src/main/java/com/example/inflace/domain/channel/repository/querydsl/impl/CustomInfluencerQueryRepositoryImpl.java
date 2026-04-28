@@ -10,7 +10,6 @@ import com.example.inflace.domain.channel.dto.response.InfluencerSearchResponse;
 import com.example.inflace.domain.channel.repository.querydsl.CustomInfluencerQueryRepository;
 import com.example.inflace.domain.video.domain.QVideo;
 import com.example.inflace.global.enums.SortOrder;
-import com.example.inflace.global.util.QueryDSLBooleanUtils;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
@@ -24,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -163,46 +163,46 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             InfluencerSearchCondition searchCondition,
             SortOrder sortOrder
     ) {
-        if (!searchCondition.hasSubscriberCursor()) {
-            return null;
+        if (searchCondition.hasSubscriberCursor()) {
+            return sortOrder == SortOrder.ASC
+                    ? new BooleanBuilder(
+                    channelStats.subscriberCount.gt(searchCondition.lastSubscriberSortCount())
+                            .or(channelStats.subscriberCount.eq(searchCondition.lastSubscriberSortCount()).and(channel.id.gt(searchCondition.lastChannelId())))
+            )
+                    : new BooleanBuilder(
+                    channelStats.subscriberCount.lt(searchCondition.lastSubscriberSortCount())
+                            .or(channelStats.subscriberCount.eq(searchCondition.lastSubscriberSortCount()).and(channel.id.lt(searchCondition.lastChannelId())))
+            );
         }
 
-        return sortOrder == SortOrder.ASC
-                ? QueryDSLBooleanUtils.nullSafeBuilder(
-                () -> channelStats.subscriberCount.gt(searchCondition.lastSubscriberSortCount())
-                        .or(channelStats.subscriberCount.eq(searchCondition.lastSubscriberSortCount()).and(channel.id.gt(searchCondition.lastChannelId())))
-        )
-                : QueryDSLBooleanUtils.nullSafeBuilder(
-                () -> channelStats.subscriberCount.lt(searchCondition.lastSubscriberSortCount())
-                        .or(channelStats.subscriberCount.eq(searchCondition.lastSubscriberSortCount()).and(channel.id.lt(searchCondition.lastChannelId())))
-        );
+        return new BooleanBuilder();
     }
 
     private BooleanBuilder buildEngagementCursorPredicate(
             InfluencerSearchCondition searchCondition,
             SortOrder sortOrder
     ) {
-        if (!searchCondition.hasEngagementCursor()) {
-            return null;
+        if (searchCondition.hasEngagementCursor()) {
+            return sortOrder == SortOrder.ASC
+                    ? new BooleanBuilder(
+                    channelStats.avgEngagementRateRecent.gt(searchCondition.lastEngagementSortRate())
+                            .or(channelStats.avgEngagementRateRecent.eq(searchCondition.lastEngagementSortRate()).and(channel.id.gt(searchCondition.lastChannelId())))
+            )
+                    : new BooleanBuilder(
+                    channelStats.avgEngagementRateRecent.lt(searchCondition.lastEngagementSortRate())
+                            .or(channelStats.avgEngagementRateRecent.eq(searchCondition.lastEngagementSortRate()).and(channel.id.lt(searchCondition.lastChannelId())))
+            );
         }
 
-        return sortOrder == SortOrder.ASC
-                ? QueryDSLBooleanUtils.nullSafeBuilder(
-                () -> channelStats.avgEngagementRateRecent.gt(searchCondition.lastEngagementSortRate())
-                        .or(channelStats.avgEngagementRateRecent.eq(searchCondition.lastEngagementSortRate()).and(channel.id.gt(searchCondition.lastChannelId())))
-        )
-                : QueryDSLBooleanUtils.nullSafeBuilder(
-                () -> channelStats.avgEngagementRateRecent.lt(searchCondition.lastEngagementSortRate())
-                        .or(channelStats.avgEngagementRateRecent.eq(searchCondition.lastEngagementSortRate()).and(channel.id.lt(searchCondition.lastChannelId())))
-        );
+        return new BooleanBuilder();
     }
 
     private BooleanBuilder buildChannelNameContains(String channelName) {
-        if (channelName == null || channelName.isBlank()) {
+        if (!StringUtils.hasText(channelName)) {
             return null;
         }
 
-        return QueryDSLBooleanUtils.nullSafeBuilder(() -> channel.name.containsIgnoreCase(channelName));
+        return new BooleanBuilder(channel.name.containsIgnoreCase(channelName));
     }
 
     private BooleanBuilder buildCategoryNameIn(List<String> categoryNames) {
@@ -213,7 +213,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
         QChannelCategory channelCategorySubQuery = new QChannelCategory("channelCategorySubQuery");
         QYoutubeCategory youtubeCategorySubQuery = new QYoutubeCategory("youtubeCategorySubQuery");
 
-        return QueryDSLBooleanUtils.nullSafeBuilder(() -> buildCategoryExistsExpression(
+        return new BooleanBuilder(buildCategoryExistsExpression(
                 categoryNames,
                 channelCategorySubQuery,
                 youtubeCategorySubQuery
@@ -241,7 +241,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             return null;
         }
 
-        return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.avgEngagementRateRecent.goe(engagementRateFrom));
+        return new BooleanBuilder(channelStats.avgEngagementRateRecent.goe(engagementRateFrom));
     }
 
     private BooleanBuilder buildEngagementRateTo(Double engagementRateTo) {
@@ -249,7 +249,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             return null;
         }
 
-        return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.avgEngagementRateRecent.loe(engagementRateTo));
+        return new BooleanBuilder(channelStats.avgEngagementRateRecent.loe(engagementRateTo));
     }
 
     private BooleanBuilder buildSubscriberFrom(Long subscriberFrom) {
@@ -257,7 +257,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             return null;
         }
 
-        return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.subscriberCount.goe(subscriberFrom));
+        return new BooleanBuilder(channelStats.subscriberCount.goe(subscriberFrom));
     }
 
     private BooleanBuilder buildSubscriberTo(Long subscriberTo) {
@@ -265,7 +265,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             return null;
         }
 
-        return QueryDSLBooleanUtils.nullSafeBuilder(() -> channelStats.subscriberCount.loe(subscriberTo));
+        return new BooleanBuilder(channelStats.subscriberCount.loe(subscriberTo));
     }
 
     private BooleanBuilder buildOutlierRangeFrom(InfluencerVideoOutlierRange outlierRange) {
@@ -273,8 +273,8 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             return null;
         }
 
-        return QueryDSLBooleanUtils.nullSafeBuilder(
-                () -> channelStats.avgOutlierScoreRecentExcludingTop5Pct.goe(outlierRange.minValueInclusive())
+        return new BooleanBuilder(
+                channelStats.avgOutlierScoreRecentExcludingTop5Pct.goe(outlierRange.minValueInclusive())
         );
     }
 
@@ -290,8 +290,8 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
 
         if (uploadPeriod.maxDaysInclusive() != null) {
             predicate.and(
-                    QueryDSLBooleanUtils.nullSafeBuilder(
-                            () -> JPAExpressions
+                    new BooleanBuilder(
+                            JPAExpressions
                                     .selectOne()
                                     .from(videoWithinMaxPeriodSubQuery)
                                     .where(
@@ -304,8 +304,8 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
         }
         if (uploadPeriod.minDaysInclusive() != null && uploadPeriod.minDaysInclusive() > 0) {
             predicate.and(
-                    QueryDSLBooleanUtils.nullSafeBuilder(
-                            () -> JPAExpressions
+                    new BooleanBuilder(
+                            JPAExpressions
                                     .selectOne()
                                     .from(videoWithinMinExclusivePeriodSubQuery)
                                     .where(

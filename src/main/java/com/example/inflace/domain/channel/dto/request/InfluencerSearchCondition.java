@@ -6,6 +6,7 @@ import com.example.inflace.global.exception.ErrorDefine;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+import org.springframework.util.StringUtils;
 
 public record InfluencerSearchCondition(
         @Schema(
@@ -112,13 +113,13 @@ public record InfluencerSearchCondition(
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
 
-        if (uploadPeriod != null && !uploadPeriod.isBlank()) {
+        if (StringUtils.hasText(uploadPeriod)) {
             InfluencerUploadPeriod.from(uploadPeriod);
         }
-        if (sortCriteria != null && !sortCriteria.isBlank()) {
+        if (StringUtils.hasText(sortCriteria)) {
             InfluencerSortCriteria.from(sortCriteria);
         }
-        if (outlierRange != null && !outlierRange.isBlank()) {
+        if (StringUtils.hasText(outlierRange)) {
             InfluencerVideoOutlierRange.from(outlierRange);
         }
 
@@ -126,17 +127,17 @@ public record InfluencerSearchCondition(
     }
 
     public InfluencerUploadPeriod uploadPeriodEnum() {
-        return uploadPeriod == null || uploadPeriod.isBlank() ? null : InfluencerUploadPeriod.from(uploadPeriod);
+        return StringUtils.hasText(uploadPeriod) ? InfluencerUploadPeriod.from(uploadPeriod) : null;
     }
 
     public InfluencerSortCriteria sortCriteriaEnum() {
-        return sortCriteria == null || sortCriteria.isBlank()
+        return !StringUtils.hasText(sortCriteria)
                 ? InfluencerSortCriteria.ENGAGEMENT_RATE
                 : InfluencerSortCriteria.from(sortCriteria);
     }
 
     public InfluencerVideoOutlierRange outlierRangeEnum() {
-        return outlierRange == null || outlierRange.isBlank() ? null : InfluencerVideoOutlierRange.from(outlierRange);
+        return StringUtils.hasText(outlierRange) ? InfluencerVideoOutlierRange.from(outlierRange) : null;
     }
 
     public boolean hasSubscriberCursor() {
@@ -148,7 +149,7 @@ public record InfluencerSearchCondition(
     }
 
     private void validateCursor() {
-        InfluencerSortCriteria activeSortCriteria = sortCriteria == null || sortCriteria.isBlank()
+        InfluencerSortCriteria activeSortCriteria = !StringUtils.hasText(sortCriteria)
                 ? InfluencerSortCriteria.ENGAGEMENT_RATE
                 : InfluencerSortCriteria.from(sortCriteria);
 
