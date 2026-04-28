@@ -41,11 +41,11 @@ public class ChannelStats extends BaseTimeEntity {
     @Column(name = "recent_upload_count_30d", nullable = false)
     private Integer recentUploadCount30d;
 
-    @Column(name = "avg_views_recent_n", nullable = false)
-    private Double avgViewsRecentN;
+    @Column(name = "avg_views_recent", nullable = false)
+    private Double avgViewsRecent;
 
-    @Column(name = "avg_engagement_rate_recent_n", nullable = false)
-    private Double avgEngagementRateRecentN;
+    @Column(name = "avg_engagement_rate_recent", nullable = false)
+    private Double avgEngagementRateRecent;
 
     @Column(name = "avg_outlier_score_recent_excluding_top_5_pct", nullable = false)
     private Double avgOutlierScoreRecentExcludingTop5Pct;
@@ -55,21 +55,21 @@ public class ChannelStats extends BaseTimeEntity {
 
     @Builder
     public ChannelStats(Channel channel, Long subscriberCount, Long totalViewCount, Long totalVideoCount,
-                        Integer recentUploadCount30d, Double avgViewsRecentN,
-                        Double avgEngagementRateRecentN, Double avgOutlierScoreRecentExcludingTop5Pct,
+                        Integer recentUploadCount30d, Double avgViewsRecent,
+                        Double avgEngagementRateRecent, Double avgOutlierScoreRecentExcludingTop5Pct,
                         LocalDateTime collectedAt) {
         this.channel = channel;
         this.subscriberCount = subscriberCount;
         this.totalViewCount = totalViewCount;
         this.totalVideoCount = totalVideoCount;
         this.recentUploadCount30d = recentUploadCount30d;
-        this.avgViewsRecentN = avgViewsRecentN;
-        this.avgEngagementRateRecentN = avgEngagementRateRecentN;
+        this.avgViewsRecent = avgViewsRecent;
+        this.avgEngagementRateRecent = avgEngagementRateRecent;
         this.avgOutlierScoreRecentExcludingTop5Pct = avgOutlierScoreRecentExcludingTop5Pct;
         this.collectedAt = collectedAt;
     }
 
     public Double getAvgEngagementRate() {
-        return avgEngagementRateRecentN;
+        return avgEngagementRateRecent;
     }
 }
