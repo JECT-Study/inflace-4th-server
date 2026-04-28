@@ -29,7 +29,7 @@ public class ChannelStats extends BaseTimeEntity {
     @JoinColumn(name = "channel_id", nullable = false)
     private Channel channel;
 
-    @Column(name = "subscriber_count")
+    @Column(name = "subscriber_count", nullable = false)
     private Long subscriberCount;
 
     @Column(name = "total_view_count")
@@ -38,16 +38,16 @@ public class ChannelStats extends BaseTimeEntity {
     @Column(name = "total_video_count")
     private Long totalVideoCount;
 
-    @Column(name = "recent_upload_count_30d")
+    @Column(name = "recent_upload_count_30d", nullable = false)
     private Integer recentUploadCount30d;
 
-    @Column(name = "avg_views_recent_n")
+    @Column(name = "avg_views_recent_n", nullable = false)
     private Double avgViewsRecentN;
 
-    @Column(name = "avg_engagement_rate_recent_n")
+    @Column(name = "avg_engagement_rate_recent_n", nullable = false)
     private Double avgEngagementRateRecentN;
 
-    @Column(name = "collected_at")
+    @Column(name = "collected_at", nullable = false)
     private LocalDateTime collectedAt;
 
     @Builder
