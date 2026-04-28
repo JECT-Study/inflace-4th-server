@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.time.Duration;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
@@ -21,7 +20,6 @@ import java.util.UUID;
 public class JwtProvider {
 
     private static final String CLAIM_USER_TYPE = "userType";
-    private static final long REFRESH_TOKEN_EXPIRATION_MILLIS = Duration.ofDays(14).toMillis();
 
     private final JwtProperties jwtProperties;
 
@@ -46,11 +44,11 @@ public class JwtProvider {
     }
 
     public String createRefreshToken(UUID userId) {
-        return createToken(userId, REFRESH_TOKEN_EXPIRATION_MILLIS);
+        return createToken(userId, jwtProperties.refreshExpiration());
     }
 
     public long getRefreshTokenExpirationMillis() {
-        return REFRESH_TOKEN_EXPIRATION_MILLIS;
+        return jwtProperties.refreshExpiration();
     }
 
     public UUID getUserId(String token) {
