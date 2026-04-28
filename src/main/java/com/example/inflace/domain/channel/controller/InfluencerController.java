@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/influencers")
 @RequiredArgsConstructor
-public class InfluencerController {
+public class InfluencerController implements InfluencerApi {
 
     private final InfluencerService influencerService;
 
+    @Override
     @GetMapping
     public BaseResponse<SliceResponse<InfluencerSearchResponse>> getInfluencersWithSearchCondition(
             @ModelAttribute InfluencerSearchCondition searchCondition
