@@ -47,13 +47,17 @@ public class ChannelStats extends BaseTimeEntity {
     @Column(name = "avg_engagement_rate_recent_n", nullable = false)
     private Double avgEngagementRateRecentN;
 
+    @Column(name = "avg_outlier_score_recent_excluding_top_5_pct", nullable = false)
+    private Double avgOutlierScoreRecentExcludingTop5Pct;
+
     @Column(name = "collected_at", nullable = false)
     private LocalDateTime collectedAt;
 
     @Builder
     public ChannelStats(Channel channel, Long subscriberCount, Long totalViewCount, Long totalVideoCount,
                         Integer recentUploadCount30d, Double avgViewsRecentN,
-                        Double avgEngagementRateRecentN, LocalDateTime collectedAt) {
+                        Double avgEngagementRateRecentN, Double avgOutlierScoreRecentExcludingTop5Pct,
+                        LocalDateTime collectedAt) {
         this.channel = channel;
         this.subscriberCount = subscriberCount;
         this.totalViewCount = totalViewCount;
@@ -61,6 +65,7 @@ public class ChannelStats extends BaseTimeEntity {
         this.recentUploadCount30d = recentUploadCount30d;
         this.avgViewsRecentN = avgViewsRecentN;
         this.avgEngagementRateRecentN = avgEngagementRateRecentN;
+        this.avgOutlierScoreRecentExcludingTop5Pct = avgOutlierScoreRecentExcludingTop5Pct;
         this.collectedAt = collectedAt;
     }
 
