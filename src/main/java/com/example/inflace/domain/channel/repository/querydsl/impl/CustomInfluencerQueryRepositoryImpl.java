@@ -1,12 +1,13 @@
 package com.example.inflace.domain.channel.repository.querydsl.impl;
 
 import com.example.inflace.domain.channel.domain.QChannelCategory;
+import com.example.inflace.domain.channel.domain.QChannelBookmark;
 import com.example.inflace.domain.channel.domain.QYoutubeCategory;
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.request.InfluencerSortCriteria;
 import com.example.inflace.domain.channel.dto.request.InfluencerUploadPeriod;
 import com.example.inflace.domain.channel.dto.request.InfluencerVideoOutlierRange;
-import com.example.inflace.domain.channel.dto.response.InfluencerSearchResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.repository.querydsl.CustomInfluencerQueryRepository;
 import com.example.inflace.domain.video.domain.QVideo;
 import com.example.inflace.global.enums.SortOrder;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.example.inflace.domain.channel.domain.QChannel.channel;
 import static com.example.inflace.domain.channel.domain.QChannelStats.channelStats;
@@ -42,7 +44,12 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Slice<InfluencerSearchResponse> getInfluencersWithSearchCondition(InfluencerSearchCondition searchCondition) {
+    public Slice<GetInfluencerSearchResponse> getInfluencersWithSearchCondition(
+            InfluencerSearchCondition searchCondition,
+            UUID userId
+    ) {
+        QChannelBookmark channelBookmark = new QChannelBookmark("channelBookmark");
+
         List<Tuple> rows = jpaQueryFactory
                 .select(
                         channel.id,
@@ -53,10 +60,15 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                         channelStats.avgEngagementRateRecent,
                         channelStats.avgViewsRecent,
                         channelStats.recentUploadCount30d,
+                        channelBookmark.id,
                         user.email
                 )
                 .from(channel)
                 .leftJoin(channelStats).on(channelStats.channel.id.eq(channel.id))
+                .leftJoin(channelBookmark).on(
+                        channelBookmark.channel.id.eq(channel.id),
+                        channelBookmark.user.id.eq(userId)
+                )
                 .leftJoin(user).on(user.id.eq(channel.user.id))
                 .where(
                         buildChannelNameContains(searchCondition.channelName()),
@@ -83,12 +95,12 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                 .toList();
 
         Map<Long, List<String>> categoryMap = buildCategoryMap(channelIds);
-        List<InfluencerSearchResponse> content = new ArrayList<>();
+        List<GetInfluencerSearchResponse> content = new ArrayList<>();
 
         for (Tuple row : pageRows) {
             Long channelId = row.get(channel.id);
 
-            content.add(new InfluencerSearchResponse(
+            content.add(new GetInfluencerSearchResponse(
                     channelId,
                     row.get(channel.name),
                     row.get(channel.channelHandle),
@@ -98,6 +110,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                     row.get(channelStats.avgEngagementRateRecent),
                     row.get(channelStats.avgViewsRecent),
                     row.get(channelStats.recentUploadCount30d),
+                    row.get(channelBookmark.id) != null,
                     row.get(user.email)
             ));
         }

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-public record InfluencerSearchResponse(
+public record GetInfluencerSearchResponse(
         @Schema(description = "채널 ID", example = "42")
         Long channelId,
 
@@ -36,7 +36,10 @@ public record InfluencerSearchResponse(
         @Schema(description = "최근 30일 업로드 수", example = "6")
         Integer recentUploadCount30d,
 
-        @Schema(description = "인플루언서 이메일", example = "test@test.com")
+        @Schema(description = "현재 로그인 유저의 즐겨찾기 여부", example = "true")
+        boolean bookmarked,
+
+        @Schema(description = "인플루언서 이메일. 가입한 인플루언서인 경우에만 값이 내려갑니다.", example = "test@test.com", nullable = true)
         String influencerEmail
 ) {
 }
