@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-public record InfluencerSearchResponse(
+public record GetInfluencerSearchResponse(
         @Schema(description = "채널 ID", example = "42")
         Long channelId,
 

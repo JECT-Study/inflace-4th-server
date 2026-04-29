@@ -1,7 +1,7 @@
 package com.example.inflace.domain.channel.controller;
 
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
-import com.example.inflace.domain.channel.dto.response.InfluencerSearchResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
@@ -29,7 +29,7 @@ public interface InfluencerApi {
                     """
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT})
-    BaseResponse<SliceResponse<InfluencerSearchResponse>> getInfluencersWithSearchCondition(
+    BaseResponse<SliceResponse<GetInfluencerSearchResponse>> getInfluencersWithSearchCondition(
             @ParameterObject InfluencerSearchCondition searchCondition
     );
 }

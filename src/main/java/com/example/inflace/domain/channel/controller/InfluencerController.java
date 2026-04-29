@@ -1,7 +1,7 @@
 package com.example.inflace.domain.channel.controller;
 
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
-import com.example.inflace.domain.channel.dto.response.InfluencerSearchResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.service.InfluencerService;
 import com.example.inflace.global.response.BaseResponse;
 import com.example.inflace.global.response.SliceResponse;
@@ -20,7 +20,7 @@ public class InfluencerController implements InfluencerApi {
 
     @Override
     @GetMapping
-    public BaseResponse<SliceResponse<InfluencerSearchResponse>> getInfluencersWithSearchCondition(
+    public BaseResponse<SliceResponse<GetInfluencerSearchResponse>> getInfluencersWithSearchCondition(
             @ModelAttribute InfluencerSearchCondition searchCondition
     ) {
         return new BaseResponse<>(

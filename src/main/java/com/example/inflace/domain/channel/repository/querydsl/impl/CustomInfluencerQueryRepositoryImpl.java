@@ -6,7 +6,7 @@ import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.request.InfluencerSortCriteria;
 import com.example.inflace.domain.channel.dto.request.InfluencerUploadPeriod;
 import com.example.inflace.domain.channel.dto.request.InfluencerVideoOutlierRange;
-import com.example.inflace.domain.channel.dto.response.InfluencerSearchResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.repository.querydsl.CustomInfluencerQueryRepository;
 import com.example.inflace.domain.video.domain.QVideo;
 import com.example.inflace.global.enums.SortOrder;
@@ -42,7 +42,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Slice<InfluencerSearchResponse> getInfluencersWithSearchCondition(InfluencerSearchCondition searchCondition) {
+    public Slice<GetInfluencerSearchResponse> getInfluencersWithSearchCondition(InfluencerSearchCondition searchCondition) {
         List<Tuple> rows = jpaQueryFactory
                 .select(
                         channel.id,
@@ -83,12 +83,12 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                 .toList();
 
         Map<Long, List<String>> categoryMap = buildCategoryMap(channelIds);
-        List<InfluencerSearchResponse> content = new ArrayList<>();
+        List<GetInfluencerSearchResponse> content = new ArrayList<>();
 
         for (Tuple row : pageRows) {
             Long channelId = row.get(channel.id);
 
-            content.add(new InfluencerSearchResponse(
+            content.add(new GetInfluencerSearchResponse(
                     channelId,
                     row.get(channel.name),
                     row.get(channel.channelHandle),
