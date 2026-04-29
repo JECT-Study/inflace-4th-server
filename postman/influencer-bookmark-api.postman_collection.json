@@ -1,0 +1,303 @@
+{
+  "info": {
+    "_postman_id": "8ad0b5b0-c9f2-4f28-b612-3a62a4cf3c65",
+    "name": "Inflace Influencer Bookmark API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "인플루언서 검색 및 즐겨찾기 관련 API 모음"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "channelId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Influencers",
+      "item": [
+        {
+          "name": "인플루언서 검색 - 기본 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/influencers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "influencers"
+              ]
+            },
+            "description": "기본 정렬 기준(engagement_rate), 기본 정렬 방향(DESC), 기본 pageSize(9), 기본 engagementRateFrom(5.0)으로 조회합니다."
+          }
+        },
+        {
+          "name": "인플루언서 검색 - 필터 조합 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/influencers?channelName=침착&uploadPeriod=30D&sortCriteria=engagement_rate&categoryNames=게임&categoryNames=엔터테인먼트&engagementRateFrom=7.5&engagementRateTo=15.0&subscriberFrom=10000&subscriberTo=300000&outlierRange=1.5X&pageSize=9&sortOrder=DESC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "influencers"
+              ],
+              "query": [
+                {
+                  "key": "channelName",
+                  "value": "침착"
+                },
+                {
+                  "key": "uploadPeriod",
+                  "value": "30D"
+                },
+                {
+                  "key": "sortCriteria",
+                  "value": "engagement_rate"
+                },
+                {
+                  "key": "categoryNames",
+                  "value": "게임"
+                },
+                {
+                  "key": "categoryNames",
+                  "value": "엔터테인먼트"
+                },
+                {
+                  "key": "engagementRateFrom",
+                  "value": "7.5"
+                },
+                {
+                  "key": "engagementRateTo",
+                  "value": "15.0"
+                },
+                {
+                  "key": "subscriberFrom",
+                  "value": "10000"
+                },
+                {
+                  "key": "subscriberTo",
+                  "value": "300000"
+                },
+                {
+                  "key": "outlierRange",
+                  "value": "1.5X"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "9"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "DESC"
+                }
+              ]
+            },
+            "description": "채널명, 업로드 기간, 카테고리, 참여율, 구독자 수, outlierRange를 함께 조합해 조회합니다."
+          }
+        },
+        {
+          "name": "인플루언서 검색 - 참여율 커서 다음 페이지",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/influencers?sortCriteria=engagement_rate&sortOrder=DESC&lastEngagementSortRate=8.73&lastChannelId=42&pageSize=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "influencers"
+              ],
+              "query": [
+                {
+                  "key": "sortCriteria",
+                  "value": "engagement_rate"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "DESC"
+                },
+                {
+                  "key": "lastEngagementSortRate",
+                  "value": "8.73"
+                },
+                {
+                  "key": "lastChannelId",
+                  "value": "42"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "9"
+                }
+              ]
+            },
+            "description": "참여율 정렬 기준 커서 페이지네이션 예시입니다. lastEngagementSortRate와 lastChannelId를 함께 전달해야 합니다."
+          }
+        },
+        {
+          "name": "인플루언서 검색 - 구독자 수 커서 다음 페이지",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/influencers?sortCriteria=subscriber&sortOrder=DESC&lastSubscriberSortCount=125000&lastChannelId=42&pageSize=9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "influencers"
+              ],
+              "query": [
+                {
+                  "key": "sortCriteria",
+                  "value": "subscriber"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "DESC"
+                },
+                {
+                  "key": "lastSubscriberSortCount",
+                  "value": "125000"
+                },
+                {
+                  "key": "lastChannelId",
+                  "value": "42"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "9"
+                }
+              ]
+            },
+            "description": "구독자 수 정렬 기준 커서 페이지네이션 예시입니다. lastSubscriberSortCount와 lastChannelId를 함께 전달해야 합니다."
+          }
+        },
+        {
+          "name": "인플루언서 즐겨찾기 추가",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/influencers/{{channelId}}/bookmark",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "influencers",
+                "{{channelId}}",
+                "bookmark"
+              ]
+            },
+            "description": "현재 로그인한 유저 기준으로 해당 인플루언서를 즐겨찾기에 추가합니다."
+          }
+        },
+        {
+          "name": "인플루언서 즐겨찾기 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/influencers/{{channelId}}/bookmark",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "influencers",
+                "{{channelId}}",
+                "bookmark"
+              ]
+            },
+            "description": "현재 로그인한 유저 기준으로 해당 인플루언서를 즐겨찾기에서 제거합니다."
+          }
+        },
+        {
+          "name": "내 인플루언서 즐겨찾기 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/influencers/bookmarks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "influencers",
+                "bookmarks"
+              ]
+            },
+            "description": "현재 로그인한 유저가 즐겨찾기한 인플루언서의 channelId 목록을 조회합니다."
+          }
+        }
+      ]
+    }
+  ]
+}

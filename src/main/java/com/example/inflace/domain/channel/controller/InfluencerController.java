@@ -1,15 +1,14 @@
 package com.example.inflace.domain.channel.controller;
 
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.service.InfluencerService;
 import com.example.inflace.global.response.BaseResponse;
 import com.example.inflace.global.response.SliceResponse;
+import com.example.inflace.global.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/influencers")
@@ -25,10 +24,34 @@ public class InfluencerController implements InfluencerApi {
     ) {
         return new BaseResponse<>(
                 SliceResponse.from(
-                        influencerService.getInfluencersWithSearchCondition(searchCondition),
+                        influencerService.getInfluencersWithSearchCondition(
+                                searchCondition,
+                                SecurityUtils.getAuthenticatedUserId()
+                        ),
                         searchCondition.sortCriteriaEnum().value(),
                         searchCondition.sortOrder().name()
                 )
         );
+    }
+
+    @PostMapping("/{channelId}/bookmark")
+    public BaseResponse<Void> createChannelBookmark(
+            @PathVariable Long channelId
+    ) {
+        influencerService.createChannelBookmark(channelId, SecurityUtils.getAuthenticatedUserId());
+        return new BaseResponse<>(null);
+    }
+
+    @DeleteMapping("/{channelId}/bookmark")
+    public BaseResponse<Void> deleteChannelBookmark(
+            @PathVariable Long channelId
+    ) {
+        influencerService.deleteChannelBookmark(channelId, SecurityUtils.getAuthenticatedUserId());
+        return new BaseResponse<>(null);
+    }
+
+    @GetMapping("/bookmarks")
+    public BaseResponse<GetInfluencerBookmarksResponse> getInfluencerBookmarks() {
+        return new BaseResponse<>(influencerService.getInfluencerBookmarks(SecurityUtils.getAuthenticatedUserId()));
     }
 }

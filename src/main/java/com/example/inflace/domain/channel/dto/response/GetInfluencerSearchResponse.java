@@ -36,6 +36,9 @@ public record GetInfluencerSearchResponse(
         @Schema(description = "최근 30일 업로드 수", example = "6")
         Integer recentUploadCount30d,
 
+        @Schema(description = "현재 로그인 유저의 즐겨찾기 여부", example = "true")
+        boolean bookmarked,
+
         @Schema(description = "인플루언서 이메일", example = "test@test.com")
         String influencerEmail
 ) {
