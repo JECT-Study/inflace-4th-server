@@ -88,6 +88,7 @@ public record InfluencerSearchCondition(
 
         @Schema(
                 description = "페이지 크기. 미입력 시 9",
+                minimum = "1",
                 defaultValue = "9",
                 example = "9"
         )
