@@ -13,11 +13,13 @@ import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 
 import com.example.inflace.domain.channel.service.ChannelService;
+import com.example.inflace.domain.channel.service.YoutubeChannelSyncService;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +30,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChannelController implements ChannelApi{
 
     private final ChannelService channelService;
+    private final YoutubeChannelSyncService youtubeChannelSyncService;
+
+    @PostMapping("/connect")
+    public BaseResponse<Long> connectMyChannel() {
+        return new BaseResponse<>(youtubeChannelSyncService.connectMyChannel());
+    }
+
+    @PostMapping("/{channelId}/refresh")
+    public BaseResponse<Long> refreshChannel(@PathVariable Long channelId) {
+        return new BaseResponse<>(youtubeChannelSyncService.refreshChannel(channelId));
+    }
 
     @GetMapping("/{channelId}/main/tops")
     public BaseResponse<ChannelTopMainVideosResponse> getMainTopVideos(

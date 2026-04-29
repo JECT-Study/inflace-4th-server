@@ -64,6 +64,22 @@ public class ChannelStats extends BaseTimeEntity {
         this.collectedAt = collectedAt;
     }
 
+    public void update(Long subscriberCount, Long totalViewCount, Long totalVideoCount,
+                       LocalDateTime collectedAt) {
+        this.subscriberCount = subscriberCount;
+        this.totalViewCount = totalViewCount;
+        this.totalVideoCount = totalVideoCount;
+        this.collectedAt = collectedAt;
+    }
+
+    public void updateCalculatedMetrics(Integer recentUploadCount30d, Double avgViewsRecentN,
+                                        Double avgEngagementRateRecentN, LocalDateTime collectedAt) {
+        this.recentUploadCount30d = recentUploadCount30d;
+        this.avgViewsRecentN = avgViewsRecentN;
+        this.avgEngagementRateRecentN = avgEngagementRateRecentN;
+        this.collectedAt = collectedAt;
+    }
+
     public Double getAvgEngagementRate() {
         return avgEngagementRateRecentN;
     }
