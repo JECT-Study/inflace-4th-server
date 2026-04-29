@@ -29,7 +29,7 @@ public class ChannelStats extends BaseTimeEntity {
     @JoinColumn(name = "channel_id", nullable = false)
     private Channel channel;
 
-    @Column(name = "subscriber_count")
+    @Column(name = "subscriber_count", nullable = false)
     private Long subscriberCount;
 
     @Column(name = "total_view_count")
@@ -38,33 +38,38 @@ public class ChannelStats extends BaseTimeEntity {
     @Column(name = "total_video_count")
     private Long totalVideoCount;
 
-    @Column(name = "recent_upload_count_30d")
+    @Column(name = "recent_upload_count_30d", nullable = false)
     private Integer recentUploadCount30d;
 
-    @Column(name = "avg_views_recent_n")
-    private Double avgViewsRecentN;
+    @Column(name = "avg_views_recent", nullable = false)
+    private Double avgViewsRecent;
 
-    @Column(name = "avg_engagement_rate_recent_n")
-    private Double avgEngagementRateRecentN;
+    @Column(name = "avg_engagement_rate_recent", nullable = false)
+    private Double avgEngagementRateRecent;
 
-    @Column(name = "collected_at")
+    @Column(name = "avg_outlier_score_recent_excluding_top_5_pct", nullable = false)
+    private Double avgOutlierScoreRecentExcludingTop5Pct;
+
+    @Column(name = "collected_at", nullable = false)
     private LocalDateTime collectedAt;
 
     @Builder
     public ChannelStats(Channel channel, Long subscriberCount, Long totalViewCount, Long totalVideoCount,
-                        Integer recentUploadCount30d, Double avgViewsRecentN,
-                        Double avgEngagementRateRecentN, LocalDateTime collectedAt) {
+                        Integer recentUploadCount30d, Double avgViewsRecent,
+                        Double avgEngagementRateRecent, Double avgOutlierScoreRecentExcludingTop5Pct,
+                        LocalDateTime collectedAt) {
         this.channel = channel;
         this.subscriberCount = subscriberCount;
         this.totalViewCount = totalViewCount;
         this.totalVideoCount = totalVideoCount;
         this.recentUploadCount30d = recentUploadCount30d;
-        this.avgViewsRecentN = avgViewsRecentN;
-        this.avgEngagementRateRecentN = avgEngagementRateRecentN;
+        this.avgViewsRecent = avgViewsRecent;
+        this.avgEngagementRateRecent = avgEngagementRateRecent;
+        this.avgOutlierScoreRecentExcludingTop5Pct = avgOutlierScoreRecentExcludingTop5Pct;
         this.collectedAt = collectedAt;
     }
 
     public Double getAvgEngagementRate() {
-        return avgEngagementRateRecentN;
+        return avgEngagementRateRecent;
     }
 }

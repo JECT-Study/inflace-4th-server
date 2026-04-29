@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.dto;
+package com.example.inflace.domain.channel.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;

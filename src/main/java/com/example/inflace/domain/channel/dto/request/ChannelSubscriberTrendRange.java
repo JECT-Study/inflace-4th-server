@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.dto.enums;
+package com.example.inflace.domain.channel.dto.request;
 
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
