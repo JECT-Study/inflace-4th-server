@@ -33,6 +33,7 @@ import java.util.Map;
 
 import static com.example.inflace.domain.channel.domain.QChannel.channel;
 import static com.example.inflace.domain.channel.domain.QChannelStats.channelStats;
+import static com.example.inflace.domain.user.domain.entity.QUser.user;
 
 @Repository
 @RequiredArgsConstructor
@@ -51,10 +52,12 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                         channelStats.subscriberCount,
                         channelStats.avgEngagementRateRecent,
                         channelStats.avgViewsRecent,
-                        channelStats.recentUploadCount30d
+                        channelStats.recentUploadCount30d,
+                        user.email
                 )
                 .from(channel)
                 .leftJoin(channelStats).on(channelStats.channel.id.eq(channel.id))
+                .leftJoin(user).on(user.id.eq(channel.user.id))
                 .where(
                         buildChannelNameContains(searchCondition.channelName()),
                         buildCategoryNameIn(searchCondition.categoryNames()),
@@ -94,7 +97,8 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                     row.get(channelStats.subscriberCount),
                     row.get(channelStats.avgEngagementRateRecent),
                     row.get(channelStats.avgViewsRecent),
-                    row.get(channelStats.recentUploadCount30d)
+                    row.get(channelStats.recentUploadCount30d),
+                    row.get(user.email)
             ));
         }
 

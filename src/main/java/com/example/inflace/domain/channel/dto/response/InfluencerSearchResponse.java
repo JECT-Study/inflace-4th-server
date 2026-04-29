@@ -34,6 +34,9 @@ public record InfluencerSearchResponse(
         Double averageViews,
 
         @Schema(description = "최근 30일 업로드 수", example = "6")
-        Integer recentUploadCount30d
+        Integer recentUploadCount30d,
+
+        @Schema(description = "인플루언서 이메일", example = "test@test.com")
+        String influencerEmail
 ) {
 }
