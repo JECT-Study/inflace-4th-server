@@ -44,7 +44,7 @@ import org.springframework.util.StringUtils;
 public class YoutubeChannelDataSyncService {
 
     private static final String VIDEO_PARTS = "snippet,contentDetails,statistics,paidProductPlacementDetails";
-    private static final int RECENT_VIDEO_SAMPLE_SIZE = 10;
+    private static final int RECENT_VIDEO_SAMPLE_SIZE = 30;
     private static final int CHANNEL_CATEGORY_LIMIT = 3;
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
 
