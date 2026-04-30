@@ -9,7 +9,8 @@ public record YoutubeDataVideoResponse(
             String id,
             Snippet snippet,
             ContentDetails contentDetails,
-            Statistics statistics
+            Statistics statistics,
+            PaidProductPlacementDetails paidProductPlacementDetails
     ) {
     }
 
@@ -43,6 +44,11 @@ public record YoutubeDataVideoResponse(
             String viewCount,
             String likeCount,
             String commentCount
+    ) {
+    }
+
+    public record PaidProductPlacementDetails(
+            Boolean hasPaidProductPlacement
     ) {
     }
 }

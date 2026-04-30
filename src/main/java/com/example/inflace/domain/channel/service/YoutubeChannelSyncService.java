@@ -46,7 +46,7 @@ import org.springframework.util.StringUtils;
 public class YoutubeChannelSyncService {
 
     private static final String MY_CHANNEL_PARTS = "snippet,statistics,contentDetails";
-    private static final String VIDEO_PARTS = "snippet,contentDetails,statistics";
+    private static final String VIDEO_PARTS = "snippet,contentDetails,statistics,paidProductPlacementDetails";
     private static final int RECENT_VIDEO_SAMPLE_SIZE = 10;
     private static final int CHANNEL_CATEGORY_LIMIT = 3;
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
@@ -183,9 +183,10 @@ public class YoutubeChannelSyncService {
     private Video upsertVideo(Channel channel, YoutubeDataVideoResponse.Item item) {
         Integer durationSeconds = parseDurationSeconds(item.contentDetails());
         boolean isShort = durationSeconds != null && durationSeconds <= SHORTS_MAX_DURATION_SECONDS;
+        boolean isAdvertisement = hasPaidProductPlacement(item);
 
         return videoRepository.findByYoutubeVideoId(item.id())
-                .map(video -> updateVideo(video, item, durationSeconds, isShort))
+                .map(video -> updateVideo(video, item, durationSeconds, isShort, isAdvertisement))
                 .orElseGet(() -> videoRepository.save(Video.builder()
                         .channel(channel)
                         .categoryId(toInteger(item.snippet() == null ? null : item.snippet().categoryId()))
@@ -195,12 +196,18 @@ public class YoutubeChannelSyncService {
                         .thumbnailUrl(extractVideoThumbnailUrl(item.snippet() == null ? null : item.snippet().thumbnails()))
                         .durationSeconds(durationSeconds)
                         .isShort(isShort)
-                        .isAdvertisement(false)
+                        .isAdvertisement(isAdvertisement)
                         .publishedAt(parsePublishedAt(item.snippet() == null ? null : item.snippet().publishedAt()))
                         .build()));
     }
 
-    private Video updateVideo(Video video, YoutubeDataVideoResponse.Item item, Integer durationSeconds, boolean isShort) {
+    private Video updateVideo(
+            Video video,
+            YoutubeDataVideoResponse.Item item,
+            Integer durationSeconds,
+            boolean isShort,
+            boolean isAdvertisement
+    ) {
         video.update(
                 toInteger(item.snippet() == null ? null : item.snippet().categoryId()),
                 item.snippet() == null ? null : item.snippet().title(),
@@ -208,7 +215,7 @@ public class YoutubeChannelSyncService {
                 extractVideoThumbnailUrl(item.snippet() == null ? null : item.snippet().thumbnails()),
                 durationSeconds,
                 isShort,
-                false,
+                isAdvertisement,
                 parsePublishedAt(item.snippet() == null ? null : item.snippet().publishedAt())
         );
         return video;
@@ -401,6 +408,12 @@ public class YoutubeChannelSyncService {
                 .filter(category -> Objects.equals(category.getId(), categoryId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private boolean hasPaidProductPlacement(YoutubeDataVideoResponse.Item item) {
+        return item.paidProductPlacementDetails() != null
+                && item.paidProductPlacementDetails().hasPaidProductPlacement() != null
+                && item.paidProductPlacementDetails().hasPaidProductPlacement() == true;
     }
 
     private void refreshVideoRisingScores(Channel channel) {
