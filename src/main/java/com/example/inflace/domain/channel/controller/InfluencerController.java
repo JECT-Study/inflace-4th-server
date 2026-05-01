@@ -5,7 +5,7 @@ import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksRes
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.service.InfluencerService;
 import com.example.inflace.global.response.BaseResponse;
-import com.example.inflace.global.response.SliceResponse;
+import com.example.inflace.global.response.CursorSliceResponse;
 import com.example.inflace.global.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,19 +19,13 @@ public class InfluencerController implements InfluencerApi {
 
     @Override
     @GetMapping
-    public BaseResponse<SliceResponse<GetInfluencerSearchResponse>> getInfluencersWithSearchCondition(
+    public BaseResponse<CursorSliceResponse<GetInfluencerSearchResponse>> getInfluencersWithSearchCondition(
             @ModelAttribute InfluencerSearchCondition searchCondition
     ) {
-        return new BaseResponse<>(
-                SliceResponse.from(
-                        influencerService.getInfluencersWithSearchCondition(
-                                searchCondition,
-                                SecurityUtils.getAuthenticatedUserId()
-                        ),
-                        searchCondition.sortCriteriaEnum().value(),
-                        searchCondition.sortOrder().name()
-                )
-        );
+        return new BaseResponse<>(influencerService.getInfluencersWithSearchCondition(
+                searchCondition,
+                SecurityUtils.getAuthenticatedUserId()
+        ));
     }
 
     @PostMapping("/{channelId}/bookmark")

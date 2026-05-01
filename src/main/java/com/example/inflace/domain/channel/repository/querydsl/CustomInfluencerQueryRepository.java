@@ -7,5 +7,9 @@ import java.util.UUID;
 
 public interface CustomInfluencerQueryRepository {
 
-    Slice<GetInfluencerSearchResponse> getInfluencersWithSearchCondition(InfluencerSearchCondition searchCondition, UUID userId);
+    Slice<GetInfluencerSearchResponse> getInfluencersWithSearchCondition(
+            InfluencerSearchCondition searchCondition,
+            UUID userId,
+            InfluencerCursorCodec.DecodedInfluencerCursor cursor
+    );
 }

@@ -8,6 +8,7 @@ import com.example.inflace.domain.channel.dto.request.InfluencerSortCriteria;
 import com.example.inflace.domain.channel.dto.request.InfluencerUploadPeriod;
 import com.example.inflace.domain.channel.dto.request.InfluencerVideoOutlierRange;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
+import com.example.inflace.domain.channel.repository.querydsl.InfluencerCursorCodec;
 import com.example.inflace.domain.channel.repository.querydsl.CustomInfluencerQueryRepository;
 import com.example.inflace.domain.video.domain.QVideo;
 import com.example.inflace.global.enums.SortOrder;
@@ -46,7 +47,8 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
     @Override
     public Slice<GetInfluencerSearchResponse> getInfluencersWithSearchCondition(
             InfluencerSearchCondition searchCondition,
-            UUID userId
+            UUID userId,
+            InfluencerCursorCodec.DecodedInfluencerCursor cursor
     ) {
         QChannelBookmark channelBookmark = new QChannelBookmark("channelBookmark");
 
@@ -79,7 +81,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                         buildSubscriberTo(searchCondition.subscriberTo()),
                         buildUploadPeriodPredicate(searchCondition.uploadPeriodEnum()),
                         buildOutlierRangeFrom(searchCondition.outlierRangeEnum()),
-                        buildSortPredicate(searchCondition)
+                        buildSortPredicate(searchCondition, cursor)
                 )
                 .orderBy(buildOrderSpecifier(searchCondition))
                 .limit(searchCondition.pageSize() + 1L)
@@ -166,52 +168,55 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
         };
     }
 
-    private BooleanBuilder buildSortPredicate(InfluencerSearchCondition searchCondition) {
+    private BooleanBuilder buildSortPredicate(
+            InfluencerSearchCondition searchCondition,
+            InfluencerCursorCodec.DecodedInfluencerCursor cursor
+    ) {
         InfluencerSortCriteria sortCriteria = searchCondition.sortCriteriaEnum();
         SortOrder sortOrder = searchCondition.sortOrder();
 
         return switch (sortCriteria) {
-            case SUBSCRIBER -> buildSubscriberCursorPredicate(searchCondition, sortOrder);
-            case ENGAGEMENT_RATE -> buildEngagementCursorPredicate(searchCondition, sortOrder);
+            case SUBSCRIBER -> buildSubscriberCursorPredicate(cursor, sortOrder);
+            case ENGAGEMENT_RATE -> buildEngagementCursorPredicate(cursor, sortOrder);
         };
     }
 
     private BooleanBuilder buildSubscriberCursorPredicate(
-            InfluencerSearchCondition searchCondition,
+            InfluencerCursorCodec.DecodedInfluencerCursor cursor,
             SortOrder sortOrder
     ) {
-        if (searchCondition.hasSubscriberCursor()) {
-            return sortOrder == SortOrder.ASC
-                    ? new BooleanBuilder(
-                    channelStats.subscriberCount.gt(searchCondition.lastSubscriberSortCount())
-                            .or(channelStats.subscriberCount.eq(searchCondition.lastSubscriberSortCount()).and(channel.id.gt(searchCondition.lastChannelId())))
-            )
-                    : new BooleanBuilder(
-                    channelStats.subscriberCount.lt(searchCondition.lastSubscriberSortCount())
-                            .or(channelStats.subscriberCount.eq(searchCondition.lastSubscriberSortCount()).and(channel.id.lt(searchCondition.lastChannelId())))
-            );
+        if (cursor == null) {
+            return new BooleanBuilder();
         }
 
-        return new BooleanBuilder();
+        return sortOrder == SortOrder.ASC
+                ? new BooleanBuilder(
+                channelStats.subscriberCount.gt(cursor.subscriberCount())
+                        .or(channelStats.subscriberCount.eq(cursor.subscriberCount()).and(channel.id.gt(cursor.channelId())))
+        )
+                : new BooleanBuilder(
+                channelStats.subscriberCount.lt(cursor.subscriberCount())
+                        .or(channelStats.subscriberCount.eq(cursor.subscriberCount()).and(channel.id.lt(cursor.channelId())))
+        );
     }
 
     private BooleanBuilder buildEngagementCursorPredicate(
-            InfluencerSearchCondition searchCondition,
+            InfluencerCursorCodec.DecodedInfluencerCursor cursor,
             SortOrder sortOrder
     ) {
-        if (searchCondition.hasEngagementCursor()) {
-            return sortOrder == SortOrder.ASC
-                    ? new BooleanBuilder(
-                    channelStats.avgEngagementRateRecent.gt(searchCondition.lastEngagementSortRate())
-                            .or(channelStats.avgEngagementRateRecent.eq(searchCondition.lastEngagementSortRate()).and(channel.id.gt(searchCondition.lastChannelId())))
-            )
-                    : new BooleanBuilder(
-                    channelStats.avgEngagementRateRecent.lt(searchCondition.lastEngagementSortRate())
-                            .or(channelStats.avgEngagementRateRecent.eq(searchCondition.lastEngagementSortRate()).and(channel.id.lt(searchCondition.lastChannelId())))
-            );
+        if (cursor == null) {
+            return new BooleanBuilder();
         }
 
-        return new BooleanBuilder();
+        return sortOrder == SortOrder.ASC
+                ? new BooleanBuilder(
+                channelStats.avgEngagementRateRecent.gt(cursor.engagementRate())
+                        .or(channelStats.avgEngagementRateRecent.eq(cursor.engagementRate()).and(channel.id.gt(cursor.channelId())))
+        )
+                : new BooleanBuilder(
+                channelStats.avgEngagementRateRecent.lt(cursor.engagementRate())
+                        .or(channelStats.avgEngagementRateRecent.eq(cursor.engagementRate()).and(channel.id.lt(cursor.channelId())))
+        );
     }
 
     private BooleanBuilder buildChannelNameContains(String channelName) {
