@@ -69,22 +69,10 @@ public record InfluencerSearchCondition(
         String outlierRange,
 
         @Schema(
-                description = "참여율 정렬 커서 값. sortCriteria=engagement_rate일 때 사용",
-                example = "8.73"
+                description = "이전 응답의 nextCursor 값. 다음 페이지 조회 시 그대로 전달합니다.",
+                example = "MXxlbmdhZ2VtZW50X3JhdGV8REVTQ3w4LjczfDQy"
         )
-        Double lastEngagementSortRate,
-
-        @Schema(
-                description = "구독자 수 정렬 커서 값. sortCriteria=subscriber일 때 사용",
-                example = "125000"
-        )
-        Long lastSubscriberSortCount,
-
-        @Schema(
-                description = "동일 정렬값 tie-break용 마지막 채널 ID. 커서 페이지네이션 시 함께 전달",
-                example = "42"
-        )
-        Long lastChannelId,
+        String cursor,
 
         @Schema(
                 description = "페이지 크기. 미입력 시 9",
@@ -109,6 +97,7 @@ public record InfluencerSearchCondition(
         engagementRateFrom = engagementRateFrom == null ? 5.0 : engagementRateFrom;
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
+        cursor = StringUtils.hasText(cursor) ? cursor : null;
 
         if (pageSize < 1) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
@@ -123,8 +112,6 @@ public record InfluencerSearchCondition(
         if (StringUtils.hasText(outlierRange)) {
             InfluencerVideoOutlierRange.from(outlierRange);
         }
-
-        validateCursor();
     }
 
     public InfluencerUploadPeriod uploadPeriodEnum() {
@@ -139,40 +126,5 @@ public record InfluencerSearchCondition(
 
     public InfluencerVideoOutlierRange outlierRangeEnum() {
         return StringUtils.hasText(outlierRange) ? InfluencerVideoOutlierRange.from(outlierRange) : null;
-    }
-
-    public boolean hasSubscriberCursor() {
-        return lastSubscriberSortCount != null && lastChannelId != null;
-    }
-
-    public boolean hasEngagementCursor() {
-        return lastEngagementSortRate != null && lastChannelId != null;
-    }
-
-    private void validateCursor() {
-        InfluencerSortCriteria activeSortCriteria = !StringUtils.hasText(sortCriteria)
-                ? InfluencerSortCriteria.ENGAGEMENT_RATE
-                : InfluencerSortCriteria.from(sortCriteria);
-
-        switch (activeSortCriteria) {
-            case SUBSCRIBER -> {
-                boolean hasAnySubscriberCursor = lastSubscriberSortCount != null || lastChannelId != null;
-                if (hasAnySubscriberCursor && hasSubscriberCursor()) {
-                    return;
-                }
-                if (hasAnySubscriberCursor) {
-                    throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
-                }
-            }
-            case ENGAGEMENT_RATE -> {
-                boolean hasAnyEngagementCursor = lastEngagementSortRate != null || lastChannelId != null;
-                if (hasAnyEngagementCursor && hasEngagementCursor()) {
-                    return;
-                }
-                if (hasAnyEngagementCursor) {
-                    throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
-                }
-            }
-        }
     }
 }
