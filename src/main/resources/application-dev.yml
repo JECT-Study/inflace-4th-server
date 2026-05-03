@@ -11,6 +11,7 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
+  refresh-expiration: 1209600000
 
 redis:
   host: ${INFLACE_VALKEY_URL}

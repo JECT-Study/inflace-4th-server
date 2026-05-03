@@ -4,7 +4,7 @@ import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelAnalytics;
 import com.example.inflace.domain.channel.dto.ChannelDataSyncResult;
 import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
-import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
+import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelAnalyticsRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.domain.entity.User;

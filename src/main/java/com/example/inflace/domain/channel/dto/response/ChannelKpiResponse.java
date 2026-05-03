@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.dto;
+package com.example.inflace.domain.channel.dto.response;
 
 public record ChannelKpiResponse(
         Long totalViews,

@@ -1,6 +1,6 @@
 package com.example.inflace.domain.auth.presentation.dto;
 
-import com.example.inflace.domain.channel.dto.UserChannelDetailsResponse;
+import com.example.inflace.domain.channel.dto.response.UserChannelDetailsResponse;
 
 public record AuthFacadeLoginResponse(
         TokenData tokenData,

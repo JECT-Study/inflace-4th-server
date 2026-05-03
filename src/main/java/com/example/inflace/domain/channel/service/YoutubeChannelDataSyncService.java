@@ -5,7 +5,8 @@ import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.domain.YoutubeCategory;
 import com.example.inflace.domain.channel.dto.ChannelDataSyncResult;
-import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
+
+import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;

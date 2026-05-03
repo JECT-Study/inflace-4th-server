@@ -1,7 +1,4 @@
-package com.example.inflace.domain.channel.dto;
-
-import com.example.inflace.domain.channel.dto.enums.ChannelVideoFormat;
-import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
+package com.example.inflace.domain.channel.dto.request;
 
 public record ChannelVideosRequest(
         String keyword,

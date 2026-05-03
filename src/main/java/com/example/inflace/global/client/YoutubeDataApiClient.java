@@ -1,7 +1,7 @@
 package com.example.inflace.global.client;
 
+import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
-import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.properties.YoutubeProperties;
 import java.net.URI;

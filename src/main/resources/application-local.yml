@@ -12,7 +12,8 @@ spring:
       lifecycle-management: start_only
 jwt:
   secret: dGVtcC1zZWNyZXQta2V5LWZvci1sb2NhbC1kZXYtMTIzNDU2Nzg5MC1hYmNkZWY=
-  expiration: 7200000
+  expiration: 1296000000
+  refresh-expiration: 1209600000
 
 redis:
   host: localhost

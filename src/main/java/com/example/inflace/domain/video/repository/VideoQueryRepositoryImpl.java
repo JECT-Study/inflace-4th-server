@@ -2,10 +2,10 @@ package com.example.inflace.domain.video.repository;
 
 import com.example.inflace.domain.channel.dto.ChannelVideoRow;
 import com.example.inflace.domain.channel.dto.ChannelVideoSliceResult;
-import com.example.inflace.domain.channel.dto.enums.ChannelVideoFormat;
-import com.example.inflace.domain.channel.dto.enums.ChannelVideoSort;
-import com.example.inflace.domain.channel.dto.ChannelVideosRequest;
-import com.example.inflace.domain.channel.dto.ChannelVideosResponse.ChannelVideoItem;
+import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
+import com.example.inflace.domain.channel.dto.request.ChannelVideoSort;
+import com.example.inflace.domain.channel.dto.request.ChannelVideosRequest;
+import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse.ChannelVideoItem;
 import com.example.inflace.domain.video.domain.QVideoAnalytics;
 import com.example.inflace.domain.video.domain.QVideo;
 import com.example.inflace.domain.video.domain.QVideoStats;

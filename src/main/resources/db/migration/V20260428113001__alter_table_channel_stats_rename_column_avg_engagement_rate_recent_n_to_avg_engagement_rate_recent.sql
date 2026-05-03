@@ -1,0 +1,2 @@
+alter table channel_stats
+rename column avg_engagement_rate_recent_n to avg_engagement_rate_recent;

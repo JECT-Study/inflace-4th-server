@@ -1,0 +1,2 @@
+alter table channel_stats
+add column avg_outlier_score_recent_excluding_top_5_pct double precision;
