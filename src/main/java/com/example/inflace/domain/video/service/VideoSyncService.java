@@ -47,9 +47,7 @@ public class VideoSyncService {
             "audienceWatchRatio", "relativeRetentionPerformance"
     );
 
-    private static final List<String> UNSUBSCRIBED_METRICS = List.of(
-            "views", "viewerPercentage"
-    );
+    private static final List<String> UNSUBSCRIBED_METRICS = List.of("views");
 
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
@@ -75,7 +73,8 @@ public class VideoSyncService {
                 LocalDate.now().minusDays(3),
                 STATS_METRICS,
                 video.getYoutubeVideoId(),
-                "video"
+                "video",
+                null
         );
 
         Map<String, Object> data = youtubeAnalyticsService.query(googleId, request);
@@ -147,7 +146,8 @@ public class VideoSyncService {
                 LocalDate.now().minusDays(3),
                 RETENTION_METRICS,
                 video.getYoutubeVideoId(),
-                "elapsedVideoTimeRatio"
+                "elapsedVideoTimeRatio",
+                null
         );
 
         YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
@@ -204,7 +204,8 @@ public class VideoSyncService {
                 LocalDate.now().minusDays(3),
                 UNSUBSCRIBED_METRICS,
                 video.getYoutubeVideoId(),
-                "subscribedStatus"
+                "subscribedStatus",
+                null
         );
 
         YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
@@ -228,9 +229,19 @@ public class VideoSyncService {
         }
 
         Long unsubscribedViewCount = toLong(unsubscribedRow.get(indexMap.get("views")));
-        Double unsubscribedViewerPercentage = toDouble(unsubscribedRow.get(indexMap.get("viewerPercentage")));
+        Long totalViewCount = videoStatsRepository.findByVideoId(videoId)
+                .map(VideoStats::getViewCount)
+                .orElse(null);
+        Double unsubscribedViewerPercentage = calculatePercentage(unsubscribedViewCount, totalViewCount);
 
         existing.get().updateUnsubscribed(unsubscribedViewCount, unsubscribedViewerPercentage);
+    }
+
+    private Double calculatePercentage(Long numerator, Long denominator) {
+        if (numerator == null || numerator <= 0 || denominator == null || denominator <= 0) {
+            return 0.0;
+        }
+        return (numerator * 100.0) / denominator;
     }
 
     private Video findVideoWithOwnership(UUID userId, long videoId) {

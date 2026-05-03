@@ -15,6 +15,8 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -29,6 +31,12 @@ public class YoutubeAnalyticsApiClient {
     private final GoogleAccessTokenStore googleAccessTokenStore;
 
     public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(String googleId, YoutubeAnalyticsVideoRequest request) {
+        Map<String, Object> requestLog = new LinkedHashMap<>();
+        requestLog.put("startDate", request.startDate());
+        requestLog.put("endDate", request.endDate());
+        requestLog.put("ids", CHANNEL_IDS);
+        requestLog.put("metrics", request.formattedMetricsList());
+
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(youtubeProperties.analyticsApi().baseUrl())
                 .path(ANALYTICS_PATH)
@@ -39,6 +47,7 @@ public class YoutubeAnalyticsApiClient {
 
         if (request.dimensions() != null) {
             builder.queryParam("dimensions", request.dimensions());
+            requestLog.put("dimensions", request.dimensions());
         }
 
         if (request.youtubeVideoId() != null) {
@@ -49,21 +58,34 @@ public class YoutubeAnalyticsApiClient {
                 filterValue += ";audienceType==ORGANIC";
             }
 
+            if (request.filters() != null) {
+                filterValue += ";" + request.filters();
+            }
+
             builder.queryParam("filters", filterValue);
+            requestLog.put("filters", filterValue);
+        } else if (request.filters() != null) {
+            builder.queryParam("filters", request.filters());
+            requestLog.put("filters", request.filters());
         }
 
         URI uri = builder.build().toUri();
+        requestLog.put("uri", uri.toString());
 
         return restClient.get()
                 .uri(uri)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(googleId))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
-                    log.error("YouTube API 4xx error: {}", new String(res.getBody().readAllBytes()));
+                    log.error("YouTube Analytics API 4xx error. params={} response={}",
+                            requestLog,
+                            new String(res.getBody().readAllBytes()));
                     throw new ApiException(ErrorDefine.YOUTUBE_API_ERROR);  // 오류 추적이 어려워서 외부 api 통신 에러 로그 추가
                 })
                 .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
-                    log.error("YouTube API 5xx error: {}", new String(res.getBody().readAllBytes()));
+                    log.error("YouTube Analytics API 5xx error. params={} response={}",
+                            requestLog,
+                            new String(res.getBody().readAllBytes()));
                     throw new ApiException(ErrorDefine.YOUTUBE_API_ERROR);
                 })
                 .body(YoutubeAnalyticsVideoResponse.class);

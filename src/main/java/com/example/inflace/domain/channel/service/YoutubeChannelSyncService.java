@@ -25,6 +25,7 @@ public class YoutubeChannelSyncService {
     private final ChannelRepository channelRepository;
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeChannelDataSyncService youtubeChannelDataSyncService;
+    private final YoutubeChannelAnalyticsSyncService youtubeChannelAnalyticsSyncService;
 
     @Transactional
     public Long connectMyChannel() {
@@ -40,6 +41,7 @@ public class YoutubeChannelSyncService {
                 user.getProviderId(),
                 myChannel
         );
+        youtubeChannelAnalyticsSyncService.syncAnalytics(user.getProviderId(), result.channel(), result.videos());
         return result.channel().getId();
     }
 
@@ -64,6 +66,7 @@ public class YoutubeChannelSyncService {
                 user.getProviderId(),
                 channelItem
         );
+        youtubeChannelAnalyticsSyncService.syncAnalytics(user.getProviderId(), result.channel(), result.videos());
         return result.channel().getId();
     }
 
