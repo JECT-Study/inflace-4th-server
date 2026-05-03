@@ -1,6 +1,6 @@
 package com.example.inflace.domain.channel.controller;
 
-import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelNewSubscriberResponse;

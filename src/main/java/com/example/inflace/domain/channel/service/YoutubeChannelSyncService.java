@@ -3,7 +3,7 @@ package com.example.inflace.domain.channel.service;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelAnalytics;
 import com.example.inflace.domain.channel.dto.ChannelDataSyncResult;
-import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
+import com.example.inflace.domain.channel.dto.response.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelAnalyticsRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
