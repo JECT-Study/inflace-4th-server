@@ -41,6 +41,21 @@ public class GoogleApiClient {
                 .body(GoogleTokenResponse.class);
     }
 
+    public GoogleTokenResponse refreshToken(String refreshToken) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", googleProperties.clientId());
+        params.add("client_secret", googleProperties.clientSecret());
+        params.add("refresh_token", refreshToken);
+        params.add("grant_type", "refresh_token");
+
+        return restClient.post()
+                .uri(TOKEN_URL)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(params)
+                .retrieve()
+                .body(GoogleTokenResponse.class);
+    }
+
     public GoogleUserInfoResponse getUserInfo(String accessToken) {
         return restClient.get()
                 .uri(USER_INFO_URL)

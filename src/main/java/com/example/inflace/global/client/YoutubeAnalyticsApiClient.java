@@ -1,6 +1,6 @@
 package com.example.inflace.global.client;
 
-import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
+import com.example.inflace.domain.auth.service.GoogleOAuthTokenService;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoRequest;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoResponse;
 import com.example.inflace.global.exception.ApiException;
@@ -28,7 +28,7 @@ public class YoutubeAnalyticsApiClient {
 
     private final RestClient restClient;
     private final YoutubeProperties youtubeProperties;
-    private final GoogleAccessTokenStore googleAccessTokenStore;
+    private final GoogleOAuthTokenService googleOAuthTokenService;
 
     public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(String googleId, YoutubeAnalyticsVideoRequest request) {
         Map<String, Object> requestLog = new LinkedHashMap<>();
@@ -72,11 +72,11 @@ public class YoutubeAnalyticsApiClient {
         URI uri = builder.build().toUri();
         requestLog.put("uri", uri.toString());
 
-        return restClient.get()
+        return googleOAuthTokenService.executeWithRefresh(googleId, accessToken -> restClient.get()
                 .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(googleId))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
+                .onStatus(statusCode -> statusCode.is4xxClientError() && statusCode.value() != 401, (req, res) -> {
                     log.error("YouTube Analytics API 4xx error. params={} response={}",
                             requestLog,
                             new String(res.getBody().readAllBytes()));
@@ -88,6 +88,6 @@ public class YoutubeAnalyticsApiClient {
                             new String(res.getBody().readAllBytes()));
                     throw new ApiException(ErrorDefine.YOUTUBE_API_ERROR);
                 })
-                .body(YoutubeAnalyticsVideoResponse.class);
+                .body(YoutubeAnalyticsVideoResponse.class));
     }
 }
