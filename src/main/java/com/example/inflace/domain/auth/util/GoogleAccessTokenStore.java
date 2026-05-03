@@ -10,19 +10,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class GoogleAccessTokenStore {
     private static final String GOOGLE_ACCESS_TOKEN_PREFIX = "auth:google-access:";
-    private static final String GOOGLE_REFRESH_TOKEN_PREFIX = "auth:google-refresh:";
     private static final long DEFAULT_GOOGLE_ACCESS_TOKEN_EXPIRE_MILLIS = 60L * 60L * 1000L;
 
     private final AuthTokenRedisRepository authTokenRedisRepository;
 
-    public void saveTokens(String googleId, String accessToken, String refreshToken, Long expiresInSeconds) {
-        saveAccessToken(googleId, accessToken, expiresInSeconds);
-        if (refreshToken != null) {
-            saveRefreshToken(googleId, refreshToken);
-        }
-    }
-
-    public void saveAccessToken(String googleId, String accessToken, Long expiresInSeconds) {
+    public void save(String googleId, String accessToken, Long expiresInSeconds) {
         long expireMillis = expiresInSeconds != null
                 ? expiresInSeconds * 1000L
                 : DEFAULT_GOOGLE_ACCESS_TOKEN_EXPIRE_MILLIS;
@@ -30,31 +22,15 @@ public class GoogleAccessTokenStore {
         authTokenRedisRepository.save(googleAccessTokenKey(googleId), accessToken, expireMillis);
     }
 
-    public void saveRefreshToken(String googleId, String refreshToken) {
-        authTokenRedisRepository.save(googleRefreshTokenKey(googleId), refreshToken);
-    }
-
-    public String findAccessToken(String googleId) {
-        return authTokenRedisRepository.get(googleAccessTokenKey(googleId));
-    }
-
-    public String getRefreshToken(String googleId) {
-        String refreshToken = findRefreshToken(googleId);
-        if (refreshToken == null) {
-            throw new ApiException(ErrorDefine.REFRESH_TOKEN_NOT_FOUND);
+    public String getAccessToken(String googleId) {
+        String token = authTokenRedisRepository.get(googleAccessTokenKey(googleId));
+        if (token == null) {
+            throw new ApiException(ErrorDefine.INVALID_HEADER_ERROR);
         }
-        return refreshToken;
-    }
-
-    public String findRefreshToken(String googleId) {
-        return authTokenRedisRepository.get(googleRefreshTokenKey(googleId));
+        return token;
     }
 
     private String googleAccessTokenKey(String googleId) {
         return GOOGLE_ACCESS_TOKEN_PREFIX + googleId;
-    }
-
-    private String googleRefreshTokenKey(String googleId) {
-        return GOOGLE_REFRESH_TOKEN_PREFIX + googleId;
     }
 }
