@@ -1,6 +1,5 @@
 package com.example.inflace.domain.channel.controller;
 
-import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelNewSubscriberResponse;
@@ -10,6 +9,7 @@ import com.example.inflace.domain.channel.dto.response.ChannelSubscriberTrendRes
 import com.example.inflace.domain.channel.dto.response.ChannelTopMainVideosResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelTopVideosResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse;
+import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.service.YoutubeChannelSyncService;
 import com.example.inflace.global.response.BaseResponse;
