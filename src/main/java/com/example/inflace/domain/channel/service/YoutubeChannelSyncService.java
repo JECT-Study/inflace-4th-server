@@ -1,8 +1,11 @@
 package com.example.inflace.domain.channel.service;
 
 import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.domain.ChannelAnalytics;
 import com.example.inflace.domain.channel.dto.ChannelDataSyncResult;
+import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.YoutubeDataChannelResponse;
+import com.example.inflace.domain.channel.repository.ChannelAnalyticsRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.user.infra.UserReadRepository;
@@ -10,6 +13,7 @@ import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.security.util.SecurityUtils;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,12 +27,13 @@ public class YoutubeChannelSyncService {
 
     private final UserReadRepository userReadRepository;
     private final ChannelRepository channelRepository;
+    private final ChannelAnalyticsRepository channelAnalyticsRepository;
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeChannelDataSyncService youtubeChannelDataSyncService;
     private final YoutubeChannelAnalyticsSyncService youtubeChannelAnalyticsSyncService;
 
     @Transactional
-    public Long connectMyChannel() {
+    public ChannelSyncResponse connectMyChannel() {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         User user = userReadRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
@@ -42,11 +47,11 @@ public class YoutubeChannelSyncService {
                 myChannel
         );
         youtubeChannelAnalyticsSyncService.syncAnalytics(user.getProviderId(), result.channel(), result.videos());
-        return result.channel().getId();
+        return buildChannelSyncResponse(result.channel());
     }
 
     @Transactional
-    public Long refreshChannel(Long channelId) {
+    public ChannelSyncResponse refreshChannel(Long channelId) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         User user = userReadRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
@@ -67,7 +72,7 @@ public class YoutubeChannelSyncService {
                 channelItem
         );
         youtubeChannelAnalyticsSyncService.syncAnalytics(user.getProviderId(), result.channel(), result.videos());
-        return result.channel().getId();
+        return buildChannelSyncResponse(result.channel());
     }
 
     private YoutubeDataChannelResponse.Item extractMyChannel(YoutubeDataChannelResponse response) {
@@ -81,5 +86,12 @@ public class YoutubeChannelSyncService {
         if (!channel.getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
+    }
+
+    private ChannelSyncResponse buildChannelSyncResponse(Channel channel) {
+        LocalDateTime updatedAt = channelAnalyticsRepository.findByChannel_Id(channel.getId())
+                .map(ChannelAnalytics::getUpdatedAt)
+                .orElse(LocalDateTime.now());
+        return new ChannelSyncResponse(channel.getId(), channel.getYoutubeChannelId(), updatedAt);
     }
 }

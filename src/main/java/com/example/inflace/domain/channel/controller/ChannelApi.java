@@ -9,6 +9,7 @@ import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionRespo
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 
 import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
+import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.ChannelTopVideosResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
@@ -27,14 +28,14 @@ public interface ChannelApi {
             description = "유튜브 채널을 연동합니다."
     )
     @ApiErrorDefines({ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.YOUTUBE_API_ERROR})
-    BaseResponse<Long> connectMyChannel();
+    BaseResponse<ChannelSyncResponse> connectMyChannel();
 
     @Operation(
             summary = "새로고침",
             description = "유튜브의 정보를 새로고침 합니다."
     )
     @ApiErrorDefines({ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.YOUTUBE_API_ERROR})
-    BaseResponse<Long> refreshChannel(@PathVariable Long channelId);
+    BaseResponse<ChannelSyncResponse> refreshChannel(@PathVariable Long channelId);
 
     @Operation(
             summary = "에픽 2-1, 메인 인기 영상 Top 5",

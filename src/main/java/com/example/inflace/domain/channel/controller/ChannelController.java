@@ -10,6 +10,7 @@ import com.example.inflace.domain.channel.dto.ChannelSubscriberDistributionRespo
 import com.example.inflace.domain.channel.dto.ChannelSubscriberPatternResponse;
 
 import com.example.inflace.domain.channel.dto.ChannelSubscriberTrendResponse;
+import com.example.inflace.domain.channel.dto.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.ChannelVideosResponse;
 
 import com.example.inflace.domain.channel.service.ChannelService;
@@ -33,12 +34,12 @@ public class ChannelController implements ChannelApi{
     private final YoutubeChannelSyncService youtubeChannelSyncService;
 
     @PostMapping("/connect")
-    public BaseResponse<Long> connectMyChannel() {
+    public BaseResponse<ChannelSyncResponse> connectMyChannel() {
         return new BaseResponse<>(youtubeChannelSyncService.connectMyChannel());
     }
 
     @PostMapping("/{channelId}/refresh")
-    public BaseResponse<Long> refreshChannel(@PathVariable Long channelId) {
+    public BaseResponse<ChannelSyncResponse> refreshChannel(@PathVariable Long channelId) {
         return new BaseResponse<>(youtubeChannelSyncService.refreshChannel(channelId));
     }
 
