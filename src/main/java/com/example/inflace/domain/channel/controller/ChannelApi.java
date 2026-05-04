@@ -92,7 +92,7 @@ public interface ChannelApi {
             summary = "영상 목록 조회",
             description = "내 채널의 영상목록을 조회합니다. 기간 필터는 yyyy-MM-dd 형식의 startDate/endDate로 전달합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.INVALID_DATE_FORMAT, ErrorDefine.INVALID_DATE_RANGE})
     BaseResponse<CursorSliceResponse<ChannelVideosResponse.ChannelVideoItem>> getChannelVideos(
             @PathVariable Long channelId,
             @RequestParam(required = false) String keyword,
