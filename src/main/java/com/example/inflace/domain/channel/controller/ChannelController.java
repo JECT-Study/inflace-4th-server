@@ -13,6 +13,7 @@ import com.example.inflace.domain.channel.dto.response.ChannelSyncResponse;
 import com.example.inflace.domain.channel.service.ChannelService;
 import com.example.inflace.domain.channel.service.YoutubeChannelSyncService;
 import com.example.inflace.global.response.BaseResponse;
+import com.example.inflace.global.response.CursorSliceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -90,7 +91,7 @@ public class ChannelController implements ChannelApi {
     }
 
     @GetMapping("/{channelId}/videos")
-    public BaseResponse<ChannelVideosResponse> getChannelVideos(
+    public BaseResponse<CursorSliceResponse<ChannelVideosResponse.ChannelVideoItem>> getChannelVideos(
             @PathVariable Long channelId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String startDate,

@@ -36,6 +36,8 @@ import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.response.CursorSliceResponse;
+import com.example.inflace.global.response.CustomSort;
 import com.example.inflace.global.security.util.SecurityUtils;
 import com.example.inflace.global.util.AnalyticsCalculator;
 import java.time.LocalDate;
@@ -218,7 +220,7 @@ public class ChannelService {
 
 
     @ReadOnlyTransactional
-    public ChannelVideosResponse getChannelVideos(
+    public CursorSliceResponse<ChannelVideosResponse.ChannelVideoItem> getChannelVideos(
             Long channelId,
             String keyword,
             String startDate,
@@ -260,13 +262,15 @@ public class ChannelService {
         );
         ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelId, request);
 
-        return new ChannelVideosResponse(
+        return new CursorSliceResponse<>(
                 result.videos(),
-                new ChannelVideosResponse.PageInfo(
+                new CursorSliceResponse.PageInfo(
                         request.size(),
+                        result.videos().size(),
                         result.nextCursor(),
                         result.hasNext()
-                )
+                ),
+                CustomSort.of(true, request.sort().name(), "DESC")
         );
     }
 

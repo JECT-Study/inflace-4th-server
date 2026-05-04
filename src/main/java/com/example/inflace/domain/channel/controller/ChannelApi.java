@@ -13,6 +13,7 @@ import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
+import com.example.inflace.global.response.CursorSliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -92,7 +93,7 @@ public interface ChannelApi {
             description = "내 채널의 영상목록을 조회합니다. 기간 필터는 yyyy-MM-dd 형식의 startDate/endDate로 전달합니다."
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
-    BaseResponse<ChannelVideosResponse> getChannelVideos(
+    BaseResponse<CursorSliceResponse<ChannelVideosResponse.ChannelVideoItem>> getChannelVideos(
             @PathVariable Long channelId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String startDate,
