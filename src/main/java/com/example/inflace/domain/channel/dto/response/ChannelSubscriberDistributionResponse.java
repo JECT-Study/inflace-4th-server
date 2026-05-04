@@ -92,6 +92,10 @@ public record ChannelSubscriberDistributionResponse(
             }
         }
 
+        if (type == DistributionType.AGE && code != null && code.endsWith("-")) {
+            return code.substring(0, code.length() - 1);
+        }
+
         return code;
     }
 
