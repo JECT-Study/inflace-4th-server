@@ -36,11 +36,14 @@ import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.response.CursorSliceResponse;
+import com.example.inflace.global.response.CustomSort;
 import com.example.inflace.global.security.util.SecurityUtils;
 import com.example.inflace.global.util.AnalyticsCalculator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import org.springframework.data.domain.Limit;
 import java.util.ArrayList;
@@ -217,9 +220,11 @@ public class ChannelService {
 
 
     @ReadOnlyTransactional
-    public ChannelVideosResponse getChannelVideos(
+    public CursorSliceResponse<ChannelVideosResponse.ChannelVideoItem> getChannelVideos(
             Long channelId,
             String keyword,
+            String startDate,
+            String endDate,
             String sort,
             String format,
             Boolean isAd,
@@ -242,17 +247,43 @@ public class ChannelService {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
 
-        ChannelVideosRequest request = new ChannelVideosRequest(keyword, parsedSort, parsedFormat, isAd, cursor, size);
+        LocalDate parsedStartDate = parseDate(startDate);
+        LocalDate parsedEndDate = parseDate(endDate);
+
+        ChannelVideosRequest request = new ChannelVideosRequest(
+                keyword,
+                parsedStartDate,
+                parsedEndDate,
+                parsedSort,
+                parsedFormat,
+                isAd,
+                cursor,
+                size
+        );
         ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelId, request);
 
-        return new ChannelVideosResponse(
+        return new CursorSliceResponse<>(
                 result.videos(),
-                new ChannelVideosResponse.PageInfo(
+                new CursorSliceResponse.PageInfo(
                         request.size(),
+                        result.videos().size(),
                         result.nextCursor(),
                         result.hasNext()
-                )
+                ),
+                CustomSort.of(true, request.sort().name(), "DESC")
         );
+    }
+
+    private LocalDate parseDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException e) {
+            throw new ApiException(ErrorDefine.INVALID_DATE_FORMAT);
+        }
     }
 
     @ReadOnlyTransactional
