@@ -1,5 +1,6 @@
 package com.example.inflace.domain.channel.controller;
 
+import com.example.inflace.domain.channel.dto.response.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelNewSubscriberResponse;
@@ -19,6 +20,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Channel", description = "채널 관련 API")
 public interface ChannelApi {
+
+    @Operation(
+            summary = "유튜브 채널 연동",
+            description = "유튜브 채널을 연동합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.YOUTUBE_API_ERROR})
+    BaseResponse<ChannelSyncResponse> connectMyChannel();
+
+    @Operation(
+            summary = "새로고침",
+            description = "유튜브의 정보를 새로고침 합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.YOUTUBE_API_ERROR})
+    BaseResponse<ChannelSyncResponse> refreshChannel(@PathVariable Long channelId);
 
     @Operation(
             summary = "에픽 2-1, 메인 인기 영상 Top 5",

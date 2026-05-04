@@ -8,7 +8,8 @@ public record YoutubeAnalyticsVideoRequest(
         LocalDate endDate,
         List<String> metrics,
         String youtubeVideoId,
-        String dimensions
+        String dimensions,
+        String filters
 ) {
     public String formattedMetricsList() {
         return String.join(",", metrics);

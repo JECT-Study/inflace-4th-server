@@ -36,4 +36,11 @@ public class VideoTag extends BaseTimeEntity {
 
     @Column(name = "tag", nullable = false)
     private String tag;
+
+    public static VideoTag of(Video video, String tag) {
+        VideoTag videoTag = new VideoTag();
+        videoTag.video = video;
+        videoTag.tag = tag;
+        return videoTag;
+    }
 }

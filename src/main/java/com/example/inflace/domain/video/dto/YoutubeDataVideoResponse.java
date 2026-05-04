@@ -8,11 +8,14 @@ public record YoutubeDataVideoResponse(
     public record Item(
             String id,
             Snippet snippet,
-            ContentDetails contentDetails
+            ContentDetails contentDetails,
+            Statistics statistics,
+            PaidProductPlacementDetails paidProductPlacementDetails
     ) {
     }
 
     public record Snippet(
+            String channelId,
             String title,
             String publishedAt,
             String description,
@@ -34,6 +37,18 @@ public record YoutubeDataVideoResponse(
 
     public record ContentDetails(
             String duration  // 쇼츠 판별용
+    ) {
+    }
+
+    public record Statistics(
+            String viewCount,
+            String likeCount,
+            String commentCount
+    ) {
+    }
+
+    public record PaidProductPlacementDetails(
+            Boolean hasPaidProductPlacement
     ) {
     }
 }

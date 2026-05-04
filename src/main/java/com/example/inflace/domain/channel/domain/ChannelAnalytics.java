@@ -97,4 +97,30 @@ public class ChannelAnalytics extends BaseTimeEntity {
         this.audienceAge = audienceAge;
         this.audienceCountry = audienceCountry;
     }
+
+    public void update(
+            LocalDate startDate,
+            LocalDate endDate,
+            LocalDateTime collectedAt,
+            Long views,
+            Long subscriberViewCount,
+            Long nonSubscriberViewCount,
+            Long watchedMinutes,
+            Integer averageViewDurationSeconds,
+            Map<String, Double> audienceGender,
+            Map<String, Double> audienceAge,
+            Map<String, Double> audienceCountry
+    ) {
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.collectedAt = collectedAt;
+        this.views = views;
+        this.subscriberViewCount = subscriberViewCount;
+        this.nonSubscriberViewCount = nonSubscriberViewCount;
+        this.watchedMinutes = watchedMinutes;
+        this.averageViewDurationSeconds = averageViewDurationSeconds;
+        this.audienceGender = audienceGender;
+        this.audienceAge = audienceAge;
+        this.audienceCountry = audienceCountry;
+    }
 }
