@@ -19,7 +19,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -126,5 +128,22 @@ public class VideoService {
         if (!video.getChannel().getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
+    }
+
+    public Map<Long, VideoStats> getVideoStatsMap(List<Video> videos) {
+        if (videos.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Long> videoIds = videos.stream()
+                .map(Video::getId)
+                .toList();
+
+        List<VideoStats> videoStatsList = videoStatsRepository.findAllByVideoIdIn(videoIds);
+        Map<Long, VideoStats> result = new HashMap<>();
+        for (VideoStats videoStats : videoStatsList) {
+            result.put(videoStats.getVideo().getId(), videoStats);
+        }
+        return result;
     }
 }

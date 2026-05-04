@@ -4,12 +4,15 @@ import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelBookmark;
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.request.InfluencerSortCriteria;
-import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.repository.ChannelBookmarkRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.querydsl.CustomInfluencerQueryRepository;
 import com.example.inflace.domain.channel.repository.querydsl.InfluencerCursorCodec;
+import com.example.inflace.domain.channel.service.insight.InfluencerInsightQueryResult;
+import com.example.inflace.domain.channel.service.insight.InfluencerInsightQueryService;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.global.annotation.ReadOnlyTransactional;
@@ -17,14 +20,19 @@ import com.example.inflace.global.enums.SortOrder;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.CursorSliceResponse;
+import com.example.inflace.infra.openai.OpenAiModel;
+import com.example.inflace.infra.openai.OpenAiSendRequest;
+import com.example.inflace.infra.openai.prompt.InfluencerInsightPrompt;
+import com.example.inflace.infra.openai.service.OpenAiService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class InfluencerService {
 
@@ -33,6 +41,8 @@ public class InfluencerService {
     private final ChannelBookmarkRepository channelBookmarkRepository;
     private final UserReadRepository userReadRepository;
     private final InfluencerCursorCodec influencerCursorCodec;
+    private final InfluencerInsightQueryService influencerInsightQueryService;
+    private final OpenAiService openAiService;
 
     @ReadOnlyTransactional
     public CursorSliceResponse<GetInfluencerSearchResponse> getInfluencersWithSearchCondition(
@@ -91,6 +101,32 @@ public class InfluencerService {
         );
     }
 
+    public GetInfluencerInsightResponse getInfluencerInsight(Long channelId) {
+        InfluencerInsightQueryResult queryResult =
+                influencerInsightQueryService.getInsightQueryResult(channelId);
+
+        String summary = null;
+
+        try {
+            summary = openAiService.sendChatMessage(new OpenAiSendRequest(
+                    InfluencerInsightPrompt.systemMessage(),
+                    InfluencerInsightPrompt.humanMessage(
+                            queryResult.channelDescription(),
+                            queryResult.recentVideoDescriptions(),
+                            queryResult.insight()
+                    ),
+                    null,
+                    OpenAiModel.GPT_4O_MINI
+            ));
+        } catch (RuntimeException e) {
+            log.warn("Failed to generate influencer insight AI summary. channelId={}", channelId, e);
+        }
+
+        return queryResult.insight().withAiSummary(new GetInfluencerInsightResponse.AiSummary(
+                summary
+        ));
+    }
+
     private String buildNextCursor(
             Slice<GetInfluencerSearchResponse> slice,
             InfluencerSortCriteria sortCriteria,
@@ -117,4 +153,5 @@ public class InfluencerService {
             );
         };
     }
+
 }

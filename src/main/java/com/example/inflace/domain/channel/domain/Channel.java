@@ -32,6 +32,9 @@ public class Channel extends BaseTimeEntity {
 
     private String name;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "youtube_channel_id")
     private String youtubeChannelId;
 

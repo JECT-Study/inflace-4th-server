@@ -32,6 +32,7 @@ import com.example.inflace.domain.video.repository.VideoQueryRepository;
 import com.example.inflace.domain.video.repository.VideoAnalyticsRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
+import com.example.inflace.domain.video.service.VideoService;
 import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.exception.ApiException;
@@ -71,6 +72,7 @@ public class ChannelService {
     private final ChannelAnalyticsRepository channelAnalyticsRepository;
     private final VideoStatsRepository videoStatsRepository;
     private final VideoAnalyticsRepository videoAnalyticsRepository;
+    private final VideoService videoService;
     private final SubscriberLogRepository subscriberLogRepository;
 
     @ReadOnlyTransactional
@@ -324,22 +326,7 @@ public class ChannelService {
     }
 
     private Map<Long, VideoStats> getVideoStatsMap(List<Video> videos) {
-        if (videos.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        List<Long> videoIds = new ArrayList<>();
-        for (Video video : videos) {
-            videoIds.add(video.getId());
-        }
-
-        List<VideoStats> videoStatsList = videoStatsRepository.findAllByVideoIdIn(videoIds);
-        Map<Long, VideoStats> videoStatsMap = new HashMap<>();
-        for (VideoStats videoStats : videoStatsList) {
-            videoStatsMap.put(videoStats.getVideo().getId(), videoStats);
-        }
-
-        return videoStatsMap;
+        return videoService.getVideoStatsMap(videos);
     }
 
     private Map<Long, VideoAnalytics> getVideoAnalyticsMap(List<Video> videos) {

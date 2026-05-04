@@ -2,6 +2,7 @@ package com.example.inflace.domain.channel.controller;
 
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.service.InfluencerService;
 import com.example.inflace.global.response.BaseResponse;
@@ -47,5 +48,12 @@ public class InfluencerController implements InfluencerApi {
     @GetMapping("/bookmarks")
     public BaseResponse<GetInfluencerBookmarksResponse> getInfluencerBookmarks() {
         return new BaseResponse<>(influencerService.getInfluencerBookmarks(SecurityUtils.getAuthenticatedUserId()));
+    }
+
+    @GetMapping("/{channelId}/insight")
+    public BaseResponse<GetInfluencerInsightResponse> getInfluencerInsight(
+            @PathVariable Long channelId
+    ) {
+        return new BaseResponse<>(influencerService.getInfluencerInsight(channelId));
     }
 }
