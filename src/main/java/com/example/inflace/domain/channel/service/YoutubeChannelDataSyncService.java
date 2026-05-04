@@ -26,7 +26,9 @@ import com.example.inflace.global.util.AnalyticsCalculator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -256,7 +258,7 @@ public class YoutubeChannelDataSyncService {
 
         List<Video> videos = videoRepository.findByChannelId(channel.getId());
         if (videos.isEmpty()) {
-            channelStats.updateCalculatedMetrics(0, 0.0, 0.0, LocalDateTime.now());
+            channelStats.updateCalculatedMetrics(0, 0.0, 0.0, 0.0, LocalDateTime.now());
             return;
         }
 
@@ -295,7 +297,16 @@ public class YoutubeChannelDataSyncService {
                 .average()
                 .orElse(0.0);
 
-        channelStats.updateCalculatedMetrics(recentUploadCount30d, avgViewsRecentN, avgEngagementRateRecentN, LocalDateTime.now());
+        double avgOutlierScoreRecentExcludingTop5Pct =
+                calculateAverageOutlierScoreRecentExcludingTop5Pct(recentVideos, videoStatsMap, channelStats);
+
+        channelStats.updateCalculatedMetrics(
+                recentUploadCount30d,
+                avgViewsRecentN,
+                avgEngagementRateRecentN,
+                avgOutlierScoreRecentExcludingTop5Pct,
+                LocalDateTime.now()
+        );
     }
 
     private void refreshVideoRisingScores(Channel channel) {
@@ -523,6 +534,38 @@ public class YoutubeChannelDataSyncService {
             return null;
         }
         return round((engagementRate / avgEngagementRate) * outlierScore, 6);
+    }
+
+    private double calculateAverageOutlierScoreRecentExcludingTop5Pct(
+            List<Video> recentVideos,
+            Map<Long, VideoStats> videoStatsMap,
+            ChannelStats channelStats
+    ) {
+        List<Double> outlierScores = recentVideos.stream()
+                .map(Video::getId)
+                .map(videoStatsMap::get)
+                .filter(videoStats -> videoStats != null)
+                .map(videoStats -> calculateOutlierScore(videoStats.getViewCount(), channelStats, null))
+                .filter(Objects::nonNull)
+                .sorted(Comparator.reverseOrder())
+                .toList();
+
+        if (outlierScores.isEmpty()) {
+            return 0.0;
+        }
+
+        int excludedCount = (int) Math.floor(outlierScores.size() * 0.05d);
+        int startIndex = Math.min(excludedCount, outlierScores.size());
+        List<Double> retainedScores = outlierScores.subList(startIndex, outlierScores.size());
+        if (retainedScores.isEmpty()) {
+            return 0.0;
+        }
+
+        double average = retainedScores.stream()
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
+        return round(average, 6);
     }
 
     private long defaultLong(Long value) {
