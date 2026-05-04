@@ -26,30 +26,23 @@ public class VideoStats extends BaseTimeEntity {
     @JoinColumn(name = "video_id", nullable = false)
     private Video video;
 
-    @Column(name = "view_count")
-    private Long viewCount;
+    @Column(name = "view_count", nullable = false)
+    private Long viewCount = 0L;
 
-    @Column(name = "like_count")
-    private Long likeCount;
+    @Column(name = "like_count", nullable = false)
+    private Long likeCount = 0L;
 
-    @Column(name = "comment_count")
-    private Long commentCount;
+    @Column(name = "comment_count", nullable = false)
+    private Long commentCount = 0L;
 
-    @Column(name = "collected_at")
+    @Column(name = "collected_at", nullable = false)
     private LocalDateTime collectedAt;
 
-    public void update(Long viewCount, Long likeCount, Long commentCount, LocalDateTime collectedAt) {
-        this.viewCount = viewCount;
-        this.likeCount = likeCount;
-        this.commentCount = commentCount;
-        this.collectedAt = collectedAt;
-    }
+    @Column(name = "vph", nullable = false)
+    private Double vph = 0.0;
 
-    @Column(name = "vph")
-    private Double vph;
-
-    @Column(name = "outlier_score")
-    private Double outlierScore;
+    @Column(name = "outlier_score", nullable = false)
+    private Double outlierScore = 0.0;
 
     @Column(name = "rising_score")
     private Double risingScore;
@@ -64,6 +57,13 @@ public class VideoStats extends BaseTimeEntity {
         this.vph = vph;
         this.outlierScore = outlierScore;
         this.risingScore = risingScore;
+        this.collectedAt = collectedAt;
+    }
+
+    public void update(Long viewCount, Long likeCount, Long commentCount, LocalDateTime collectedAt) {
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
+        this.commentCount = commentCount;
         this.collectedAt = collectedAt;
     }
 }
