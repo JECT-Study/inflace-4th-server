@@ -1,0 +1,131 @@
+package com.example.inflace.domain.channel.dto.response;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+import java.util.List;
+
+public record GetInfluencerInsightResponse(
+        @Schema(description = "채널 ID", example = "42")
+        Long channelId,
+
+        @Schema(description = "채널명", example = "침착맨")
+        String channelName,
+
+        @Schema(description = "채널 핸들", example = "@chimchakman")
+        String channelHandle,
+
+        @JsonFormat(pattern = "yyyy.MM.dd")
+        @Schema(description = "채널 가입일", example = "2020.01.01")
+        LocalDateTime joinedAt,
+
+        @Schema(description = "총 구독자 수", example = "125000")
+        Long subscriberCount,
+
+        @ArraySchema(
+                arraySchema = @Schema(description = "채널 카테고리 목록"),
+                schema = @Schema(example = "게임")
+        )
+        List<String> categories,
+
+        @Schema(description = "AI 요약 정보")
+        AiSummary aiSummary,
+
+        @Schema(description = "팬층 지표")
+        Audience audience,
+
+        @Schema(description = "콘텐츠 지표")
+        Content content,
+
+        @Schema(description = "활동 지표")
+        Activity activity,
+
+        @Schema(description = "롱폼 vs 숏폼 분석")
+        FormatAnalysis formatAnalysis
+) {
+    public record AiSummary(
+            @Schema(description = "LLM이 생성한 채널 요약", nullable = true, example = "팬덤 충성도가 높고 2x 이상 바이럴 비중이 안정적인 게임 채널입니다.")
+            String summary
+    ) {
+    }
+
+    public record Audience(
+            @Schema(description = "채널 전체 참여율(%)", example = "7.2")
+            double engagementRate,
+
+            @Schema(description = "채널 전체 좋아요 비율(%)", example = "2.1")
+            double likeRate,
+
+            @Schema(description = "채널 전체 댓글 비율(%)", example = "1.5")
+            double commentRate,
+
+            @Schema(description = "구독자 대비 평균 조회 비율(%)", example = "22.0")
+            double viewsPerSubscriberRate
+    ) {
+    }
+
+    public record Content(
+            @Schema(description = "2배 이상 바이럴 영상 비율(%)", example = "38.0")
+            double viral2xRate,
+
+            @Schema(description = "5배 이상 바이럴 영상 비율(%)", example = "12.0")
+            double viral5xRate,
+
+            @Schema(description = "VPH 중앙값", example = "720.0")
+            double medianVph,
+
+            @Schema(description = "직전 30일 대비 최근 30일 평균 조회수 성장률(%)", example = "28.0")
+            double growthTrendRate
+    ) {
+    }
+
+    public record Activity(
+            @Schema(description = "최근 90일 기준 주간 평균 업로드 횟수", example = "1.4")
+            double uploadsPerWeek,
+
+            @Schema(description = "최근 30일 업로드 빈도 변화", example = "INCREASING")
+            UploadFrequencyTrend frequencyTrend
+    ) {
+    }
+
+    public enum UploadFrequencyTrend {
+        INCREASING,
+        DECREASING,
+        STABLE
+    }
+
+    public record FormatAnalysis(
+            @Schema(description = "롱폼 지표")
+            FormatMetric longForm,
+
+            @Schema(description = "숏폼 지표")
+            FormatMetric shortForm
+    ) {
+    }
+
+    public record FormatMetric(
+            @Schema(description = "최근 30일 평균 조회수", example = "185432.0")
+            double averageViews30d,
+
+            @Schema(description = "최근 30일 참여율(%)", example = "8.7")
+            double engagementRate
+    ) {
+    }
+
+    public GetInfluencerInsightResponse withAiSummary(AiSummary aiSummary) {
+        return new GetInfluencerInsightResponse(
+                channelId,
+                channelName,
+                channelHandle,
+                joinedAt,
+                subscriberCount,
+                categories,
+                aiSummary,
+                audience,
+                content,
+                activity,
+                formatAnalysis
+        );
+    }
+}

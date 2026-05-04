@@ -2,6 +2,7 @@ package com.example.inflace.domain.channel.controller;
 
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -77,4 +78,21 @@ public interface InfluencerApi {
     )
     @ApiErrorDefines(ErrorDefine.AUTHENTICATION_FAILED)
     BaseResponse<GetInfluencerBookmarksResponse> getInfluencerBookmarks();
+
+    @Operation(
+            summary = "인플루언서 채널 인사이트 조회",
+            description = """
+                    특정 인플루언서 채널의 팬층, 콘텐츠, 활동, 롱폼/숏폼 지표를 종합 조회합니다.
+                    
+                    - 영상이 50개 이상인 채널만 조회 가능합니다.
+                    - 기본 채널 정보로 `channelName`, `categories`, `channelHandle`, `joinedAt`, `subscriberCount`를 함께 반환합니다.
+                    - AI 요약은 채널 description, 최신 영상 description 10개, 각종 지표를 바탕으로 생성됩니다.
+                    - OpenAI 호출에 실패하면 `aiSummary.summary`는 null로 반환될 수 있습니다.
+                    """
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    BaseResponse<GetInfluencerInsightResponse> getInfluencerInsight(
+            @Parameter(description = "인사이트를 조회할 채널 ID", example = "42")
+            @PathVariable Long channelId
+    );
 }
