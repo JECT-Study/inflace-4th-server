@@ -36,4 +36,11 @@ public class ChannelCategory extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private YoutubeCategory category;
+
+    public static ChannelCategory of(Channel channel, YoutubeCategory category) {
+        ChannelCategory relation = new ChannelCategory();
+        relation.channel = channel;
+        relation.category = category;
+        return relation;
+    }
 }

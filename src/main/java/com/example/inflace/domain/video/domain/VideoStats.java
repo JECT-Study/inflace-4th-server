@@ -60,10 +60,19 @@ public class VideoStats extends BaseTimeEntity {
         this.collectedAt = collectedAt;
     }
 
-    public void update(Long viewCount, Long likeCount, Long commentCount, LocalDateTime collectedAt) {
+    public void update(Long viewCount, Long likeCount, Long commentCount,
+                       Double vph, Double outlierScore, Double risingScore,
+                       LocalDateTime collectedAt) {
         this.viewCount = viewCount;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
+        this.vph = vph;
+        this.outlierScore = outlierScore;
+        this.risingScore = risingScore;
         this.collectedAt = collectedAt;
+    }
+
+    public void update(Long viewCount, Long likeCount, Long commentCount, LocalDateTime collectedAt) {
+        update(viewCount, likeCount, commentCount, this.vph, this.outlierScore, this.risingScore, collectedAt);
     }
 }

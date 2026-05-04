@@ -1,5 +1,6 @@
 package com.example.inflace.domain.channel.controller;
 
+import com.example.inflace.domain.channel.dto.response.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelEngagementRateResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelKpiResponse;
 import com.example.inflace.domain.channel.dto.response.ChannelNewSubscriberResponse;
@@ -12,6 +13,7 @@ import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
+import com.example.inflace.global.response.CursorSliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +21,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Channel", description = "채널 관련 API")
 public interface ChannelApi {
+
+    @Operation(
+            summary = "유튜브 채널 연동",
+            description = "유튜브 채널을 연동합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.YOUTUBE_API_ERROR})
+    BaseResponse<ChannelSyncResponse> connectMyChannel();
+
+    @Operation(
+            summary = "새로고침",
+            description = "유튜브의 정보를 새로고침 합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.YOUTUBE_API_ERROR})
+    BaseResponse<ChannelSyncResponse> refreshChannel(@PathVariable Long channelId);
 
     @Operation(
             summary = "에픽 2-1, 메인 인기 영상 Top 5",
@@ -74,12 +90,14 @@ public interface ChannelApi {
 
     @Operation(
             summary = "영상 목록 조회",
-            description = "내 채널의 영상목록을 조회합니다."
+            description = "내 채널의 영상목록을 조회합니다. 기간 필터는 yyyy-MM-dd 형식의 startDate/endDate로 전달합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
-    BaseResponse<ChannelVideosResponse> getChannelVideos(
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.INVALID_DATE_FORMAT, ErrorDefine.INVALID_DATE_RANGE})
+    BaseResponse<CursorSliceResponse<ChannelVideosResponse.ChannelVideoItem>> getChannelVideos(
             @PathVariable Long channelId,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam(required = false, defaultValue = "LATEST") String sort,
             @RequestParam(required = false, defaultValue = "ALL") String format,
             @RequestParam(required = false) Boolean isAd,

@@ -8,6 +8,8 @@ public enum ErrorDefine {
 
     INVALID_HEADER_ERROR("AUTH_400", HttpStatus.BAD_REQUEST, "Bad Request: Invalid Header Error"),
     INVALID_ARGUMENT("COMMON_400", HttpStatus.BAD_REQUEST, "Bad Request: Invalid Arguments"),
+    INVALID_DATE_FORMAT("COMMON_400_DATE_FORMAT", HttpStatus.BAD_REQUEST, "Bad Request: Invalid date format"),
+    INVALID_DATE_RANGE("COMMON_400_DATE_RANGE", HttpStatus.BAD_REQUEST, "Bad Request: Invalid date range"),
     AUTH_UNSUPPORTED_PROVIDER("AUTH_401", HttpStatus.BAD_REQUEST, "Bad Request: Unsupported OAuth Provider"),
     AUTHENTICATION_FAILED("AUTH_401_UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Unauthorized: Authentication required"),
     INVALID_ACCESS_TOKEN("AUTH_401_ACCESS", HttpStatus.UNAUTHORIZED, "Unauthorized: Invalid access token"),

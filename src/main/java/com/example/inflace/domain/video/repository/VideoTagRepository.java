@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface VideoTagRepository extends JpaRepository<VideoTag, Long> {
     List<VideoTag> findAllByVideoId(Long videoId);
+    List<VideoTag> findAllByVideoIdIn(List<Long> videoIds);
 }

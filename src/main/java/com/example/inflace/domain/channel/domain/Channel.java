@@ -61,4 +61,13 @@ public class Channel extends BaseTimeEntity {
         this.uploadsPlaylistId = uploadsPlaylistId;
         this.youtubePublishedAt = youtubePublishedAt;
     }
+
+    public void update(String name, String channelHandle, String profileImageUrl,
+                       String uploadsPlaylistId, LocalDateTime youtubePublishedAt) {
+        this.name = name;
+        this.channelHandle = channelHandle;
+        this.profileImageUrl = profileImageUrl;
+        this.uploadsPlaylistId = uploadsPlaylistId;
+        this.youtubePublishedAt = youtubePublishedAt;
+    }
 }

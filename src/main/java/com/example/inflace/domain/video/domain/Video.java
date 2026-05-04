@@ -71,6 +71,19 @@ public class Video extends BaseTimeEntity {
         this.publishedAt = publishedAt;
     }
 
+    public void update(Integer categoryId, String title, String description, String thumbnailUrl,
+                       Integer durationSeconds, boolean isShort, boolean isAdvertisement,
+                       LocalDateTime publishedAt) {
+        this.categoryId = categoryId;
+        this.title = title;
+        this.description = description;
+        this.thumbnailUrl = thumbnailUrl;
+        this.durationSeconds = durationSeconds;
+        this.isShort = isShort;
+        this.isAdvertisement = isAdvertisement;
+        this.publishedAt = publishedAt;
+    }
+
     @Transient
     public String getVideoUrl() {
         return youtubeVideoId != null ? "https://www.youtube.com/watch?v=" + youtubeVideoId : null;
