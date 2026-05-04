@@ -14,6 +14,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -46,6 +47,11 @@ public class VideoQueryRepositoryImpl implements VideoQueryRepository {
 
         if (request.isAd() != null) {
             predicate.and(video.isAdvertisement.eq(request.isAd()));
+        }
+
+        BooleanExpression publishedAtCondition = buildPublishedAtCondition(request, video);
+        if (publishedAtCondition != null) {
+            predicate.and(publishedAtCondition);
         }
 
         BooleanExpression cursorCondition = buildCursorCondition(request, video, stats);
@@ -91,6 +97,22 @@ public class VideoQueryRepositoryImpl implements VideoQueryRepository {
         }
 
         return new ChannelVideoSliceResult(items, nextCursor, hasNext);
+    }
+
+    private BooleanExpression buildPublishedAtCondition(ChannelVideosRequest request, QVideo video) {
+        BooleanExpression condition = null;
+
+        if (request.startDate() != null) {
+            condition = video.publishedAt.goe(request.startDate().atStartOfDay());
+        }
+
+        if (request.endDate() != null) {
+            LocalDate exclusiveEndDate = request.endDate().plusDays(1);
+            BooleanExpression endCondition = video.publishedAt.lt(exclusiveEndDate.atStartOfDay());
+            condition = condition == null ? endCondition : condition.and(endCondition);
+        }
+
+        return condition;
     }
 
     private OrderSpecifier<?>[] buildOrderSpecifiers(ChannelVideoSort sort, QVideo video, QVideoStats stats) {

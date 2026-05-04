@@ -93,13 +93,25 @@ public class ChannelController implements ChannelApi {
     public BaseResponse<ChannelVideosResponse> getChannelVideos(
             @PathVariable Long channelId,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam(defaultValue = "LATEST") String sort,
             @RequestParam(defaultValue = "ALL") String format,
             @RequestParam(required = false) Boolean isAd,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "12") Integer size
     ) {
-        return new BaseResponse<>(channelService.getChannelVideos(channelId, keyword, sort, format, isAd, cursor, size));
+        return new BaseResponse<>(channelService.getChannelVideos(
+                channelId,
+                keyword,
+                startDate,
+                endDate,
+                sort,
+                format,
+                isAd,
+                cursor,
+                size
+        ));
     }
 
     @GetMapping("/{channelId}/subscriber-trend")

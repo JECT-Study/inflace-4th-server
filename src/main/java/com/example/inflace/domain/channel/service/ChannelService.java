@@ -41,6 +41,7 @@ import com.example.inflace.global.util.AnalyticsCalculator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import org.springframework.data.domain.Limit;
 import java.util.ArrayList;
@@ -220,6 +221,8 @@ public class ChannelService {
     public ChannelVideosResponse getChannelVideos(
             Long channelId,
             String keyword,
+            String startDate,
+            String endDate,
             String sort,
             String format,
             Boolean isAd,
@@ -242,7 +245,19 @@ public class ChannelService {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
 
-        ChannelVideosRequest request = new ChannelVideosRequest(keyword, parsedSort, parsedFormat, isAd, cursor, size);
+        LocalDate parsedStartDate = parseDate(startDate);
+        LocalDate parsedEndDate = parseDate(endDate);
+
+        ChannelVideosRequest request = new ChannelVideosRequest(
+                keyword,
+                parsedStartDate,
+                parsedEndDate,
+                parsedSort,
+                parsedFormat,
+                isAd,
+                cursor,
+                size
+        );
         ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelId, request);
 
         return new ChannelVideosResponse(
@@ -253,6 +268,18 @@ public class ChannelService {
                         result.hasNext()
                 )
         );
+    }
+
+    private LocalDate parseDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException e) {
+            throw new ApiException(ErrorDefine.INVALID_DATE_FORMAT);
+        }
     }
 
     @ReadOnlyTransactional
