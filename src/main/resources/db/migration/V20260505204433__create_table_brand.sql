@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS brand (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    CONSTRAINT uk_brand_name UNIQUE (name)
+);
