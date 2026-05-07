@@ -41,6 +41,9 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "활동 지표")
         Activity activity,
 
+        @Schema(description = "광고 지표")
+        Advertisement advertisement,
+
         @Schema(description = "롱폼 vs 숏폼 분석")
         FormatAnalysis formatAnalysis
 ) {
@@ -101,6 +104,18 @@ public record GetInfluencerInsightResponse(
     ) {
     }
 
+    public record Advertisement(
+            @Schema(description = "광고 종합 점수", example = "72.8")
+            double score,
+
+            @Schema(description = "조회수 변동계수(CV)", example = "0.92")
+            double viewCoefficientOfVariation,
+
+            @Schema(description = "구독 건강도 지표(구독자 대비 평균 조회 비율, %)", example = "22.0")
+            double subscriberHealthRate
+    ) {
+    }
+
     public enum UploadFrequencyTrend {
         INCREASING,
         DECREASING,
@@ -137,6 +152,7 @@ public record GetInfluencerInsightResponse(
                 audience,
                 content,
                 activity,
+                advertisement,
                 formatAnalysis
         );
     }

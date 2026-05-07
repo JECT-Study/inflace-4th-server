@@ -54,7 +54,8 @@ public final class InfluencerInsightPrompt {
                 1. Audience response level
                 2. Content performance characteristics
                 3. Upload activity trend
-                4. Long-form vs short-form difference
+                4. Advertising suitability
+                5. Long-form vs short-form difference
 
                 <CHANNEL_DATA>
                 Channel Name: %s
@@ -88,6 +89,11 @@ public final class InfluencerInsightPrompt {
                 Recent Upload (최근 업로드): %s
                 Upload Cycle (업로드 주기): %s
                 Frequency Trend (빈도 변화): %s
+
+                [Advertisement]
+                Advertisement Score (광고 점수): %.2f
+                View Coefficient of Variation (조회수 안정성 CV): %.2f
+                Subscriber Health Rate (구독 건강도 지표): %.2f%%
 
                 [Long-form vs Short-form]
                 Long-form Avg Views (30d, 롱폼 평균 조회 수): %.2f
@@ -125,6 +131,9 @@ public final class InfluencerInsightPrompt {
                 formatRecentUpload(insight.activity().recentUpload()),
                 formatUploadCycle(insight.activity().uploadCycle()),
                 toKoreanTrend(insight.activity().frequencyTrend()),
+                insight.advertisement().score(),
+                insight.advertisement().viewCoefficientOfVariation(),
+                insight.advertisement().subscriberHealthRate(),
                 insight.formatAnalysis().longForm().averageViews30d(),
                 insight.formatAnalysis().longForm().engagementRate(),
                 insight.formatAnalysis().shortForm().averageViews30d(),

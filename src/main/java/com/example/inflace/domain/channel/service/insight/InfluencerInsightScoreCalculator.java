@@ -15,8 +15,13 @@ public class InfluencerInsightScoreCalculator {
     private static final double CONTENT_GROWTH_WEIGHT = 25.0;
     private static final double ACTIVITY_UPLOAD_CYCLE_WEIGHT = 35.0;
     private static final double ACTIVITY_FREQUENCY_CHANGE_WEIGHT = 25.0;
+    private static final double AD_VIEW_STABILITY_WEIGHT = 30.0;
+    private static final double AD_SUBSCRIBER_HEALTH_WEIGHT = 30.0;
+    private static final double AD_SPONSORSHIP_EXPERIENCE_WEIGHT = 20.0;
     private static final double ACTIVITY_TOTAL_WEIGHT =
             ACTIVITY_UPLOAD_CYCLE_WEIGHT + ACTIVITY_FREQUENCY_CHANGE_WEIGHT;
+    private static final double ADVERTISEMENT_TOTAL_WEIGHT =
+            AD_VIEW_STABILITY_WEIGHT + AD_SUBSCRIBER_HEALTH_WEIGHT + AD_SPONSORSHIP_EXPERIENCE_WEIGHT;
 
     public double audienceScore(
             double engagementRate,
@@ -59,6 +64,31 @@ public class InfluencerInsightScoreCalculator {
         );
     }
 
+    public double advertisementScore(
+            double viewStabilityScore,
+            double subscriberHealthScore,
+            double sponsorshipExperienceScore
+    ) {
+        return calculateWeightedAverage(
+                ADVERTISEMENT_TOTAL_WEIGHT,
+                viewStabilityScore * AD_VIEW_STABILITY_WEIGHT
+                        + subscriberHealthScore * AD_SUBSCRIBER_HEALTH_WEIGHT
+                        + sponsorshipExperienceScore * AD_SPONSORSHIP_EXPERIENCE_WEIGHT
+        );
+    }
+
+    public double viewStabilityScore(double coefficientOfVariation) {
+        return rangedPeakScore(coefficientOfVariation, 0.4, 1.8);
+    }
+
+    public double subscriberHealthScore(double subscriberHealthRate) {
+        return rangedPeakScore(subscriberHealthRate, 2.0, 50.0);
+    }
+
+    public double sponsorshipExperienceScore(double sponsorshipExperienceRate) {
+        return thresholdScore(sponsorshipExperienceRate, 20.0);
+    }
+
     private double divideBy100(double weightedSum) {
         return clamp(weightedSum / 100.0);
     }
@@ -75,6 +105,26 @@ public class InfluencerInsightScoreCalculator {
             return 0.0;
         }
         return clamp((actualValue / fullScoreThreshold) * 100.0);
+    }
+
+    private double rangedPeakScore(double actualValue, double lowerBound, double upperBound) {
+        if (lowerBound < 0.0 || upperBound <= lowerBound) {
+            return 0.0;
+        }
+        if (actualValue >= lowerBound && actualValue <= upperBound) {
+            return 100.0;
+        }
+        if (actualValue < lowerBound) {
+            return clamp((actualValue / lowerBound) * 100.0);
+        }
+
+        double upperRange = upperBound - lowerBound;
+        if (upperRange <= 0.0) {
+            return 0.0;
+        }
+
+        double overflow = actualValue - upperBound;
+        return clamp(100.0 - (overflow / upperRange) * 100.0);
     }
 
     private double clamp(double value) {

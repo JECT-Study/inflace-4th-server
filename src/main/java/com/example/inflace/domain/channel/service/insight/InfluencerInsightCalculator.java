@@ -45,6 +45,7 @@ public class InfluencerInsightCalculator {
         GetInfluencerInsightResponse.Audience audience = buildAudienceMetrics(latestMetrics, channelStats);
         GetInfluencerInsightResponse.Content content = buildContentMetrics(latestMetrics);
         GetInfluencerInsightResponse.Activity activity = buildActivityMetrics(latestVideos);
+        GetInfluencerInsightResponse.Advertisement advertisement = buildAdvertisementMetrics(latestMetrics, channelStats);
         GetInfluencerInsightResponse.FormatAnalysis formatAnalysis = buildFormatAnalysis(metrics);
 
         return new GetInfluencerInsightResponse(
@@ -58,6 +59,7 @@ public class InfluencerInsightCalculator {
                 audience,
                 content,
                 activity,
+                advertisement,
                 formatAnalysis
         );
     }
@@ -82,6 +84,7 @@ public class InfluencerInsightCalculator {
 
             metrics.add(new VideoMetric(
                     video.isShort(),
+                    video.isAdvertisement(),
                     video.getPublishedAt(),
                     viewCount,
                     likeCount,
@@ -222,8 +225,37 @@ public class InfluencerInsightCalculator {
         );
     }
 
+    private GetInfluencerInsightResponse.Advertisement buildAdvertisementMetrics(
+            List<VideoMetric> metrics,
+            ChannelStats channelStats
+    ) {
+        double averageViews = averageViewCount(metrics);
+        double viewCoefficientOfVariation = calculateCoefficientOfVariation(metrics, averageViews);
+        double subscriberHealthRate = 0.0;
+        if (channelStats != null && channelStats.getSubscriberCount() > 0) {
+            subscriberHealthRate = calculateRatio(averageViews, channelStats.getSubscriberCount());
+        }
+        double sponsorshipExperienceRate = calculateFixedWindowPercentOf(metrics, VideoMetric::isAdvertisement);
+
+        double viewStabilityScore = scoreCalculator.viewStabilityScore(viewCoefficientOfVariation);
+        double subscriberHealthScore = scoreCalculator.subscriberHealthScore(subscriberHealthRate);
+        double sponsorshipExperienceScore = scoreCalculator.sponsorshipExperienceScore(sponsorshipExperienceRate);
+        double score = scoreCalculator.advertisementScore(
+                viewStabilityScore,
+                subscriberHealthScore,
+                sponsorshipExperienceScore
+        );
+
+        return new GetInfluencerInsightResponse.Advertisement(
+                calculateRound(score),
+                calculateRound(viewCoefficientOfVariation),
+                calculateRound(subscriberHealthRate)
+        );
+    }
+
     private record VideoMetric(
             boolean isShort,
+            boolean isAdvertisement,
             LocalDateTime publishedAt,
             long viewCount,
             long likeCount,
@@ -269,6 +301,19 @@ public class InfluencerInsightCalculator {
                 .mapToDouble(VideoMetric::engagementRate)
                 .average()
                 .orElse(0.0);
+    }
+
+    private double calculateCoefficientOfVariation(List<VideoMetric> metrics, double averageViews) {
+        if (metrics.isEmpty() || averageViews <= 0.0) {
+            return 0.0;
+        }
+
+        double variance = metrics.stream()
+                .mapToDouble(metric -> Math.pow(metric.viewCount() - averageViews, 2))
+                .average()
+                .orElse(0.0);
+
+        return Math.sqrt(variance) / averageViews;
     }
 
     private double calculateGrowthRate(double previousValue, double recentValue) {
