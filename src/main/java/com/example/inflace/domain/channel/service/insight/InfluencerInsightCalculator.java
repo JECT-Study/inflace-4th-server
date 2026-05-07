@@ -37,6 +37,8 @@ public class InfluencerInsightCalculator {
                 channel.getId(),
                 channel.getName(),
                 channel.getChannelHandle(),
+                channel.getProfileImageUrl(),
+                channel.getBannerImageUrl(),
                 channel.getYoutubePublishedAt(),
                 channelStats != null ? channelStats.getSubscriberCount() : 0L,
                 categories,

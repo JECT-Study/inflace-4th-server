@@ -16,6 +16,12 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "채널 핸들", example = "@chimchakman")
         String channelHandle,
 
+        @Schema(description = "채널 프로필 이미지 URL", example = "https://yt3.ggpht.com/oQnwIVz1_jEh84oyAJP4VmqyAOu0BqFjqq1q5LwRzE2NqchtoH4diA6Y6YYSFnJ7nJawYdHd=s800-c-k-c0x00ffffff-no-rj")
+        String profileImageUrl,
+
+        @Schema(description = "채널 배너 이미지 URL", example = "https://yt3.ggpht.com/oQnwIVz1_jEh84oyAJP4VmqyAOu0BqFjqq1q5LwRzE2NqchtoH4diA6Y6YYSFnJ7nJawYdHd=s800-c-k-c0x00ffffff-no-rj")
+        String bannerImageUrl,
+
         @JsonFormat(pattern = "yyyy.MM.dd")
         @Schema(description = "채널 가입일", example = "2020.01.01")
         LocalDateTime joinedAt,
@@ -118,6 +124,8 @@ public record GetInfluencerInsightResponse(
                 channelId,
                 channelName,
                 channelHandle,
+                profileImageUrl,
+                bannerImageUrl,
                 joinedAt,
                 subscriberCount,
                 categories,
