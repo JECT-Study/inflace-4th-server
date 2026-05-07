@@ -15,10 +15,12 @@ import com.example.inflace.global.security.jwt.JwtProvider;
 import com.example.inflace.global.security.util.SecurityUtils;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthFacade {
 
     private final OAuthStrategyRouter oAuthStrategyRouter;
@@ -29,8 +31,12 @@ public class AuthFacade {
     private final ChannelRepository channelRepository;
 
     public AuthFacadeLoginResponse login(LoginRequest request) {
+        log.info("auth login start provider={}", request.provider());
+
+        log.info("auth login step=oauth-user-info provider={}", request.provider());
         OAuthUserInfo userInfo = oAuthStrategyRouter.getStrategy(request.provider()).getUserInfo(request.code());
 
+        log.info("auth login step=register-user provider={}", request.provider());
         UserRegistrationResult result = userService.registerIfNotExists(
                 userInfo.sub(),
                 userInfo.name(),
@@ -39,14 +45,20 @@ public class AuthFacade {
                 userInfo.plan()
         );
 
+        log.info("auth login step=load-user-details provider={} userId={} isNew={}",
+                request.provider(), result.userId(), result.isNewUser());
         UserDetailsResponse userDetails = userService.getUserDetails(result.userId());
 
+        log.info("auth login step=load-user-channel userId={}", userDetails.id());
         Channel channel = channelRepository.findByUser_Id(userDetails.id()).orElse(null);
 
         String accessToken = jwtProvider.createAccessToken(userDetails.id(), userDetails.userRoles());
         String refreshToken = jwtProvider.createRefreshToken(userDetails.id());
 
+        log.info("auth login step=save-refresh-token userId={}", result.userId());
         authTokenRedisService.saveRefreshToken(result.userId(), refreshToken, jwtProvider.getRefreshTokenExpirationMillis());
+
+        log.info("auth login success userId={} hasChannel={}", userDetails.id(), channel != null);
 
         return AuthFacadeLoginResponse.of(
                 new TokenData(accessToken, refreshToken),

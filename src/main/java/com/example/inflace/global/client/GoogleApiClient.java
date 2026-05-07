@@ -4,6 +4,7 @@ import com.example.inflace.domain.auth.presentation.dto.GoogleTokenResponse;
 import com.example.inflace.domain.auth.presentation.dto.GoogleUserInfoResponse;
 import com.example.inflace.global.properties.GoogleProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestClient;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class GoogleApiClient {
 
     private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -33,6 +35,7 @@ public class GoogleApiClient {
         params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code");
 
+        log.info("google api request=token redirectUri={}", redirectUri);
         return restClient.post()
                 .uri(TOKEN_URL)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -42,6 +45,7 @@ public class GoogleApiClient {
     }
 
     public GoogleUserInfoResponse getUserInfo(String accessToken) {
+        log.info("google api request=user-info");
         return restClient.get()
                 .uri(USER_INFO_URL)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
