@@ -31,6 +31,7 @@ public class YoutubeChannelSyncService {
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeChannelDataSyncService youtubeChannelDataSyncService;
     private final YoutubeChannelAnalyticsSyncService youtubeChannelAnalyticsSyncService;
+    private final ChannelSyncCooldownService channelSyncCooldownService;
 
     @Transactional
     public ChannelSyncResponse connectMyChannel() {
@@ -41,12 +42,17 @@ public class YoutubeChannelSyncService {
         YoutubeDataChannelResponse response = youtubeDataApiClient.getMyChannel(user.getProviderId(), MY_CHANNEL_PARTS);
         YoutubeDataChannelResponse.Item myChannel = extractMyChannel(response);
 
+        channelRepository.findByUser_IdAndYoutubeChannelId(userId, myChannel.id())
+                .map(Channel::getId)
+                .ifPresent(channelSyncCooldownService::validateNotOnCooldown);
+
         ChannelDataSyncResult result = youtubeChannelDataSyncService.synchronizeChannel(
                 user,
                 user.getProviderId(),
                 myChannel
         );
         youtubeChannelAnalyticsSyncService.syncAnalytics(user.getProviderId(), result.channel(), result.videos());
+        channelSyncCooldownService.startCooldown(result.channel().getId());
         return buildChannelSyncResponse(result.channel());
     }
 
@@ -59,6 +65,7 @@ public class YoutubeChannelSyncService {
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
 
         validateChannelOwnership(channel, userId);
+        channelSyncCooldownService.validateNotOnCooldown(channelId);
 
         YoutubeDataChannelResponse response = youtubeDataApiClient.getYoutubeChannels(
                 channel.getYoutubeChannelId(),
@@ -72,6 +79,7 @@ public class YoutubeChannelSyncService {
                 channelItem
         );
         youtubeChannelAnalyticsSyncService.syncAnalytics(user.getProviderId(), result.channel(), result.videos());
+        channelSyncCooldownService.startCooldown(result.channel().getId());
         return buildChannelSyncResponse(result.channel());
     }
 
