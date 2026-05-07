@@ -51,6 +51,9 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Audience(
+            @Schema(description = "팬층 종합 점수", example = "84.5")
+            double score,
+
             @Schema(description = "채널 전체 참여율(%)", example = "7.2")
             double engagementRate,
 
@@ -66,6 +69,9 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Content(
+            @Schema(description = "콘텐츠 종합 점수", example = "76.3")
+            double score,
+
             @Schema(description = "2배 이상 바이럴 영상 비율(%)", example = "38.0")
             double viral2xRate,
 
@@ -81,6 +87,9 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Activity(
+            @Schema(description = "활동 종합 점수", example = "68.4")
+            double score,
+
             @Schema(description = "최근 업로드 후 경과 일수", example = "2")
             int recentUpload,
 

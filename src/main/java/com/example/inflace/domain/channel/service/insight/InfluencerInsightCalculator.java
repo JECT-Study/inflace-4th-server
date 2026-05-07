@@ -20,10 +20,16 @@ import static java.time.Duration.between;
 @Component
 public class InfluencerInsightCalculator {
 
+    private final InfluencerInsightScoreCalculator scoreCalculator;
+
     private static final int CONTENT_WINDOW_SIZE = 50;
     private static final int GROWTH_WINDOW_SIZE = 25;
     private static final int FREQUENCY_INTERVAL_WINDOW_SIZE = 5;
     private static final int RECENT_WINDOW_DAYS = 30;
+
+    public InfluencerInsightCalculator(InfluencerInsightScoreCalculator scoreCalculator) {
+        this.scoreCalculator = scoreCalculator;
+    }
 
     public GetInfluencerInsightResponse calculate(
             Channel channel,
@@ -114,8 +120,15 @@ public class InfluencerInsightCalculator {
         if (channelStats != null && channelStats.getSubscriberCount() > 0) {
             viewsPerSubscriberRate = calculateRatio(averageViewCount(metrics), channelStats.getSubscriberCount());
         }
+        double score = scoreCalculator.audienceScore(
+                engagementRate,
+                likeRate,
+                commentRate,
+                viewsPerSubscriberRate
+        );
 
         return new GetInfluencerInsightResponse.Audience(
+                calculateRound(score),
                 calculateRound(engagementRate),
                 calculateRound(likeRate),
                 calculateRound(commentRate),
@@ -141,15 +154,23 @@ public class InfluencerInsightCalculator {
                 .skip(GROWTH_WINDOW_SIZE)
                 .limit(GROWTH_WINDOW_SIZE)
                 .toList();
+        double growthTrendRate = calculateGrowthRate(
+                averageViewCount(previous25),
+                averageViewCount(recent25)
+        );
+        double score = scoreCalculator.contentScore(
+                viral2xRate,
+                viral5xRate,
+                medianVph,
+                growthTrendRate
+        );
 
         return new GetInfluencerInsightResponse.Content(
+                calculateRound(score),
                 calculateRound(viral2xRate),
                 calculateRound(viral5xRate),
                 calculateRound(medianVph),
-                calculateRound(calculateGrowthRate(
-                        averageViewCount(previous25),
-                        averageViewCount(recent25)
-                ))
+                calculateRound(growthTrendRate)
         );
     }
 
@@ -166,8 +187,10 @@ public class InfluencerInsightCalculator {
         double uploadsPerWeek = averageIntervalDays <= 0.0
                 ? 0.0
                 : 7.0 / averageIntervalDays;
+        double score = scoreCalculator.activityScore(averageIntervalDays, intervalChange);
 
         return new GetInfluencerInsightResponse.Activity(
+                calculateRound(score),
                 calculateRecentUploadDays(videos),
                 calculateRound(uploadsPerWeek),
                 resolveFrequencyTrend(intervalChange, recentAverageIntervalDays, previousAverageIntervalDays)
@@ -358,4 +381,5 @@ public class InfluencerInsightCalculator {
         }
         return GetInfluencerInsightResponse.UploadFrequencyTrend.STABLE;
     }
+
 }
