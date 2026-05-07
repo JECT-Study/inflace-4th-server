@@ -25,6 +25,10 @@ cookie:
   same-site: Lax
   secure: false
 
+channel:
+  sync:
+    cooldown-millis: 3600
+
 cors:
   allowed:
     origins:
