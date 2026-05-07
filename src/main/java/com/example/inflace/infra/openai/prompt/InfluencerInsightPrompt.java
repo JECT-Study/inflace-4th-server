@@ -82,8 +82,9 @@ public final class InfluencerInsightPrompt {
                 Growth Trend (성장 추세): %.2f%%
 
                 [Activity]
-                Uploads per Week (업로드 주기): %.2f
-                Upload Frequency Trend (업로드 빈도 변화): %s
+                Recent Upload (최근 업로드): %s
+                Upload Cycle (업로드 주기): %s
+                Frequency Trend (빈도 변화): %s
 
                 [Long-form vs Short-form]
                 Long-form Avg Views (30d, 롱폼 평균 조회 수): %.2f
@@ -115,7 +116,8 @@ public final class InfluencerInsightPrompt {
                 insight.content().viral5xRate(),
                 insight.content().medianVph(),
                 insight.content().growthTrendRate(),
-                insight.activity().uploadsPerWeek(),
+                formatRecentUpload(insight.activity().recentUpload()),
+                formatUploadCycle(insight.activity().uploadCycle()),
                 toKoreanTrend(insight.activity().frequencyTrend()),
                 insight.formatAnalysis().longForm().averageViews30d(),
                 insight.formatAnalysis().longForm().engagementRate(),
@@ -130,5 +132,19 @@ public final class InfluencerInsightPrompt {
             case DECREASING -> "감소 중";
             case STABLE -> "유지 중";
         };
+    }
+
+    private static String formatRecentUpload(int recentUploadDays) {
+        if (recentUploadDays < 0) {
+            return "정보 없음";
+        }
+        if (recentUploadDays == 0) {
+            return "오늘";
+        }
+        return recentUploadDays + "일 전";
+    }
+
+    private static String formatUploadCycle(double uploadCycle) {
+        return "주 " + uploadCycle + "회";
     }
 }

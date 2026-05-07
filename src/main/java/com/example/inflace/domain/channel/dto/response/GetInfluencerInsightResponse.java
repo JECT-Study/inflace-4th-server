@@ -81,10 +81,13 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Activity(
-            @Schema(description = "최근 90일 기준 주간 평균 업로드 횟수", example = "1.4")
-            double uploadsPerWeek,
+            @Schema(description = "최근 업로드 후 경과 일수", example = "2")
+            int recentUpload,
 
-            @Schema(description = "최근 30일 업로드 빈도 변화", example = "INCREASING")
+            @Schema(description = "주간 업로드 횟수", example = "1.4")
+            double uploadCycle,
+
+            @Schema(description = "업로드 빈도 변화", example = "INCREASING")
             UploadFrequencyTrend frequencyTrend
     ) {
     }
