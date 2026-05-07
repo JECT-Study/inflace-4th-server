@@ -70,18 +70,21 @@ public final class InfluencerInsightPrompt {
                 </RECENT_VIDEO_DESCRIPTIONS>
 
                 [Audience]
+                Audience Score (팬층 점수): %.2f
                 Engagement Rate (참여율): %.2f%%
                 Like Rate (좋아요 비율): %.2f%%
                 Comment Rate (댓글 비율): %.2f%%
                 Views per Subscriber (구독자 대비 조회): %.2f%%
 
                 [Content]
+                Content Score (콘텐츠 점수): %.2f
                 Viral Rate 2x+ (2배 이상 바이럴 비율): %.2f%%
                 Viral Rate 5x+ (5배 이상 바이럴 비율): %.2f%%
                 Median VPH (VPH 중앙값): %.2f
                 Growth Trend (성장 추세): %.2f%%
 
                 [Activity]
+                Activity Score (활동 점수): %.2f
                 Recent Upload (최근 업로드): %s
                 Upload Cycle (업로드 주기): %s
                 Frequency Trend (빈도 변화): %s
@@ -108,14 +111,17 @@ public final class InfluencerInsightPrompt {
                 videoDescriptionCount,
                 videoDescriptionCount,
                 descriptions,
+                insight.audience().score(),
                 insight.audience().engagementRate(),
                 insight.audience().likeRate(),
                 insight.audience().commentRate(),
                 insight.audience().viewsPerSubscriberRate(),
+                insight.content().score(),
                 insight.content().viral2xRate(),
                 insight.content().viral5xRate(),
                 insight.content().medianVph(),
                 insight.content().growthTrendRate(),
+                insight.activity().score(),
                 formatRecentUpload(insight.activity().recentUpload()),
                 formatUploadCycle(insight.activity().uploadCycle()),
                 toKoreanTrend(insight.activity().frequencyTrend()),
