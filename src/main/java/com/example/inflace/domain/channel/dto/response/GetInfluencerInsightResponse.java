@@ -35,9 +35,6 @@ public record GetInfluencerInsightResponse(
         )
         List<String> categories,
 
-        @Schema(description = "AI 요약 정보")
-        AiSummary aiSummary,
-
         @Schema(description = "팬층 지표")
         Audience audience,
 
@@ -53,12 +50,6 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "롱폼 vs 숏폼 분석")
         FormatAnalysis formatAnalysis
 ) {
-    public record AiSummary(
-            @Schema(description = "LLM이 생성한 채널 요약", nullable = true, example = "팬덤 충성도가 높고 2x 이상 바이럴 비중이 안정적인 게임 채널입니다.")
-            String summary
-    ) {
-    }
-
     public record Audience(
             @Schema(description = "팬층 종합 점수", example = "84.5")
             double score,
@@ -144,24 +135,5 @@ public record GetInfluencerInsightResponse(
             @Schema(description = "최근 30일 참여율(%)", example = "8.7")
             double engagementRate
     ) {
-    }
-
-    public GetInfluencerInsightResponse withAiSummary(AiSummary aiSummary) {
-        return new GetInfluencerInsightResponse(
-                channelId,
-                channelName,
-                channelHandle,
-                profileImageUrl,
-                bannerImageUrl,
-                joinedAt,
-                subscriberCount,
-                categories,
-                aiSummary,
-                audience,
-                content,
-                activity,
-                advertisement,
-                formatAnalysis
-        );
     }
 }
