@@ -15,10 +15,22 @@ import java.util.function.Predicate;
 
 import org.springframework.stereotype.Component;
 
+import static java.time.Duration.between;
+
 @Component
 public class InfluencerInsightCalculator {
 
+    private final InfluencerInsightScoreCalculator scoreCalculator;
+
+    private static final int CONTENT_WINDOW_SIZE = 50;
+    private static final int GROWTH_WINDOW_SIZE = 25;
+    private static final int FREQUENCY_INTERVAL_WINDOW_SIZE = 5;
     private static final int RECENT_WINDOW_DAYS = 30;
+
+    public InfluencerInsightCalculator(InfluencerInsightScoreCalculator scoreCalculator) {
+        this.scoreCalculator = scoreCalculator;
+    }
+
     public GetInfluencerInsightResponse calculate(
             Channel channel,
             ChannelStats channelStats,
@@ -27,10 +39,13 @@ public class InfluencerInsightCalculator {
             Map<Long, VideoStats> videoStatsMap
     ) {
         List<VideoMetric> metrics = buildVideoMetrics(videos, videoStatsMap);
+        List<Video> latestVideos = getLatestVideos(videos);
+        List<VideoMetric> latestMetrics = getLatestMetrics(metrics);
 
-        GetInfluencerInsightResponse.Audience audience = buildAudienceMetrics(metrics, channelStats);
-        GetInfluencerInsightResponse.Content content = buildContentMetrics(metrics, channelStats);
-        GetInfluencerInsightResponse.Activity activity = buildActivityMetrics(videos, channelStats);
+        GetInfluencerInsightResponse.Audience audience = buildAudienceMetrics(latestMetrics, channelStats);
+        GetInfluencerInsightResponse.Content content = buildContentMetrics(latestMetrics);
+        GetInfluencerInsightResponse.Activity activity = buildActivityMetrics(latestVideos);
+        GetInfluencerInsightResponse.Advertisement advertisement = buildAdvertisementMetrics(latestMetrics, channelStats);
         GetInfluencerInsightResponse.FormatAnalysis formatAnalysis = buildFormatAnalysis(metrics);
 
         return new GetInfluencerInsightResponse(
@@ -46,6 +61,7 @@ public class InfluencerInsightCalculator {
                 audience,
                 content,
                 activity,
+                advertisement,
                 formatAnalysis
         );
     }
@@ -70,6 +86,7 @@ public class InfluencerInsightCalculator {
 
             metrics.add(new VideoMetric(
                     video.isShort(),
+                    video.isAdvertisement(),
                     video.getPublishedAt(),
                     viewCount,
                     likeCount,
@@ -106,13 +123,17 @@ public class InfluencerInsightCalculator {
 
         double viewsPerSubscriberRate = 0.0;
         if (channelStats != null && channelStats.getSubscriberCount() > 0) {
-            double baselineViews = channelStats.getAvgViewsRecent() != null
-                    ? channelStats.getAvgViewsRecent()
-                    : averageViewCount(metrics);
-            viewsPerSubscriberRate = calculateRatio(baselineViews, channelStats.getSubscriberCount());
+            viewsPerSubscriberRate = calculateRatio(averageViewCount(metrics), channelStats.getSubscriberCount());
         }
+        double score = scoreCalculator.audienceScore(
+                engagementRate,
+                likeRate,
+                commentRate,
+                viewsPerSubscriberRate
+        );
 
         return new GetInfluencerInsightResponse.Audience(
+                calculateRound(score),
                 calculateRound(engagementRate),
                 calculateRound(likeRate),
                 calculateRound(commentRate),
@@ -121,61 +142,63 @@ public class InfluencerInsightCalculator {
     }
 
     private GetInfluencerInsightResponse.Content buildContentMetrics(
-            List<VideoMetric> metrics,
-            ChannelStats channelStats
+            List<VideoMetric> metrics
     ) {
-        double viral2xRate = calculatePercentOf(metrics, metric -> metric.outlierScore() >= 2.0);
-        double viral5xRate = calculatePercentOf(metrics, metric -> metric.outlierScore() >= 5.0);
+        double averageViews = averageViewCount(metrics);
+
+        double viral2xRate = calculateFixedWindowPercentOf(metrics, metric -> metric.viewCount() > averageViews * 2);
+        double viral5xRate = calculateFixedWindowPercentOf(metrics, metric -> metric.viewCount() > averageViews * 5);
         double medianVph = calculateMedian(metrics.stream()
                 .map(VideoMetric::vph)
                 .toList());
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime recentStart = now.minusDays(RECENT_WINDOW_DAYS);
-        LocalDateTime previousStart = now.minusDays(RECENT_WINDOW_DAYS * 2L);
-
-        double recentAverageViews = channelStats != null && channelStats.getAvgViewsRecent() != null
-                ? channelStats.getAvgViewsRecent()
-                : averageViewCount(metrics.stream()
-                .filter(metric -> metric.publishedAt() != null && !metric.publishedAt().isBefore(recentStart))
-                .toList());
-
-        double previousAverageViews = averageViewCount(metrics.stream()
-                .filter(metric -> metric.publishedAt() != null
-                        && metric.publishedAt().isBefore(recentStart)
-                        && !metric.publishedAt().isBefore(previousStart))
-                .toList());
+        List<VideoMetric> recent25 = metrics.stream()
+                .limit(GROWTH_WINDOW_SIZE)
+                .toList();
+        List<VideoMetric> previous25 = metrics.stream()
+                .skip(GROWTH_WINDOW_SIZE)
+                .limit(GROWTH_WINDOW_SIZE)
+                .toList();
+        double growthTrendRate = calculateGrowthRate(
+                averageViewCount(previous25),
+                averageViewCount(recent25)
+        );
+        double score = scoreCalculator.contentScore(
+                viral2xRate,
+                viral5xRate,
+                medianVph,
+                growthTrendRate
+        );
 
         return new GetInfluencerInsightResponse.Content(
+                calculateRound(score),
                 calculateRound(viral2xRate),
                 calculateRound(viral5xRate),
                 calculateRound(medianVph),
-                calculateRound(calculateGrowthRate(previousAverageViews, recentAverageViews))
+                calculateRound(growthTrendRate)
         );
     }
 
-    private GetInfluencerInsightResponse.Activity buildActivityMetrics(List<Video> videos, ChannelStats channelStats) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime recent30d = now.minusDays(RECENT_WINDOW_DAYS);
-        LocalDateTime previous30d = now.minusDays(RECENT_WINDOW_DAYS * 2L);
+    private GetInfluencerInsightResponse.Activity buildActivityMetrics(List<Video> videos) {
+        double averageIntervalDays = averageIntervalDays(videos);
+        double recentAverageIntervalDays = averageIntervalDays(videos, 0, FREQUENCY_INTERVAL_WINDOW_SIZE);
+        double previousAverageIntervalDays = averageIntervalDays(
+                videos,
+                FREQUENCY_INTERVAL_WINDOW_SIZE,
+                FREQUENCY_INTERVAL_WINDOW_SIZE
+        );
+        double intervalChange = recentAverageIntervalDays - previousAverageIntervalDays;
 
-        long uploadsInRecent30d = channelStats != null && channelStats.getRecentUploadCount30d() != null
-                ? channelStats.getRecentUploadCount30d()
-                : videos.stream()
-                .filter(video -> video.getPublishedAt() != null && !video.getPublishedAt().isBefore(recent30d))
-                .count();
-
-        long uploadsInPrevious30d = videos.stream()
-                .filter(video -> video.getPublishedAt() != null
-                        && video.getPublishedAt().isBefore(recent30d)
-                        && !video.getPublishedAt().isBefore(previous30d))
-                .count();
-
-        double uploadsPerWeek = uploadsInRecent30d / (RECENT_WINDOW_DAYS / 7.0);
+        double uploadsPerWeek = averageIntervalDays <= 0.0
+                ? 0.0
+                : 7.0 / averageIntervalDays;
+        double score = scoreCalculator.activityScore(averageIntervalDays, intervalChange);
 
         return new GetInfluencerInsightResponse.Activity(
+                calculateRound(score),
+                calculateRecentUploadDays(videos),
                 calculateRound(uploadsPerWeek),
-                resolveFrequencyTrend(uploadsInPrevious30d, uploadsInRecent30d)
+                resolveFrequencyTrend(intervalChange, recentAverageIntervalDays, previousAverageIntervalDays)
         );
     }
 
@@ -204,17 +227,53 @@ public class InfluencerInsightCalculator {
         );
     }
 
-    private GetInfluencerInsightResponse.UploadFrequencyTrend resolveFrequencyTrend(long previousCount, long recentCount) {
-        if (recentCount > previousCount) {
-            return GetInfluencerInsightResponse.UploadFrequencyTrend.INCREASING;
+    private GetInfluencerInsightResponse.Advertisement buildAdvertisementMetrics(
+            List<VideoMetric> metrics,
+            ChannelStats channelStats
+    ) {
+        double averageViews = averageViewCount(metrics);
+        double viewCoefficientOfVariation = calculateCoefficientOfVariation(metrics, averageViews);
+        double subscriberHealthRate = 0.0;
+        if (channelStats != null && channelStats.getSubscriberCount() > 0) {
+            subscriberHealthRate = calculateRatio(averageViews, channelStats.getSubscriberCount());
         }
-        if (recentCount < previousCount) {
-            return GetInfluencerInsightResponse.UploadFrequencyTrend.DECREASING;
-        }
-        return GetInfluencerInsightResponse.UploadFrequencyTrend.STABLE;
+        double sponsorshipExperienceRate = calculateFixedWindowPercentOf(metrics, VideoMetric::isAdvertisement);
+
+        double viewStabilityScore = scoreCalculator.viewStabilityScore(viewCoefficientOfVariation);
+        double subscriberHealthScore = scoreCalculator.subscriberHealthScore(subscriberHealthRate);
+        double sponsorshipExperienceScore = scoreCalculator.sponsorshipExperienceScore(sponsorshipExperienceRate);
+        double score = scoreCalculator.advertisementScore(
+                viewStabilityScore,
+                subscriberHealthScore,
+                sponsorshipExperienceScore
+        );
+
+        return new GetInfluencerInsightResponse.Advertisement(
+                calculateRound(score),
+                calculateRound(viewCoefficientOfVariation),
+                calculateRound(subscriberHealthRate)
+        );
     }
 
-    private double calculatePercentOf(List<VideoMetric> metrics, Predicate<VideoMetric> predicate) {
+    private record VideoMetric(
+            boolean isShort,
+            boolean isAdvertisement,
+            LocalDateTime publishedAt,
+            long viewCount,
+            long likeCount,
+            long commentCount,
+            double engagementRate,
+            double likeRate,
+            double commentRate,
+            double vph,
+            double outlierScore
+    ) {
+    }
+
+    private double calculateFixedWindowPercentOf(
+            List<VideoMetric> metrics,
+            Predicate<VideoMetric> predicate
+    ) {
         if (metrics.isEmpty()) {
             return 0.0;
         }
@@ -223,7 +282,7 @@ public class InfluencerInsightCalculator {
                 .filter(predicate)
                 .count();
 
-        return matched * 100.0 / metrics.size();
+        return matched * 100.0 / CONTENT_WINDOW_SIZE;
     }
 
     private double averageViewCount(List<VideoMetric> metrics) {
@@ -244,6 +303,19 @@ public class InfluencerInsightCalculator {
                 .mapToDouble(VideoMetric::engagementRate)
                 .average()
                 .orElse(0.0);
+    }
+
+    private double calculateCoefficientOfVariation(List<VideoMetric> metrics, double averageViews) {
+        if (metrics.isEmpty() || averageViews <= 0.0) {
+            return 0.0;
+        }
+
+        double variance = metrics.stream()
+                .mapToDouble(metric -> Math.pow(metric.viewCount() - averageViews, 2))
+                .average()
+                .orElse(0.0);
+
+        return Math.sqrt(variance) / averageViews;
     }
 
     private double calculateGrowthRate(double previousValue, double recentValue) {
@@ -287,17 +359,74 @@ public class InfluencerInsightCalculator {
         return Math.round(value * 100.0) / 100.0;
     }
 
-    private record VideoMetric(
-            boolean isShort,
-            LocalDateTime publishedAt,
-            long viewCount,
-            long likeCount,
-            long commentCount,
-            double engagementRate,
-            double likeRate,
-            double commentRate,
-            double vph,
-            double outlierScore
-    ) {
+    private List<VideoMetric> getLatestMetrics(List<VideoMetric> metrics) {
+        return metrics.stream()
+                .filter(metric -> metric.publishedAt() != null)
+                .limit(CONTENT_WINDOW_SIZE)
+                .toList();
     }
+
+    private List<Video> getLatestVideos(List<Video> videos) {
+        return videos.stream()
+                .filter(video -> video.getPublishedAt() != null)
+                .limit(CONTENT_WINDOW_SIZE)
+                .toList();
+    }
+
+    private double averageIntervalDays(List<Video> videos) {
+        return averageIntervalDays(videos, 0, Integer.MAX_VALUE);
+    }
+
+    private double averageIntervalDays(List<Video> videos, int startIntervalIndex, int intervalCount) {
+        if (videos.size() < startIntervalIndex + 2 || intervalCount <= 0) {
+            return 0.0;
+        }
+
+        double sum = 0.0;
+        int counted = 0;
+
+        for (int i = startIntervalIndex; i < videos.size() - 1 && counted < intervalCount; i++) {
+            LocalDateTime current = videos.get(i).getPublishedAt();
+            LocalDateTime next = videos.get(i + 1).getPublishedAt();
+            if (current == null || next == null) {
+                continue;
+            }
+
+            double intervalDays = Math.abs(between(next, current).toMinutes()) / 1440.0;
+            sum += intervalDays;
+            counted++;
+        }
+
+        if (counted == 0) {
+            return 0.0;
+        }
+        return sum / counted;
+    }
+
+    private int calculateRecentUploadDays(List<Video> videos) {
+        if (videos.isEmpty() || videos.getFirst().getPublishedAt() == null) {
+            return -1;
+        }
+
+        LocalDateTime latestPublishedAt = videos.getFirst().getPublishedAt();
+        return (int) Math.max(0, between(latestPublishedAt, LocalDateTime.now()).toDays());
+    }
+
+    private GetInfluencerInsightResponse.UploadFrequencyTrend resolveFrequencyTrend(
+            double intervalChange,
+            double recentAverageIntervalDays,
+            double previousAverageIntervalDays
+    ) {
+        if (recentAverageIntervalDays <= 0.0 || previousAverageIntervalDays <= 0.0) {
+            return GetInfluencerInsightResponse.UploadFrequencyTrend.STABLE;
+        }
+        if (intervalChange < 0.0) {
+            return GetInfluencerInsightResponse.UploadFrequencyTrend.INCREASING;
+        }
+        if (intervalChange > 0.0) {
+            return GetInfluencerInsightResponse.UploadFrequencyTrend.DECREASING;
+        }
+        return GetInfluencerInsightResponse.UploadFrequencyTrend.STABLE;
+    }
+
 }

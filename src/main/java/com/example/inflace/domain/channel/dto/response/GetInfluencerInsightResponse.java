@@ -47,6 +47,9 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "활동 지표")
         Activity activity,
 
+        @Schema(description = "광고 지표")
+        Advertisement advertisement,
+
         @Schema(description = "롱폼 vs 숏폼 분석")
         FormatAnalysis formatAnalysis
 ) {
@@ -57,6 +60,9 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Audience(
+            @Schema(description = "팬층 종합 점수", example = "84.5")
+            double score,
+
             @Schema(description = "채널 전체 참여율(%)", example = "7.2")
             double engagementRate,
 
@@ -72,6 +78,9 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Content(
+            @Schema(description = "콘텐츠 종합 점수", example = "76.3")
+            double score,
+
             @Schema(description = "2배 이상 바이럴 영상 비율(%)", example = "38.0")
             double viral2xRate,
 
@@ -87,11 +96,29 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Activity(
-            @Schema(description = "최근 90일 기준 주간 평균 업로드 횟수", example = "1.4")
-            double uploadsPerWeek,
+            @Schema(description = "활동 종합 점수", example = "68.4")
+            double score,
 
-            @Schema(description = "최근 30일 업로드 빈도 변화", example = "INCREASING")
+            @Schema(description = "최근 업로드 후 경과 일수", example = "2")
+            int recentUpload,
+
+            @Schema(description = "주간 업로드 횟수", example = "1.4")
+            double uploadCycle,
+
+            @Schema(description = "업로드 빈도 변화", example = "INCREASING")
             UploadFrequencyTrend frequencyTrend
+    ) {
+    }
+
+    public record Advertisement(
+            @Schema(description = "광고 종합 점수", example = "72.8")
+            double score,
+
+            @Schema(description = "조회수 변동계수(CV)", example = "0.92")
+            double viewCoefficientOfVariation,
+
+            @Schema(description = "구독 건강도 지표(구독자 대비 평균 조회 비율, %)", example = "22.0")
+            double subscriberHealthRate
     ) {
     }
 
@@ -133,6 +160,7 @@ public record GetInfluencerInsightResponse(
                 audience,
                 content,
                 activity,
+                advertisement,
                 formatAnalysis
         );
     }
