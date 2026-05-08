@@ -91,7 +91,7 @@ public interface InfluencerApi {
                     - 조회한 인사이트 계산값은 Redis에 캐시되며 AI 요약 API에서 재사용될 수 있습니다.
                     """
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.CHANNEL_INSIGHT_REQUIRES_MIN_VIDEO_COUNT, ErrorDefine.CHANNEL_NOT_FOUND})
     BaseResponse<GetInfluencerInsightResponse> getInfluencerInsight(
             @Parameter(description = "인사이트를 조회할 채널 ID", example = "42")
             @PathVariable Long channelId
@@ -110,7 +110,7 @@ public interface InfluencerApi {
                     - OpenAI 호출에 실패하면 `summary`는 null로 반환될 수 있습니다.
                     """
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.CHANNEL_INSIGHT_REQUIRES_MIN_VIDEO_COUNT, ErrorDefine.CHANNEL_NOT_FOUND})
     BaseResponse<GetInfluencerInsightSummaryResponse> getInfluencerInsightSummary(
             @Parameter(description = "AI 요약을 조회할 채널 ID", example = "42")
             @PathVariable Long channelId
