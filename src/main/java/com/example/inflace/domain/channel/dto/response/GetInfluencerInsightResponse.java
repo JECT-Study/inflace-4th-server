@@ -16,6 +16,12 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "채널 핸들", example = "@chimchakman")
         String channelHandle,
 
+        @Schema(description = "채널 프로필 이미지 URL", example = "https://yt3.ggpht.com/oQnwIVz1_jEh84oyAJP4VmqyAOu0BqFjqq1q5LwRzE2NqchtoH4diA6Y6YYSFnJ7nJawYdHd=s800-c-k-c0x00ffffff-no-rj")
+        String profileImageUrl,
+
+        @Schema(description = "채널 배너 이미지 URL", example = "https://yt3.ggpht.com/oQnwIVz1_jEh84oyAJP4VmqyAOu0BqFjqq1q5LwRzE2NqchtoH4diA6Y6YYSFnJ7nJawYdHd=s800-c-k-c0x00ffffff-no-rj")
+        String bannerImageUrl,
+
         @JsonFormat(pattern = "yyyy.MM.dd")
         @Schema(description = "채널 가입일", example = "2020.01.01")
         LocalDateTime joinedAt,
@@ -29,9 +35,6 @@ public record GetInfluencerInsightResponse(
         )
         List<String> categories,
 
-        @Schema(description = "AI 요약 정보")
-        AiSummary aiSummary,
-
         @Schema(description = "팬층 지표")
         Audience audience,
 
@@ -41,16 +44,16 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "활동 지표")
         Activity activity,
 
+        @Schema(description = "광고 지표")
+        Advertisement advertisement,
+
         @Schema(description = "롱폼 vs 숏폼 분석")
         FormatAnalysis formatAnalysis
 ) {
-    public record AiSummary(
-            @Schema(description = "LLM이 생성한 채널 요약", nullable = true, example = "팬덤 충성도가 높고 2x 이상 바이럴 비중이 안정적인 게임 채널입니다.")
-            String summary
-    ) {
-    }
-
     public record Audience(
+            @Schema(description = "팬층 종합 점수", example = "84.5")
+            double score,
+
             @Schema(description = "채널 전체 참여율(%)", example = "7.2")
             double engagementRate,
 
@@ -66,6 +69,9 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Content(
+            @Schema(description = "콘텐츠 종합 점수", example = "76.3")
+            double score,
+
             @Schema(description = "2배 이상 바이럴 영상 비율(%)", example = "38.0")
             double viral2xRate,
 
@@ -81,11 +87,29 @@ public record GetInfluencerInsightResponse(
     }
 
     public record Activity(
-            @Schema(description = "최근 90일 기준 주간 평균 업로드 횟수", example = "1.4")
-            double uploadsPerWeek,
+            @Schema(description = "활동 종합 점수", example = "68.4")
+            double score,
 
-            @Schema(description = "최근 30일 업로드 빈도 변화", example = "INCREASING")
+            @Schema(description = "최근 업로드 후 경과 일수", example = "2")
+            int recentUpload,
+
+            @Schema(description = "주간 업로드 횟수", example = "1.4")
+            double uploadCycle,
+
+            @Schema(description = "업로드 빈도 변화", example = "INCREASING")
             UploadFrequencyTrend frequencyTrend
+    ) {
+    }
+
+    public record Advertisement(
+            @Schema(description = "광고 종합 점수", example = "72.8")
+            double score,
+
+            @Schema(description = "조회수 변동계수(CV)", example = "0.92")
+            double viewCoefficientOfVariation,
+
+            @Schema(description = "구독 건강도 지표(구독자 대비 평균 조회 비율, %)", example = "22.0")
+            double subscriberHealthRate
     ) {
     }
 
@@ -111,21 +135,5 @@ public record GetInfluencerInsightResponse(
             @Schema(description = "최근 30일 참여율(%)", example = "8.7")
             double engagementRate
     ) {
-    }
-
-    public GetInfluencerInsightResponse withAiSummary(AiSummary aiSummary) {
-        return new GetInfluencerInsightResponse(
-                channelId,
-                channelName,
-                channelHandle,
-                joinedAt,
-                subscriberCount,
-                categories,
-                aiSummary,
-                audience,
-                content,
-                activity,
-                formatAnalysis
-        );
     }
 }

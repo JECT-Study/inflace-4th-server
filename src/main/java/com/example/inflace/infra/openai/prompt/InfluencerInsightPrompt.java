@@ -54,7 +54,8 @@ public final class InfluencerInsightPrompt {
                 1. Audience response level
                 2. Content performance characteristics
                 3. Upload activity trend
-                4. Long-form vs short-form difference
+                4. Advertising suitability
+                5. Long-form vs short-form difference
 
                 <CHANNEL_DATA>
                 Channel Name: %s
@@ -70,20 +71,29 @@ public final class InfluencerInsightPrompt {
                 </RECENT_VIDEO_DESCRIPTIONS>
 
                 [Audience]
+                Audience Score (팬층 점수): %.2f
                 Engagement Rate (참여율): %.2f%%
                 Like Rate (좋아요 비율): %.2f%%
                 Comment Rate (댓글 비율): %.2f%%
                 Views per Subscriber (구독자 대비 조회): %.2f%%
 
                 [Content]
+                Content Score (콘텐츠 점수): %.2f
                 Viral Rate 2x+ (2배 이상 바이럴 비율): %.2f%%
                 Viral Rate 5x+ (5배 이상 바이럴 비율): %.2f%%
                 Median VPH (VPH 중앙값): %.2f
                 Growth Trend (성장 추세): %.2f%%
 
                 [Activity]
-                Uploads per Week (업로드 주기): %.2f
-                Upload Frequency Trend (업로드 빈도 변화): %s
+                Activity Score (활동 점수): %.2f
+                Recent Upload (최근 업로드): %s
+                Upload Cycle (업로드 주기): %s
+                Frequency Trend (빈도 변화): %s
+
+                [Advertisement]
+                Advertisement Score (광고 점수): %.2f
+                View Coefficient of Variation (조회수 안정성 CV): %.2f
+                Subscriber Health Rate (구독 건강도 지표): %.2f%%
 
                 [Long-form vs Short-form]
                 Long-form Avg Views (30d, 롱폼 평균 조회 수): %.2f
@@ -107,16 +117,23 @@ public final class InfluencerInsightPrompt {
                 videoDescriptionCount,
                 videoDescriptionCount,
                 descriptions,
+                insight.audience().score(),
                 insight.audience().engagementRate(),
                 insight.audience().likeRate(),
                 insight.audience().commentRate(),
                 insight.audience().viewsPerSubscriberRate(),
+                insight.content().score(),
                 insight.content().viral2xRate(),
                 insight.content().viral5xRate(),
                 insight.content().medianVph(),
                 insight.content().growthTrendRate(),
-                insight.activity().uploadsPerWeek(),
+                insight.activity().score(),
+                formatRecentUpload(insight.activity().recentUpload()),
+                formatUploadCycle(insight.activity().uploadCycle()),
                 toKoreanTrend(insight.activity().frequencyTrend()),
+                insight.advertisement().score(),
+                insight.advertisement().viewCoefficientOfVariation(),
+                insight.advertisement().subscriberHealthRate(),
                 insight.formatAnalysis().longForm().averageViews30d(),
                 insight.formatAnalysis().longForm().engagementRate(),
                 insight.formatAnalysis().shortForm().averageViews30d(),
@@ -130,5 +147,19 @@ public final class InfluencerInsightPrompt {
             case DECREASING -> "감소 중";
             case STABLE -> "유지 중";
         };
+    }
+
+    private static String formatRecentUpload(int recentUploadDays) {
+        if (recentUploadDays < 0) {
+            return "정보 없음";
+        }
+        if (recentUploadDays == 0) {
+            return "오늘";
+        }
+        return recentUploadDays + "일 전";
+    }
+
+    private static String formatUploadCycle(double uploadCycle) {
+        return "주 " + uploadCycle + "회";
     }
 }

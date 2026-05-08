@@ -53,4 +53,6 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     Long countByChannelIdAndPublishedAtGreaterThanEqual(Long channelId, LocalDateTime publishedAt);
 
     List<Video> findByChannelId(Long channelId);
+
+    List<Video> findByChannelIdOrderByPublishedAtDesc(Long channelId);
 }

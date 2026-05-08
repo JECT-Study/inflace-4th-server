@@ -20,10 +20,15 @@ redis:
   port: 15501
   password: password
   database: 0
+  ssl-enabled: false
 
 cookie:
   same-site: Lax
   secure: false
+
+channel:
+  sync:
+    cooldown-millis: 3600
 
 cors:
   allowed:

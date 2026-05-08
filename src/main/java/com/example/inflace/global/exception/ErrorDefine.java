@@ -33,6 +33,8 @@ public enum ErrorDefine {
     CHANNEL_NOT_FOUND("CHANNEL_404", HttpStatus.NOT_FOUND, "Not Found: Channel Not Found"),
     CHANNEL_STATS_NOT_FOUND("CHANNEL_STATS_404", HttpStatus.NOT_FOUND, " Not Found: Channel Stats not found"),
     CHANNEL_ANALYTICS_NOT_FOUND("CHANNEL_ANALYTICS_404", HttpStatus.NOT_FOUND, "Not Found: Channel Analytics not found"),
+    CHANNEL_SYNC_COOLDOWN("CHANNEL_429_COOLDOWN", HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests: Channel sync is currently on cooldown"),
+    CHANNEL_INSIGHT_REQUIRES_MIN_VIDEO_COUNT("CHANNEL_INSIGHT_400", HttpStatus.BAD_REQUEST, "Bad Request: At least 50 videos are required for channel insight"),
 
     //ETC
     YOUTUBE_API_ERROR("YOUTUBE_500", HttpStatus.INTERNAL_SERVER_ERROR, "YouTube API Error");

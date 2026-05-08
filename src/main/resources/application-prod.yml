@@ -18,6 +18,7 @@ redis:
   port: ${INFLACE_VALKEY_PORT}
   password: ${INFLACE_VALKEY_PASSWORD:}
   database: 0
+  ssl-enabled: ${INFLACE_VALKEY_SSL_ENABLED:true}
 
 cookie:
   same-site: None

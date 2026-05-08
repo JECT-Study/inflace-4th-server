@@ -44,6 +44,9 @@ public class Channel extends BaseTimeEntity {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Column(name = "banner_image_url")
+    private String bannerImageUrl;
+
     @Column(name = "uploads_playlist_id")
     private String uploadsPlaylistId;
 

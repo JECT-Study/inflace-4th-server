@@ -6,6 +6,7 @@ import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.request.InfluencerSortCriteria;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightSummaryResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.repository.ChannelBookmarkRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
@@ -24,6 +25,7 @@ import com.example.inflace.infra.openai.OpenAiModel;
 import com.example.inflace.infra.openai.OpenAiSendRequest;
 import com.example.inflace.infra.openai.prompt.InfluencerInsightPrompt;
 import com.example.inflace.infra.openai.service.OpenAiService;
+import com.example.inflace.infra.redis.influencer.InfluencerInsightRedisRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Slice;
@@ -42,6 +44,7 @@ public class InfluencerService {
     private final UserReadRepository userReadRepository;
     private final InfluencerCursorCodec influencerCursorCodec;
     private final InfluencerInsightQueryService influencerInsightQueryService;
+    private final InfluencerInsightRedisRepository influencerInsightRedisRepository;
     private final OpenAiService openAiService;
 
     @ReadOnlyTransactional
@@ -102,13 +105,24 @@ public class InfluencerService {
     }
 
     public GetInfluencerInsightResponse getInfluencerInsight(Long channelId) {
-        InfluencerInsightQueryResult queryResult =
-                influencerInsightQueryService.getInsightQueryResult(channelId);
+        InfluencerInsightQueryResult queryResult = influencerInsightQueryService.getInsightQueryResult(channelId);
+        influencerInsightRedisRepository.saveInsightQueryResult(channelId, queryResult);
+        return queryResult.insight();
+    }
 
-        String summary = null;
+    public GetInfluencerInsightSummaryResponse getInfluencerInsightSummary(Long channelId) {
+        String cachedSummary = influencerInsightRedisRepository.getSummary(channelId);
+        if (cachedSummary != null && !cachedSummary.isBlank()) {
+            return new GetInfluencerInsightSummaryResponse(cachedSummary);
+        }
+
+        InfluencerInsightQueryResult queryResult = influencerInsightRedisRepository.getInsightQueryResult(channelId);
+        if (queryResult == null) {
+            queryResult = influencerInsightQueryService.getInsightQueryResult(channelId);
+        }
 
         try {
-            summary = openAiService.sendChatMessage(new OpenAiSendRequest(
+            String summary = openAiService.sendChatMessage(new OpenAiSendRequest(
                     InfluencerInsightPrompt.systemMessage(),
                     InfluencerInsightPrompt.humanMessage(
                             queryResult.channelDescription(),
@@ -118,13 +132,16 @@ public class InfluencerService {
                     null,
                     OpenAiModel.GPT_4O_MINI
             ));
+
+            if (summary != null && !summary.isBlank()) {
+                influencerInsightRedisRepository.saveSummary(channelId, summary);
+            }
+
+            return new GetInfluencerInsightSummaryResponse(summary);
         } catch (RuntimeException e) {
             log.warn("Failed to generate influencer insight AI summary. channelId={}", channelId, e);
+            return new GetInfluencerInsightSummaryResponse(null);
         }
-
-        return queryResult.insight().withAiSummary(new GetInfluencerInsightResponse.AiSummary(
-                summary
-        ));
     }
 
     private String buildNextCursor(

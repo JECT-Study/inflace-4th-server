@@ -40,11 +40,10 @@ public class InfluencerInsightQueryService {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
 
-        List<Video> videos = videoRepository.findByChannelId(channelId);
+        List<Video> videos = videoRepository.findByChannelIdOrderByPublishedAtDesc(channelId);
         if (videos.size() < MIN_VIDEO_COUNT_FOR_INSIGHT) {
-            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+            throw new ApiException(ErrorDefine.CHANNEL_INSIGHT_REQUIRES_MIN_VIDEO_COUNT);
         }
-
         List<String> categories = channelCategoryRepository.findAllByChannel_Id(channelId).stream()
                 .map(ChannelCategory::getCategory)
                 .filter(Objects::nonNull)
@@ -71,18 +70,6 @@ public class InfluencerInsightQueryService {
     private List<String> getRecentVideoDescriptions(List<Video> videos) {
         return videos.stream()
                 .filter(video -> StringUtils.hasText(video.getDescription()))
-                .sorted((video1, video2) -> {
-                    if (video1.getPublishedAt() == null && video2.getPublishedAt() == null) {
-                        return 0;
-                    }
-                    if (video1.getPublishedAt() == null) {
-                        return 1;
-                    }
-                    if (video2.getPublishedAt() == null) {
-                        return -1;
-                    }
-                    return video2.getPublishedAt().compareTo(video1.getPublishedAt());
-                })
                 .limit(MAX_RECENT_VIDEO_DESCRIPTION_COUNT)
                 .map(Video::getDescription)
                 .toList();

@@ -1,8 +1,7 @@
 package com.example.inflace.global.client;
 
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
-import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
-import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
+import com.example.inflace.domain.auth.service.GoogleOAuthTokenService;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.properties.YoutubeProperties;
 import java.net.URI;
@@ -28,7 +27,7 @@ public class YoutubeDataApiClient {
 
     private final RestClient restClient;
     private final YoutubeProperties youtubeProperties;
-    private final GoogleAccessTokenStore googleAccessTokenStore;
+    private final GoogleOAuthTokenService googleOAuthTokenService;
 
     public YoutubeDataChannelResponse getYoutubeChannels(String channelId, String parts) {
         URI uri = UriComponentsBuilder
@@ -55,11 +54,11 @@ public class YoutubeDataApiClient {
                 .build()
                 .toUri();
 
-        return restClient.get()
+        return googleOAuthTokenService.executeWithRefresh(googleId, accessToken -> restClient.get()
                 .uri(uri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(googleId))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .retrieve()
-                .body(YoutubeDataChannelResponse.class);
+                .body(YoutubeDataChannelResponse.class));
     }
 
     public YoutubeDataVideoResponse getYoutubeVideo(String videoId, String parts) {
@@ -98,11 +97,11 @@ public class YoutubeDataApiClient {
                 builder.queryParam("pageToken", pageToken);
             }
 
-            PlaylistItemsResponse response = restClient.get()
+            PlaylistItemsResponse response = googleOAuthTokenService.executeWithRefresh(googleId, accessToken -> restClient.get()
                     .uri(builder.build().toUri())
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessTokenStore.getAccessToken(googleId))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                     .retrieve()
-                    .body(PlaylistItemsResponse.class);
+                    .body(PlaylistItemsResponse.class));
 
             if (response == null || response.items() == null || response.items().isEmpty()) {
                 break;
