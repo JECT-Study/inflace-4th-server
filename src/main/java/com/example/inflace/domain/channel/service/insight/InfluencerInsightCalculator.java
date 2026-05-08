@@ -57,7 +57,6 @@ public class InfluencerInsightCalculator {
                 channel.getYoutubePublishedAt(),
                 channelStats != null ? channelStats.getSubscriberCount() : 0L,
                 categories,
-                new GetInfluencerInsightResponse.AiSummary(null),
                 audience,
                 content,
                 activity,

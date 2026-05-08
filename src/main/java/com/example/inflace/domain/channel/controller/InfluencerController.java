@@ -3,6 +3,7 @@ package com.example.inflace.domain.channel.controller;
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightSummaryResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.domain.channel.service.InfluencerService;
 import com.example.inflace.global.response.BaseResponse;
@@ -55,5 +56,13 @@ public class InfluencerController implements InfluencerApi {
             @PathVariable Long channelId
     ) {
         return new BaseResponse<>(influencerService.getInfluencerInsight(channelId));
+    }
+
+    @Override
+    @GetMapping("/{channelId}/insight-summary")
+    public BaseResponse<GetInfluencerInsightSummaryResponse> getInfluencerInsightSummary(
+            @PathVariable Long channelId
+    ) {
+        return new BaseResponse<>(influencerService.getInfluencerInsightSummary(channelId));
     }
 }

@@ -42,7 +42,7 @@ public class InfluencerInsightQueryService {
 
         List<Video> videos = videoRepository.findByChannelIdOrderByPublishedAtDesc(channelId);
         if (videos.size() < MIN_VIDEO_COUNT_FOR_INSIGHT) {
-            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+            throw new ApiException(ErrorDefine.CHANNEL_INSIGHT_REQUIRES_MIN_VIDEO_COUNT);
         }
         List<String> categories = channelCategoryRepository.findAllByChannel_Id(channelId).stream()
                 .map(ChannelCategory::getCategory)
