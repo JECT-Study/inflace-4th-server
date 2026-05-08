@@ -14,6 +14,10 @@ public class AuthTokenRedisRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    public void save(String key, String value) {
+        redisTemplate.opsForValue().set(key, value);
+    }
+
     public void save(String key, String value, long expireMillis) {
         redisTemplate.opsForValue().set(key, value, Duration.ofMillis(expireMillis));
     }
