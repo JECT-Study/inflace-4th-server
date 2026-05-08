@@ -3,7 +3,7 @@ package com.example.inflace.domain.auth.application;
 import com.example.inflace.domain.auth.presentation.dto.GoogleTokenResponse;
 import com.example.inflace.domain.auth.presentation.dto.GoogleUserInfoResponse;
 import com.example.inflace.domain.auth.presentation.dto.OAuthUserInfo;
-import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
+import com.example.inflace.domain.auth.service.GoogleOAuthTokenService;
 import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.global.client.GoogleApiClient;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +14,13 @@ import org.springframework.stereotype.Component;
 public class GoogleLoginStrategy implements OAuthLoginStrategy {
 
     private final GoogleApiClient googleApiClient;
-    private final GoogleAccessTokenStore googleAccessTokenStore;
+    private final GoogleOAuthTokenService googleOAuthTokenService;
 
     @Override
     public OAuthUserInfo getUserInfo(String code) {
         GoogleTokenResponse token = googleApiClient.getToken(code);
         GoogleUserInfoResponse userInfo = googleApiClient.getUserInfo(token.accessToken());
-        googleAccessTokenStore.save(userInfo.sub(), token.accessToken(), token.expiresIn());
+        googleOAuthTokenService.saveTokens(userInfo.sub(), token);
 
         return new OAuthUserInfo(userInfo.sub(), userInfo.name(), userInfo.email(), userInfo.picture(), Plan.FREE);
     }
