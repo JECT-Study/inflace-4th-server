@@ -3,6 +3,7 @@ package com.example.inflace.domain.channel.controller;
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerBookmarksResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
+import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightSummaryResponse;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -86,13 +87,32 @@ public interface InfluencerApi {
                     
                     - 영상이 50개 이상인 채널만 조회 가능합니다.
                     - 기본 채널 정보로 `channelName`, `categories`, `channelHandle`, `joinedAt`, `subscriberCount`를 함께 반환합니다.
-                    - AI 요약은 채널 description, 최신 영상 description 10개, 각종 지표를 바탕으로 생성됩니다.
-                    - OpenAI 호출에 실패하면 `aiSummary.summary`는 null로 반환될 수 있습니다.
+                    - 이 API는 지표 조회 전용이며 OpenAI 요약 생성은 별도 API에서 수행합니다.
+                    - 조회한 인사이트 계산값은 Redis에 캐시되며 AI 요약 API에서 재사용될 수 있습니다.
                     """
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
     BaseResponse<GetInfluencerInsightResponse> getInfluencerInsight(
             @Parameter(description = "인사이트를 조회할 채널 ID", example = "42")
+            @PathVariable Long channelId
+    );
+
+    @Operation(
+            summary = "인플루언서 채널 인사이트 AI 요약 조회",
+            description = """
+                    특정 인플루언서 채널의 인사이트 AI 요약만 조회합니다.
+                    
+                    - 프론트는 일반적으로 인사이트 API 호출 후 이 API를 호출하는 흐름을 사용합니다.
+                    - 채널 description, 최신 영상 description 10개, 인사이트 지표를 바탕으로 LLM 요약을 생성합니다.
+                    - 먼저 Redis에서 요약 캐시를 조회하고, 없으면 인사이트 계산 캐시를 재사용합니다.
+                    - 인사이트 계산 캐시가 없으면 직접 인사이트를 다시 계산한 뒤 요약을 생성합니다.
+                    - 생성된 요약은 Redis에 6시간 동안 캐시됩니다.
+                    - OpenAI 호출에 실패하면 `summary`는 null로 반환될 수 있습니다.
+                    """
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    BaseResponse<GetInfluencerInsightSummaryResponse> getInfluencerInsightSummary(
+            @Parameter(description = "AI 요약을 조회할 채널 ID", example = "42")
             @PathVariable Long channelId
     );
 }
