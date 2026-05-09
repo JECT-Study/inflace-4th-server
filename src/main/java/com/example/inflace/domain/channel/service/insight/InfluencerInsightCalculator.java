@@ -216,10 +216,12 @@ public class InfluencerInsightCalculator {
 
         return new GetInfluencerInsightResponse.FormatAnalysis(
                 new GetInfluencerInsightResponse.FormatMetric(
+                        recentLongForm.size(),
                         calculateRound(averageViewCount(recentLongForm)),
                         calculateRound(averageEngagementRate(recentLongForm))
                 ),
                 new GetInfluencerInsightResponse.FormatMetric(
+                        recentShortForm.size(),
                         calculateRound(averageViewCount(recentShortForm)),
                         calculateRound(averageEngagementRate(recentShortForm))
                 )

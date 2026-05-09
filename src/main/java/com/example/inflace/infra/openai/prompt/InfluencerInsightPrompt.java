@@ -96,8 +96,10 @@ public final class InfluencerInsightPrompt {
                 Subscriber Health Rate (구독 건강도 지표): %.2f%%
 
                 [Long-form vs Short-form]
+                Long-form Count (30d, 롱폼 개수): %d
                 Long-form Avg Views (30d, 롱폼 평균 조회 수): %.2f
                 Long-form Engagement Rate (30d, 롱폼 참여율): %.2f%%
+                Short-form Count (30d, 숏폼 개수): %d
                 Short-form Avg Views (30d, 숏폼 평균 조회 수): %.2f
                 Short-form Engagement Rate (30d, 숏폼 참여율): %.2f%%
                 </CHANNEL_DATA>
@@ -134,8 +136,10 @@ public final class InfluencerInsightPrompt {
                 insight.advertisement().score(),
                 insight.advertisement().viewCoefficientOfVariation(),
                 insight.advertisement().subscriberHealthRate(),
+                insight.formatAnalysis().longForm().count(),
                 insight.formatAnalysis().longForm().averageViews30d(),
                 insight.formatAnalysis().longForm().engagementRate(),
+                insight.formatAnalysis().shortForm().count(),
                 insight.formatAnalysis().shortForm().averageViews30d(),
                 insight.formatAnalysis().shortForm().engagementRate()
         );

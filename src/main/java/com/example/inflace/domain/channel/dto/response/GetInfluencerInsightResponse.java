@@ -129,6 +129,9 @@ public record GetInfluencerInsightResponse(
     }
 
     public record FormatMetric(
+            @Schema(description = "최근 30일 영상 개수", example = "12")
+            int count,
+
             @Schema(description = "최근 30일 평균 조회수", example = "185432.0")
             double averageViews30d,
 
