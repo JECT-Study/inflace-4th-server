@@ -10,7 +10,7 @@ public record BrandCollaborationTrendsRequest(
         @ArraySchema(schema = @Schema(description = "분석할 유튜브 영상 ID 목록", example = "dQw4w9WgXcQ"))
         List<String> youtubeVideoIds
 ) {
-    private static final int MAX_VIDEO_COUNT = 50;
+    private static final int MAX_VIDEO_COUNT = 10;
 
     public BrandCollaborationTrendsRequest {
         if (youtubeVideoIds == null || youtubeVideoIds.isEmpty()) {

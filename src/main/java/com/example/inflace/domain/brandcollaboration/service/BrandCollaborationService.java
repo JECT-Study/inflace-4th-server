@@ -107,15 +107,24 @@ public class BrandCollaborationService {
         );
     }
 
+    private record TrendsAiResponse(
+            List<String> commonKeywords,
+            String keywordSummary,
+            List<BrandCollaborationTrendsResponse.CategoryShare> categoryDistribution,
+            BrandCollaborationTrendsResponse.StrategyInsight strategyInsight
+    ) {
+    }
+
     public BrandCollaborationTrendsResponse analyzeTrends(BrandCollaborationTrendsRequest request) {
         List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(
                 request.youtubeVideoIds(), TRENDS_VIDEO_PARTS);
 
         if (videoItems.isEmpty()) {
-            return new BrandCollaborationTrendsResponse(List.of(), null);
+            return new BrandCollaborationTrendsResponse(List.of(), null, null, null, null);
         }
 
         Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(videoItems, CHANNEL_PARTS_WITH_STATS);
+        BrandCollaborationTrendsResponse.ChannelStats channelStats = computeChannelStats(channelMap);
 
         try {
             String raw = openAiService.sendChatMessage(new OpenAiSendRequest(
@@ -124,11 +133,49 @@ public class BrandCollaborationService {
                     null,
                     OpenAiModel.GPT_4O
             ));
-            return objectMapper.readValue(raw, BrandCollaborationTrendsResponse.class);
+            TrendsAiResponse ai = objectMapper.readValue(stripMarkdown(raw), TrendsAiResponse.class);
+            return new BrandCollaborationTrendsResponse(
+                    ai.commonKeywords(), ai.keywordSummary(), ai.categoryDistribution(), ai.strategyInsight(),
+                    channelStats);
         } catch (JsonProcessingException | RuntimeException e) {
             log.warn("Failed to analyze brand collaboration trends. videoCount={}", videoItems.size(), e);
-            return new BrandCollaborationTrendsResponse(List.of(), null);
+            return new BrandCollaborationTrendsResponse(List.of(), null, null, null, channelStats);
         }
+    }
+
+    private BrandCollaborationTrendsResponse.ChannelStats computeChannelStats(
+            Map<String, YoutubeDataChannelResponse.Item> channelMap
+    ) {
+        List<Long> counts = channelMap.values().stream()
+                .filter(c -> c.statistics() != null)
+                .map(c -> parseLong(c.statistics().subscriberCount()))
+                .filter(count -> count > 0)
+                .sorted()
+                .toList();
+
+        if (counts.isEmpty()) {
+            return new BrandCollaborationTrendsResponse.ChannelStats(channelMap.size(), null, null);
+        }
+
+        long avg = (long) counts.stream().mapToLong(Long::longValue).average().orElse(0);
+        long min = counts.get(0);
+        long max = counts.get(counts.size() - 1);
+
+        return new BrandCollaborationTrendsResponse.ChannelStats(
+                channelMap.size(),
+                formatSubscriberCount(avg),
+                formatSubscriberCount(min) + "~" + formatSubscriberCount(max)
+        );
+    }
+
+    private String formatSubscriberCount(long count) {
+        if (count >= 100_000_000) {
+            return String.format("%.1f", count / 100_000_000.0).replaceAll("\\.0$", "") + "억";
+        }
+        if (count >= 10_000) {
+            return String.format("%.1f", count / 10_000.0).replaceAll("\\.0$", "") + "만";
+        }
+        return count + "명";
     }
 
     private void validateKeywords(List<String> includeKeywords, List<String> excludeKeywords) {
@@ -264,6 +311,14 @@ public class BrandCollaborationService {
                 new CursorSliceResponse.PageInfo(condition.pageSize(), 0, null, false),
                 CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
         );
+    }
+
+    private String stripMarkdown(String raw) {
+        String stripped = raw.strip();
+        if (stripped.startsWith("```")) {
+            stripped = stripped.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").strip();
+        }
+        return stripped;
     }
 
     private long parseLong(String value) {

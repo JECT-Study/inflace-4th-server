@@ -38,13 +38,16 @@ public interface BrandCollaborationApi {
     @Operation(
             summary = "경쟁사 콘텐츠 트렌드 분석",
             description = """
-                    선택한 YouTube 영상들을 AI로 분석하여 공통 키워드와 전략 인사이트를 반환합니다.
+                    선택한 YouTube 영상들을 AI로 분석하여 공통 키워드, 카테고리 분포, 전략 인사이트를 반환합니다.
+                    채널 구독자 통계는 YouTube API 데이터를 기반으로 백엔드에서 직접 계산합니다.
 
                     - `commonKeywords`: 영상의 50% 이상에서 등장한 키워드, 최대 10개
                     - `keywordSummary`: 공통 키워드 트렌드 요약 (한국어)
+                    - `categoryDistribution`: 영상 컨텐츠 기반 카테고리 분포 (AI 추론)
                     - `strategyInsight.pplIntent`: 해당 채널들을 PPL로 선택한 이유 분석
                     - `strategyInsight.competitivePoints`: 경쟁사 PPL 콘텐츠의 공통 강조 포인트
-                    - OpenAI 호출 실패 시 `commonKeywords`는 빈 리스트, 나머지는 null로 반환됩니다.
+                    - `channelStats`: 협업 채널 수, 평균/범위 구독자 수 (백엔드 계산)
+                    - OpenAI 호출 실패 시 `commonKeywords`는 빈 리스트, AI 필드는 null, `channelStats`는 정상 반환됩니다.
                     """
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT})

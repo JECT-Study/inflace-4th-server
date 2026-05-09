@@ -14,6 +14,7 @@ public record YoutubeDataChannelResponse(
     ){}
     public record Snippet(
             String title,
+            String description,
             String customUrl,
             String publishedAt,
             String country,
