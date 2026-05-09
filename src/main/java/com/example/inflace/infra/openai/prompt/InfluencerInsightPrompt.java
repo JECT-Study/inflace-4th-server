@@ -91,9 +91,7 @@ public final class InfluencerInsightPrompt {
                 Frequency Trend (빈도 변화): %s
 
                 [Advertisement]
-                Advertisement Score (광고 점수): %.2f
-                View Coefficient of Variation (조회수 안정성 CV): %.2f
-                Subscriber Health Rate (구독 건강도 지표): %.2f%%
+                %s
 
                 [Long-form vs Short-form]
                 Long-form Count (30d, 롱폼 개수): %d
@@ -133,9 +131,7 @@ public final class InfluencerInsightPrompt {
                 formatRecentUpload(insight.activity().recentUpload()),
                 formatUploadCycle(insight.activity().uploadCycle()),
                 toKoreanTrend(insight.activity().frequencyTrend()),
-                insight.advertisement().score(),
-                insight.advertisement().viewCoefficientOfVariation(),
-                insight.advertisement().subscriberHealthRate(),
+                formatAdvertisementSection(insight.advertisement()),
                 insight.formatAnalysis().longForm().count(),
                 insight.formatAnalysis().longForm().averageViews30d(),
                 insight.formatAnalysis().longForm().engagementRate(),
@@ -165,5 +161,21 @@ public final class InfluencerInsightPrompt {
 
     private static String formatUploadCycle(double uploadCycle) {
         return "주 " + uploadCycle + "회";
+    }
+
+    private static String formatAdvertisementSection(GetInfluencerInsightResponse.Advertisement advertisement) {
+        if (advertisement == null) {
+            return "광고 집행 영상이 3개 미만이라 광고 지표를 계산하지 않음";
+        }
+
+        return """
+                Advertisement Score (광고 점수): %.2f
+                View Coefficient of Variation (조회수 안정성 CV): %.2f
+                Subscriber Health Rate (구독 건강도 지표): %.2f%%
+                """.formatted(
+                advertisement.score(),
+                advertisement.viewCoefficientOfVariation(),
+                advertisement.subscriberHealthRate()
+        ).trim();
     }
 }

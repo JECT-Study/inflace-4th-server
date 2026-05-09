@@ -26,6 +26,7 @@ public class InfluencerInsightCalculator {
     private static final int GROWTH_WINDOW_SIZE = 25;
     private static final int FREQUENCY_INTERVAL_WINDOW_SIZE = 5;
     private static final int RECENT_WINDOW_DAYS = 30;
+    private static final int MIN_ADVERTISEMENT_VIDEO_COUNT = 3;
 
     public InfluencerInsightCalculator(InfluencerInsightScoreCalculator scoreCalculator) {
         this.scoreCalculator = scoreCalculator;
@@ -232,6 +233,13 @@ public class InfluencerInsightCalculator {
             List<VideoMetric> metrics,
             ChannelStats channelStats
     ) {
+        long advertisementVideoCount = metrics.stream()
+                .filter(VideoMetric::isAdvertisement)
+                .count();
+        if (advertisementVideoCount < MIN_ADVERTISEMENT_VIDEO_COUNT) {
+            return null;
+        }
+
         double averageViews = averageViewCount(metrics);
         double viewCoefficientOfVariation = calculateCoefficientOfVariation(metrics, averageViews);
         double subscriberHealthRate = 0.0;
