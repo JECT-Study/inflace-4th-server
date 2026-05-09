@@ -55,7 +55,7 @@ public class BrandCollaborationService {
     public CursorSliceResponse<BrandCollaborationVideoResponse> search(BrandCollaborationSearchCondition condition) {
         validateKeywords(condition.includeKeywords(), condition.excludeKeywords());
 
-        String q = buildQuery(condition.brandName(), condition.includeKeywords(), condition.excludeKeywords());
+        String q = buildQuery(condition.includeKeywords(), condition.excludeKeywords());
         String youtubePageToken = decodePageToken(condition.cursor(), condition.sortCriteriaValue(), condition.sortOrder().name());
 
         YoutubeSearchListResponse searchResponse = youtubeSearchApiClient.search(
@@ -138,12 +138,9 @@ public class BrandCollaborationService {
         }
     }
 
-    private String buildQuery(String brandName, List<String> includeKeywords, List<String> excludeKeywords) {
-        StringBuilder q = new StringBuilder(brandName);
+    private String buildQuery(List<String> includeKeywords, List<String> excludeKeywords) {
+        StringBuilder q = new StringBuilder(String.join("|", includeKeywords));
 
-        if (!includeKeywords.isEmpty()) {
-            q.append(" ").append(String.join("|", includeKeywords));
-        }
         for (String keyword : excludeKeywords) {
             q.append(" -").append(keyword);
         }

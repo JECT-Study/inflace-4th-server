@@ -10,19 +10,16 @@ import java.util.List;
 import org.springframework.util.StringUtils;
 
 public record BrandCollaborationSearchCondition(
-        @Schema(description = "검색할 브랜드명", example = "아모레퍼시픽")
-        String brandName,
-
         @Schema(description = "기간 필터 시작일 (RFC 3339)", example = "2024-01-01T00:00:00Z")
         String startDate,
 
         @Schema(description = "기간 필터 종료일 (RFC 3339)", example = "2024-12-31T23:59:59Z")
         String endDate,
 
-        @ArraySchema(schema = @Schema(example = "립밤"))
+        @ArraySchema(schema = @Schema(description = "포함 키워드 (최대 5개)", example = "메디큐브"))
         List<String> includeKeywords,
 
-        @ArraySchema(schema = @Schema(example = "쿠팡파트너스"))
+        @ArraySchema(schema = @Schema(description = "제외 키워드 (최대 5개)", example = "쿠팡파트너스"))
         List<String> excludeKeywords,
 
         @Schema(description = "영상 형식", allowableValues = {"ALL", "LONG_FORM", "SHORT_FORM"}, defaultValue = "ALL")
@@ -59,13 +56,19 @@ public record BrandCollaborationSearchCondition(
         Integer pageSize
 ) {
     private static final int DEFAULT_PAGE_SIZE = 9;
+    private static final int MAX_KEYWORD_COUNT = 5;
 
     public BrandCollaborationSearchCondition {
-        if (!StringUtils.hasText(brandName)) {
-            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
-        }
         includeKeywords = includeKeywords == null ? List.of() : includeKeywords;
         excludeKeywords = excludeKeywords == null ? List.of() : excludeKeywords;
+
+        if (includeKeywords.isEmpty()) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
+        if (includeKeywords.size() > MAX_KEYWORD_COUNT || excludeKeywords.size() > MAX_KEYWORD_COUNT) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
+
         minViews = minViews == null ? 0L : minViews;
         minLikes = minLikes == null ? 0L : minLikes;
         minComments = minComments == null ? 0L : minComments;
@@ -74,9 +77,6 @@ public record BrandCollaborationSearchCondition(
         cursor = StringUtils.hasText(cursor) ? cursor : null;
 
         if (pageSize < 1) {
-            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
-        }
-        if (excludeKeywords.size() > 5) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
     }
