@@ -1,18 +1,26 @@
 package com.example.inflace.domain.brandcollaboration.service;
 
 import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborationSearchCondition;
+import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborationTrendsRequest;
+import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationTrendsResponse;
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationVideoResponse;
+import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.client.YoutubeSearchApiClient;
-import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.global.client.YoutubeSearchApiClient.YoutubeSearchListResponse;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.CursorSliceResponse;
 import com.example.inflace.global.response.CustomSort;
 import com.example.inflace.global.util.AnalyticsCalculator;
+import com.example.inflace.infra.openai.OpenAiModel;
+import com.example.inflace.infra.openai.OpenAiSendRequest;
+import com.example.inflace.infra.openai.prompt.BrandCollaborationTrendsPrompt;
+import com.example.inflace.infra.openai.service.OpenAiService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -22,19 +30,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class BrandCollaborationService {
 
     private static final String VIDEO_PARTS = "snippet,statistics,contentDetails";
+    // https://developers.google.com/youtube/v3/docs/videos/list
+    private static final String TRENDS_VIDEO_PARTS = "snippet,statistics";
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
     private static final String CHANNEL_PARTS = "snippet";
+    // https://developers.google.com/youtube/v3/docs/channels/list
+    private static final String CHANNEL_PARTS_WITH_STATS = "snippet,statistics";
 
     private final YoutubeSearchApiClient youtubeSearchApiClient;
     private final YoutubeDataApiClient youtubeDataApiClient;
+    private final OpenAiService openAiService;
+    private final ObjectMapper objectMapper;
 
     public CursorSliceResponse<BrandCollaborationVideoResponse> search(BrandCollaborationSearchCondition condition) {
         validateKeywords(condition.includeKeywords(), condition.excludeKeywords());
@@ -71,7 +87,7 @@ public class BrandCollaborationService {
             return emptyResponse(condition);
         }
 
-        Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(filtered);
+        Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(filtered, CHANNEL_PARTS);
         List<BrandCollaborationVideoResponse> content = buildContent(filtered, channelMap);
 
         if (condition.sortOrder().name().equals("ASC")) {
@@ -89,6 +105,30 @@ public class BrandCollaborationService {
                 new CursorSliceResponse.PageInfo(condition.pageSize(), content.size(), nextCursor, nextCursor != null),
                 CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
         );
+    }
+
+    public BrandCollaborationTrendsResponse analyzeTrends(BrandCollaborationTrendsRequest request) {
+        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(
+                request.youtubeVideoIds(), TRENDS_VIDEO_PARTS);
+
+        if (videoItems.isEmpty()) {
+            return new BrandCollaborationTrendsResponse(List.of(), null);
+        }
+
+        Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(videoItems, CHANNEL_PARTS_WITH_STATS);
+
+        try {
+            String raw = openAiService.sendChatMessage(new OpenAiSendRequest(
+                    BrandCollaborationTrendsPrompt.systemMessage(),
+                    BrandCollaborationTrendsPrompt.humanMessage(videoItems, channelMap),
+                    null,
+                    OpenAiModel.GPT_4O
+            ));
+            return objectMapper.readValue(raw, BrandCollaborationTrendsResponse.class);
+        } catch (JsonProcessingException | RuntimeException e) {
+            log.warn("Failed to analyze brand collaboration trends. videoCount={}", videoItems.size(), e);
+            return new BrandCollaborationTrendsResponse(List.of(), null);
+        }
     }
 
     private void validateKeywords(List<String> includeKeywords, List<String> excludeKeywords) {
@@ -170,7 +210,9 @@ public class BrandCollaborationService {
         return format == ChannelVideoFormat.SHORT_FORM ? isShort : !isShort;
     }
 
-    private Map<String, YoutubeDataChannelResponse.Item> fetchChannelMap(List<YoutubeDataVideoResponse.Item> items) {
+    private Map<String, YoutubeDataChannelResponse.Item> fetchChannelMap(
+            List<YoutubeDataVideoResponse.Item> items, String parts
+    ) {
         List<String> channelIds = items.stream()
                 .map(item -> item.snippet() != null ? item.snippet().channelId() : null)
                 .filter(Objects::nonNull)
@@ -182,7 +224,7 @@ public class BrandCollaborationService {
         }
 
         YoutubeDataChannelResponse channelResponse = youtubeDataApiClient.getYoutubeChannels(
-                String.join(",", channelIds), CHANNEL_PARTS);
+                String.join(",", channelIds), parts);
 
         if (channelResponse == null || channelResponse.items() == null) {
             return Map.of();

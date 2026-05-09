@@ -1,6 +1,8 @@
 package com.example.inflace.domain.brandcollaboration.controller;
 
 import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborationSearchCondition;
+import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborationTrendsRequest;
+import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationTrendsResponse;
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationVideoResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -9,6 +11,7 @@ import com.example.inflace.global.response.CursorSliceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "BrandCollaboration", description = "경쟁사 협업 인플루언서 조회 API")
 public interface BrandCollaborationApi {
@@ -30,5 +33,20 @@ public interface BrandCollaborationApi {
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT})
     BaseResponse<CursorSliceResponse<BrandCollaborationVideoResponse>> search(
             @ParameterObject BrandCollaborationSearchCondition condition
+    );
+
+    @Operation(
+            summary = "경쟁사 콘텐츠 트렌드 분석",
+            description = """
+                    선택한 YouTube 영상들을 AI로 분석하여 공통 키워드와 채널 공통 특징을 반환합니다.
+
+                    - `commonKeywords`: 영상의 50% 이상에서 등장한 키워드, 최대 10개
+                    - `channelInsight`: 선택한 채널들의 공통 특징 분석 (한국어)
+                    - OpenAI 호출 실패 시 `commonKeywords`는 빈 리스트, `channelInsight`는 null로 반환됩니다.
+                    """
+    )
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT})
+    BaseResponse<BrandCollaborationTrendsResponse> analyzeTrends(
+            @RequestBody BrandCollaborationTrendsRequest request
     );
 }
