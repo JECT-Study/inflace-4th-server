@@ -188,17 +188,11 @@ public class BrandCollaborationService {
                 .filter(item -> parseLong(item.statistics().viewCount()) >= condition.minViews())
                 .filter(item -> parseLong(item.statistics().likeCount()) >= condition.minLikes())
                 .filter(item -> parseLong(item.statistics().commentCount()) >= condition.minComments())
-                .filter(item -> matchesVideoFormat(item, condition.videoFormat()))
+                .filter(item -> matchesVideoFormat(item, condition.videoFormatEnum()))
                 .toList();
     }
 
-    private boolean matchesVideoFormat(YoutubeDataVideoResponse.Item item, String videoFormat) {
-        ChannelVideoFormat format = ChannelVideoFormat.ALL;
-        if (StringUtils.hasText(videoFormat)) {
-            try {
-                format = ChannelVideoFormat.valueOf(videoFormat.toUpperCase());
-            } catch (IllegalArgumentException ignored) {}
-        }
+    private boolean matchesVideoFormat(YoutubeDataVideoResponse.Item item, ChannelVideoFormat format) {
         if (format == ChannelVideoFormat.ALL) {
             return true;
         }
