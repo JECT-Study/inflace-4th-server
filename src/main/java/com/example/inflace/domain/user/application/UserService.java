@@ -34,7 +34,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -124,9 +123,7 @@ public class UserService {
                 ),
                 new UserProfileResponse.PreferenceInfo(
                         getUserRoles(userId),
-                        getUserNeeds(userId),
-                        Arrays.asList(UserRole.values()),
-                        Arrays.asList(Need.values())
+                        getUserNeeds(userId)
                 )
         );
     }

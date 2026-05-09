@@ -20,9 +20,7 @@ public record UserProfileResponse(
 
     public record PreferenceInfo(
             List<UserRole> roles,
-            List<Need> needs,
-            List<UserRole> roleOptions,
-            List<Need> needOptions
+            List<Need> needs
     ) {
     }
 }
