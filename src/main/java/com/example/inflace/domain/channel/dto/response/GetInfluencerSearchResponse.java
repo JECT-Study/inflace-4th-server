@@ -24,6 +24,12 @@ public record GetInfluencerSearchResponse(
         )
         List<String> categories,
 
+        @ArraySchema(
+                arraySchema = @Schema(description = "최근 PPL 브랜드 목록"),
+                schema = @Schema(example = "나이키")
+        )
+        List<String> recentPplBrands,
+
         @Schema(description = "구독자 수", example = "125000")
         Long subscriberCount,
 
