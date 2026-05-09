@@ -66,7 +66,7 @@ public class AuthController implements AuthApi {
     public ResponseEntity<BaseResponse<AccessTokenResponse>> reissue(
             HttpServletRequest request
     ) {
-        if (!EnvironmentUtils.isLocal(environment)) throwIfNotAllowedOrigin(request);
+        if (EnvironmentUtils.isProd(environment)) throwIfNotAllowedOrigin(request);
 
         String refreshToken = authCookieUtils.extractRefreshToken(request.getCookies());
         TokenData tokenData = authFacade.reissue(refreshToken);
