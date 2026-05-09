@@ -1,13 +1,11 @@
 package com.example.inflace.domain.user.presentation;
 
-import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "User", description = "유저 API")
@@ -32,6 +30,20 @@ public interface UserApi {
     )
     @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
     BaseResponse<UserChannelMainResponse> getUserChannelMain();
+
+    @Operation(
+            summary = "마이페이지 프로필 조회",
+            description = "마이페이지 정보를 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND})
+    BaseResponse<UserProfileResponse> getProfile();
+
+    @Operation(
+            summary = "마이페이지 맞춤 서비스 정보 수정",
+            description = "현재 로그인한 유저의 userType과 userNeed를 수정합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND})
+    BaseResponse<UserProfileResponse> updatePreferences(@RequestBody UserPreferenceUpdateRequest request);
 
     @Operation(
             summary = "회원 탈퇴",
