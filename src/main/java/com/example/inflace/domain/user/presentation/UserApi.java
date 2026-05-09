@@ -35,7 +35,7 @@ public interface UserApi {
             summary = "마이페이지 프로필 조회",
             description = "마이페이지 정보를 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND})
     BaseResponse<UserProfileResponse> getProfile();
 
     @Operation(
