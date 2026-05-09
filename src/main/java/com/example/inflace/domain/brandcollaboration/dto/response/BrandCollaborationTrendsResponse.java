@@ -9,7 +9,7 @@ public record BrandCollaborationTrendsResponse(
         List<CategoryShare> categoryDistribution,
         StrategyInsight strategyInsight,
 
-        // TODO: avgUploadFrequency, audienceDemographics
+        // TODO: audienceDemographics — YouTube Analytics API (채널 오너 OAuth) 필요
         ChannelStats channelStats
 ) {
     public record CategoryShare(
@@ -27,7 +27,8 @@ public record BrandCollaborationTrendsResponse(
     public record ChannelStats(
             int channelCount,
             String avgSubscribers,
-            String subscriberRange
+            String subscriberRange,
+            String avgUploadFrequency
     ) {
     }
 }

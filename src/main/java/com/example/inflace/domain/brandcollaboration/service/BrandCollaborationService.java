@@ -22,12 +22,14 @@ import com.example.inflace.infra.openai.service.OpenAiService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +47,8 @@ public class BrandCollaborationService {
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
     private static final String CHANNEL_PARTS = "snippet";
     // https://developers.google.com/youtube/v3/docs/channels/list
-    private static final String CHANNEL_PARTS_WITH_STATS = "snippet,statistics";
+    private static final String CHANNEL_PARTS_WITH_STATS = "snippet,statistics,contentDetails";
+    private static final int RECENT_UPLOADS_COUNT = 10;
 
     private final YoutubeSearchApiClient youtubeSearchApiClient;
     private final YoutubeDataApiClient youtubeDataApiClient;
@@ -153,19 +156,54 @@ public class BrandCollaborationService {
                 .sorted()
                 .toList();
 
-        if (counts.isEmpty()) {
-            return new BrandCollaborationTrendsResponse.ChannelStats(channelMap.size(), null, null);
+        String avgSubscribers = null;
+        String subscriberRange = null;
+        if (!counts.isEmpty()) {
+            long avg = (long) counts.stream().mapToLong(Long::longValue).average().orElse(0);
+            avgSubscribers = formatSubscriberCount(avg);
+            subscriberRange = formatSubscriberCount(counts.getFirst()) + "~" + formatSubscriberCount(counts.getLast());
         }
 
-        long avg = (long) counts.stream().mapToLong(Long::longValue).average().orElse(0);
-        long min = counts.get(0);
-        long max = counts.get(counts.size() - 1);
+        String avgUploadFrequency = computeAvgUploadFrequency(channelMap);
 
         return new BrandCollaborationTrendsResponse.ChannelStats(
                 channelMap.size(),
-                formatSubscriberCount(avg),
-                formatSubscriberCount(min) + "~" + formatSubscriberCount(max)
+                avgSubscribers,
+                subscriberRange,
+                avgUploadFrequency
         );
+    }
+
+    private String computeAvgUploadFrequency(Map<String, YoutubeDataChannelResponse.Item> channelMap) {
+        OptionalDouble avg = channelMap.values().stream()
+                .filter(c -> c.contentDetails() != null && c.contentDetails().relatedPlaylists() != null)
+                .map(c -> c.contentDetails().relatedPlaylists().uploads())
+                .filter(StringUtils::hasText)
+                .mapToDouble(playlistId -> {
+                    List<Instant> instants = youtubeDataApiClient
+                            .getRecentUploadDates(playlistId, RECENT_UPLOADS_COUNT)
+                            .stream().map(Instant::parse).sorted().toList();
+                    if (instants.size() < 2) return Double.NaN;
+                    long spanSeconds = instants.getLast().getEpochSecond() - instants.getFirst().getEpochSecond();
+                    return spanSeconds / 86400.0 / (instants.size() - 1);
+                })
+                .filter(d -> !Double.isNaN(d) && d > 0)
+                .average();
+
+        return avg.isPresent() ? formatUploadFrequency(avg.getAsDouble()) : null;
+    }
+
+    private String formatUploadFrequency(double avgDays) {
+        if (avgDays < 1) {
+            long timesPerDay = Math.round(1.0 / avgDays);
+            return "일 " + timesPerDay + "회";
+        }
+        if (avgDays <= 14) {
+            double timesPerWeek = 7.0 / avgDays;
+            return String.format("주 %.1f회", timesPerWeek).replaceAll("\\.0회$", "회");
+        }
+        long timesPerMonth = Math.round(30.0 / avgDays);
+        return "월 " + (timesPerMonth > 0 ? timesPerMonth : 1) + "회";
     }
 
     private String formatSubscriberCount(long count) {

@@ -94,7 +94,8 @@ public final class BrandCollaborationTrendsPrompt {
                 ? channel.snippet().title() : "정보 없음";
         String channelDescription = formatDescription(
                 (channel != null && channel.snippet() != null) ? channel.snippet().description() : null);
-        String subscriberCount = (channel != null && channel.statistics() != null)
+        String subscriberCount = (channel != null && channel.statistics() != null
+                && StringUtils.hasText(channel.statistics().subscriberCount()))
                 ? channel.statistics().subscriberCount() : "0";
         String channelTotalViews = (channel != null && channel.statistics() != null
                 && StringUtils.hasText(channel.statistics().viewCount()))

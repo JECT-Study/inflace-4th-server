@@ -46,7 +46,7 @@ public interface BrandCollaborationApi {
                     - `categoryDistribution`: 영상 컨텐츠 기반 카테고리 분포 (AI 추론)
                     - `strategyInsight.pplIntent`: 해당 채널들을 PPL로 선택한 이유 분석
                     - `strategyInsight.competitivePoints`: 경쟁사 PPL 콘텐츠의 공통 강조 포인트
-                    - `channelStats`: 협업 채널 수, 평균/범위 구독자 수 (백엔드 계산)
+                    - `channelStats`: 협업 채널 수, 평균/범위 구독자 수, 평균 업로드 주기 (백엔드 계산)
                     - OpenAI 호출 실패 시 `commonKeywords`는 빈 리스트, AI 필드는 null, `channelStats`는 정상 반환됩니다.
                     """
     )
