@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -90,15 +89,20 @@ public class BrandCollaborationService {
         List<YoutubeDataVideoResponse.Item> filtered = applyStatisticsFilter(videoItems, condition);
 
         if (filtered.isEmpty()) {
-            return emptyResponse(condition);
+            String nextCursor = encodeNextCursor(
+                    searchResponse.nextPageToken(),
+                    condition.sortCriteriaValue(),
+                    condition.sortOrder().name()
+            );
+            return new CursorSliceResponse<>(
+                    List.of(),
+                    new CursorSliceResponse.PageInfo(condition.pageSize(), 0, nextCursor, nextCursor != null),
+                    CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
+            );
         }
 
         Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(filtered, CHANNEL_PARTS);
         List<BrandCollaborationVideoResponse> content = buildContent(filtered, channelMap);
-
-        if (condition.sortOrder().name().equals("ASC")) {
-            Collections.reverse(content);
-        }
 
         String nextCursor = encodeNextCursor(
                 searchResponse.nextPageToken(),

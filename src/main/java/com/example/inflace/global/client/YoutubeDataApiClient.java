@@ -179,12 +179,14 @@ public class YoutubeDataApiClient {
             return List.of();
         }
 
+        int clampedMaxResults = Math.max(1, Math.min(maxResults, YOUTUBE_MAX_RESULTS));
+
         URI uri = UriComponentsBuilder
                 .fromUriString(youtubeProperties.dataApi().baseUrl())
                 .path(PLAYLIST_ITEMS_PATH)
                 .queryParam("part", "snippet")
                 .queryParam("playlistId", playlistId)
-                .queryParam("maxResults", maxResults)
+                .queryParam("maxResults", clampedMaxResults)
                 .queryParam("key", youtubeProperties.dataApi().apiKey())
                 .build()
                 .toUri();

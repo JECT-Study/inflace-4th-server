@@ -79,8 +79,8 @@ public final class BrandCollaborationTrendsPrompt {
         String channelId = video.snippet() != null ? video.snippet().channelId() : null;
         YoutubeDataChannelResponse.Item channel = channelId != null ? channelMap.get(channelId) : null;
 
-        String channelName = (channel != null && channel.snippet() != null)
-                ? channel.snippet().title() : "N/A";
+        String channelName = normalizeForPrompt(
+                (channel != null && channel.snippet() != null) ? channel.snippet().title() : null);
         String channelDescription = formatDescription(
                 (channel != null && channel.snippet() != null) ? channel.snippet().description() : null);
         String subscriberCount = (channel != null && channel.statistics() != null
@@ -93,8 +93,8 @@ public final class BrandCollaborationTrendsPrompt {
                 && StringUtils.hasText(channel.statistics().videoCount()))
                 ? channel.statistics().videoCount() : "0";
 
-        String title = (video.snippet() != null && StringUtils.hasText(video.snippet().title()))
-                ? video.snippet().title() : "N/A";
+        String title = normalizeForPrompt(
+                video.snippet() != null ? video.snippet().title() : null);
         String publishedAt = (video.snippet() != null && StringUtils.hasText(video.snippet().publishedAt()))
                 ? video.snippet().publishedAt() : "N/A";
         String tags = formatTags(video.snippet() != null ? video.snippet().tags() : null);
@@ -142,7 +142,14 @@ public final class BrandCollaborationTrendsPrompt {
         if (tags == null || tags.isEmpty()) {
             return "N/A";
         }
-        return String.join(", ", tags);
+        return tags.stream().map(BrandCollaborationTrendsPrompt::normalizeForPrompt).collect(Collectors.joining(", "));
+    }
+
+    private static String normalizeForPrompt(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "N/A";
+        }
+        return value.replace("<", "").replace(">", "");
     }
 
     private static String formatDescription(String description) {

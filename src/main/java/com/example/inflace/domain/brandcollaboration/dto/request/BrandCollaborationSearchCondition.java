@@ -46,7 +46,7 @@ public record BrandCollaborationSearchCondition(
         @Schema(description = "정렬 기준", allowableValues = {"LATEST", "VIEW_COUNT", "ENGAGEMENT"}, defaultValue = "LATEST")
         String sortCriteria,
 
-        @Schema(description = "정렬 방향", allowableValues = {"ASC", "DESC"}, defaultValue = "DESC")
+        @Schema(description = "정렬 방향", allowableValues = {"DESC"}, defaultValue = "DESC")
         SortOrder sortOrder,
 
         @Schema(description = "이전 응답의 nextCursor 값. 다음 페이지 조회 시 그대로 전달합니다.", example = "TEFURVNUfERFU0N8dG9rZW4")
@@ -59,8 +59,10 @@ public record BrandCollaborationSearchCondition(
     private static final int MAX_KEYWORD_COUNT = 5;
 
     public BrandCollaborationSearchCondition {
-        includeKeywords = includeKeywords == null ? List.of() : includeKeywords;
-        excludeKeywords = excludeKeywords == null ? List.of() : excludeKeywords;
+        includeKeywords = includeKeywords == null ? List.of()
+                : includeKeywords.stream().map(String::trim).filter(StringUtils::hasText).toList();
+        excludeKeywords = excludeKeywords == null ? List.of()
+                : excludeKeywords.stream().map(String::trim).filter(StringUtils::hasText).toList();
 
         if (includeKeywords.isEmpty()) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
@@ -69,10 +71,13 @@ public record BrandCollaborationSearchCondition(
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
 
-        minViews = minViews == null ? 0L : minViews;
-        minLikes = minLikes == null ? 0L : minLikes;
-        minComments = minComments == null ? 0L : minComments;
+        minViews = (minViews == null || minViews < 0) ? 0L : minViews;
+        minLikes = (minLikes == null || minLikes < 0) ? 0L : minLikes;
+        minComments = (minComments == null || minComments < 0) ? 0L : minComments;
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
+        if (SortOrder.ASC.equals(sortOrder)) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
         cursor = StringUtils.hasText(cursor) ? cursor : null;
 
