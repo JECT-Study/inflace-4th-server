@@ -43,10 +43,6 @@ public final class BrandCollaborationTrendsPrompt {
                 - Identify what content hooks or messaging patterns are repeated across videos.
                 - Write 2 to 3 sentences. Be specific, not generic.
 
-                categoryDistribution:
-                - Infer content categories from video titles, tags, and descriptions.
-                - Return at most 5 categories. Total percentage must sum to 100.
-
                 strategyInsight.pplIntent:
                 - Use Channel Subscribers, Channel Total Views, Channel VideoCount, and Channel Description to explain why the brand selected these specific channels.
                 - Focus on audience scale, content niche fit, and channel credibility signals visible in the data.
@@ -61,7 +57,7 @@ public final class BrandCollaborationTrendsPrompt {
                 - keywordSummary, pplIntent, competitivePoints: plain text only. No bullets, numbering, or markdown.
 
                 Return ONLY valid JSON, no markdown:
-                {"commonKeywords":["k1","k2"],"keywordSummary":"요약","categoryDistribution":[{"category":"뷰티/스킨케어","percentage":71}],"strategyInsight":{"pplIntent":"분석","competitivePoints":"분석"}}
+                {"commonKeywords":["k1","k2"],"keywordSummary":"요약","strategyInsight":{"pplIntent":"분석","competitivePoints":"분석"}}
                 """;
     }
 

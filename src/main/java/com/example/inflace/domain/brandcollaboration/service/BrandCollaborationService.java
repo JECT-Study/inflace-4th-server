@@ -6,6 +6,7 @@ import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollabora
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationVideoResponse;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
+import com.example.inflace.domain.channel.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.client.YoutubeSearchApiClient;
@@ -26,6 +27,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,6 +54,7 @@ public class BrandCollaborationService {
 
     private final YoutubeSearchApiClient youtubeSearchApiClient;
     private final YoutubeDataApiClient youtubeDataApiClient;
+    private final YoutubeCategoryRepository youtubeCategoryRepository;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
 
@@ -113,7 +116,6 @@ public class BrandCollaborationService {
     private record TrendsAiResponse(
             List<String> commonKeywords,
             String keywordSummary,
-            List<BrandCollaborationTrendsResponse.CategoryShare> categoryDistribution,
             BrandCollaborationTrendsResponse.StrategyInsight strategyInsight
     ) {
     }
@@ -123,13 +125,35 @@ public class BrandCollaborationService {
                 request.youtubeVideoIds(), TRENDS_VIDEO_PARTS);
 
         if (videoItems.isEmpty()) {
-            return new BrandCollaborationTrendsResponse(List.of(), null, null, null, null);
+            return new BrandCollaborationTrendsResponse(
+                    new BrandCollaborationTrendsResponse.ContentKeywords(List.of(), null),
+                    null,
+                    null
+            );
         }
 
+        // channels.list (snippet,statistics,contentDetails) — 구독자 통계 + 업로드 플레이리스트 ID 확보
         Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(videoItems, CHANNEL_PARTS_WITH_STATS);
-        BrandCollaborationTrendsResponse.ChannelStats channelStats = computeChannelStats(channelMap);
+
+        // 구독자 수: channels.list statistics.subscriberCount 직접 계산
+        List<Long> subCounts = channelMap.values().stream()
+                .filter(c -> c.statistics() != null)
+                .map(c -> parseLong(c.statistics().subscriberCount()))
+                .filter(count -> count > 0)
+                .sorted()
+                .toList();
+        long avgSubscribers = subCounts.isEmpty() ? 0L : (long) subCounts.stream().mapToLong(Long::longValue).average().orElse(0);
+        long minSubscribers = subCounts.isEmpty() ? 0L : subCounts.getFirst();
+        long maxSubscribers = subCounts.isEmpty() ? 0L : subCounts.getLast();
+
+        // 업로드 간격: 채널별 uploads 플레이리스트 최근 10개 publishedAt → 평균 간격(일)
+        Double uploadIntervalDays = computeAvgUploadDays(channelMap);
+
+        // 카테고리 분포: 영상 snippet.categoryId → YoutubeCategory 테이블 룩업 후 비율 계산
+        List<BrandCollaborationTrendsResponse.CategoryShare> categoryDistribution = computeCategoryDistribution(videoItems);
 
         try {
+            // AI: commonKeywords, keywordSummary, strategyInsight
             String raw = openAiService.sendChatMessage(new OpenAiSendRequest(
                     BrandCollaborationTrendsPrompt.systemMessage(),
                     BrandCollaborationTrendsPrompt.humanMessage(videoItems, channelMap),
@@ -138,43 +162,63 @@ public class BrandCollaborationService {
             ));
             TrendsAiResponse ai = objectMapper.readValue(stripMarkdown(raw), TrendsAiResponse.class);
             return new BrandCollaborationTrendsResponse(
-                    ai.commonKeywords(), ai.keywordSummary(), ai.categoryDistribution(), ai.strategyInsight(),
-                    channelStats);
+                    new BrandCollaborationTrendsResponse.ContentKeywords(ai.commonKeywords(), ai.keywordSummary()),
+                    new BrandCollaborationTrendsResponse.ChannelCharacteristics(
+                            channelMap.size(), avgSubscribers, minSubscribers, maxSubscribers,
+                            uploadIntervalDays, categoryDistribution),
+                    ai.strategyInsight()
+            );
         } catch (JsonProcessingException | RuntimeException e) {
+            // AI 실패 시 백엔드 계산값만 반환, AI 필드는 null
             log.warn("Failed to analyze brand collaboration trends. videoCount={}", videoItems.size(), e);
-            return new BrandCollaborationTrendsResponse(List.of(), null, null, null, channelStats);
+            return new BrandCollaborationTrendsResponse(
+                    new BrandCollaborationTrendsResponse.ContentKeywords(List.of(), null),
+                    new BrandCollaborationTrendsResponse.ChannelCharacteristics(
+                            channelMap.size(), avgSubscribers, minSubscribers, maxSubscribers,
+                            uploadIntervalDays, categoryDistribution),
+                    null
+            );
         }
     }
 
-    private BrandCollaborationTrendsResponse.ChannelStats computeChannelStats(
-            Map<String, YoutubeDataChannelResponse.Item> channelMap
+    private List<BrandCollaborationTrendsResponse.CategoryShare> computeCategoryDistribution(
+            List<YoutubeDataVideoResponse.Item> videoItems
     ) {
-        List<Long> counts = channelMap.values().stream()
-                .filter(c -> c.statistics() != null)
-                .map(c -> parseLong(c.statistics().subscriberCount()))
-                .filter(count -> count > 0)
-                .sorted()
+        List<Integer> categoryIds = videoItems.stream()
+                .map(item -> item.snippet() != null ? item.snippet().categoryId() : null)
+                .filter(StringUtils::hasText)
+                .map(id -> {
+                    try { return Integer.parseInt(id); }
+                    catch (NumberFormatException e) { return null; }
+                })
+                .filter(Objects::nonNull)
                 .toList();
 
-        String avgSubscribers = null;
-        String subscriberRange = null;
-        if (!counts.isEmpty()) {
-            long avg = (long) counts.stream().mapToLong(Long::longValue).average().orElse(0);
-            avgSubscribers = formatSubscriberCount(avg);
-            subscriberRange = formatSubscriberCount(counts.getFirst()) + "~" + formatSubscriberCount(counts.getLast());
+        if (categoryIds.isEmpty()) {
+            return List.of();
         }
 
-        String avgUploadFrequency = computeAvgUploadFrequency(channelMap);
+        Map<Integer, String> titleMap = youtubeCategoryRepository
+                .findByYoutubeCategoryIdIn(categoryIds.stream().distinct().toList())
+                .stream()
+                .collect(Collectors.toMap(c -> c.getYoutubeCategoryId(), c -> c.getTitle()));
 
-        return new BrandCollaborationTrendsResponse.ChannelStats(
-                channelMap.size(),
-                avgSubscribers,
-                subscriberRange,
-                avgUploadFrequency
-        );
+        int total = categoryIds.size();
+        return categoryIds.stream()
+                .collect(Collectors.groupingBy(
+                        id -> titleMap.getOrDefault(id, "기타"),
+                        Collectors.counting()
+                ))
+                .entrySet().stream()
+                .map(e -> new BrandCollaborationTrendsResponse.CategoryShare(
+                        e.getKey(),
+                        (int) Math.round((double) e.getValue() / total * 100)
+                ))
+                .sorted(Comparator.comparingInt(BrandCollaborationTrendsResponse.CategoryShare::percentage).reversed())
+                .toList();
     }
 
-    private String computeAvgUploadFrequency(Map<String, YoutubeDataChannelResponse.Item> channelMap) {
+    private Double computeAvgUploadDays(Map<String, YoutubeDataChannelResponse.Item> channelMap) {
         OptionalDouble avg = channelMap.values().stream()
                 .filter(c -> c.contentDetails() != null && c.contentDetails().relatedPlaylists() != null)
                 .map(c -> c.contentDetails().relatedPlaylists().uploads())
@@ -190,30 +234,7 @@ public class BrandCollaborationService {
                 .filter(d -> !Double.isNaN(d) && d > 0)
                 .average();
 
-        return avg.isPresent() ? formatUploadFrequency(avg.getAsDouble()) : null;
-    }
-
-    private String formatUploadFrequency(double avgDays) {
-        if (avgDays < 1) {
-            long timesPerDay = Math.round(1.0 / avgDays);
-            return "일 " + timesPerDay + "회";
-        }
-        if (avgDays <= 14) {
-            double timesPerWeek = 7.0 / avgDays;
-            return String.format("주 %.1f회", timesPerWeek).replaceAll("\\.0회$", "회");
-        }
-        long timesPerMonth = Math.round(30.0 / avgDays);
-        return "월 " + (timesPerMonth > 0 ? timesPerMonth : 1) + "회";
-    }
-
-    private String formatSubscriberCount(long count) {
-        if (count >= 100_000_000) {
-            return String.format("%.1f", count / 100_000_000.0).replaceAll("\\.0$", "") + "억";
-        }
-        if (count >= 10_000) {
-            return String.format("%.1f", count / 10_000.0).replaceAll("\\.0$", "") + "만";
-        }
-        return count + "명";
+        return avg.isPresent() ? avg.getAsDouble() : null;
     }
 
     private void validateKeywords(List<String> includeKeywords, List<String> excludeKeywords) {
