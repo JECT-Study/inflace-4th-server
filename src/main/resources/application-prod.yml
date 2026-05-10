@@ -27,4 +27,4 @@ cookie:
 cors:
   allowed:
     origins:
-      - https://inflace.site
+      - https://www.inflace.site
