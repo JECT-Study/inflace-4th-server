@@ -26,5 +26,5 @@ cookie:
 cors:
   allowed:
     origins:
-      - https://www.inflace.site
+      - https://inflace.site
       - http://localhost:3000
