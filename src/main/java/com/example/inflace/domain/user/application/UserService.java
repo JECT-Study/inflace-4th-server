@@ -9,13 +9,20 @@ import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.user.domain.entity.User;
+import com.example.inflace.domain.user.domain.entity.UserNeed;
+import com.example.inflace.domain.user.domain.entity.UserType;
+import com.example.inflace.domain.user.domain.enums.Need;
 import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.domain.enums.UserRole;
 import com.example.inflace.domain.user.infra.UserCommandRepository;
+import com.example.inflace.domain.user.infra.UserNeedRepository;
 import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.user.infra.UserRegistrationResult;
+import com.example.inflace.domain.user.infra.UserTypeRepository;
 import com.example.inflace.domain.user.presentation.OnboardingRequest;
 import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
+import com.example.inflace.domain.user.presentation.UserPreferenceUpdateRequest;
+import com.example.inflace.domain.user.presentation.UserProfileResponse;
 import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.repository.VideoRepository;
@@ -37,6 +44,8 @@ public class UserService {
 
     private final UserReadRepository userReadRepository;
     private final UserCommandRepository userCommandRepository;
+    private final UserTypeRepository userTypeRepository;
+    private final UserNeedRepository userNeedRepository;
     private final ChannelRepository channelRepository;
     private final ChannelCategoryRepository channelCategoryRepository;
     private final ChannelStatsRepository channelStatsRepository;
@@ -99,11 +108,62 @@ public class UserService {
         );
     }
 
+    @ReadOnlyTransactional
+    public UserProfileResponse getProfile() {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        return new UserProfileResponse(
+                new UserProfileResponse.AccountInfo(
+                        user.getProfileImage(),
+                        user.getName(),
+                        user.getEmail(),
+                        user.getCreatedAt()
+                ),
+                new UserProfileResponse.PreferenceInfo(
+                        getUserRoles(userId),
+                        getUserNeeds(userId)
+                )
+        );
+    }
+
+    @Transactional
+    public UserProfileResponse updatePreferences(UserPreferenceUpdateRequest request) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        userTypeRepository.deleteAllByUserId(userId);
+        userNeedRepository.deleteAllByUserId(userId);
+
+        userTypeRepository.saveAll(request.roles().stream()
+                .map(role -> UserType.of(role, user))
+                .toList());
+        userNeedRepository.saveAll(request.needs().stream()
+                .map(need -> new UserNeed(need, user))
+                .toList());
+
+        return getProfile();
+    }
+
     @Transactional
     public void onboarding(OnboardingRequest request) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
 
         userCommandRepository.insertUserTypes(userId, request.roles());
         userCommandRepository.insertNeeds(userId, request.needs());
+    }
+
+    private List<UserRole> getUserRoles(UUID userId) {
+        return userTypeRepository.findAllByUser_Id(userId).stream()
+                .map(UserType::getRole)
+                .toList();
+    }
+
+    private List<Need> getUserNeeds(UUID userId) {
+        return userNeedRepository.findAllByUser_Id(userId).stream()
+                .map(UserNeed::getNeed)
+                .toList();
     }
 }
