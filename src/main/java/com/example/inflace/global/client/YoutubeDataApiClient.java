@@ -173,6 +173,39 @@ public class YoutubeDataApiClient {
         return chunks;
     }
 
+    // https://developers.google.com/youtube/v3/docs/playlistItems/list
+    public List<String> getRecentUploadDates(String playlistId, int maxResults) {
+        if (!StringUtils.hasText(playlistId)) {
+            return List.of();
+        }
+
+        int clampedMaxResults = Math.max(1, Math.min(maxResults, YOUTUBE_MAX_RESULTS));
+
+        URI uri = UriComponentsBuilder
+                .fromUriString(youtubeProperties.dataApi().baseUrl())
+                .path(PLAYLIST_ITEMS_PATH)
+                .queryParam("part", "snippet")
+                .queryParam("playlistId", playlistId)
+                .queryParam("maxResults", clampedMaxResults)
+                .queryParam("key", youtubeProperties.dataApi().apiKey())
+                .build()
+                .toUri();
+
+        PlaylistItemsResponse response = restClient.get()
+                .uri(uri)
+                .retrieve()
+                .body(PlaylistItemsResponse.class);
+
+        if (response == null || response.items() == null) {
+            return List.of();
+        }
+
+        return response.items().stream()
+                .filter(item -> item.snippet() != null && StringUtils.hasText(item.snippet().publishedAt()))
+                .map(item -> item.snippet().publishedAt())
+                .toList();
+    }
+
     public record PlaylistItemsResponse(
             String nextPageToken,
             List<PlaylistItem> items
@@ -180,7 +213,13 @@ public class YoutubeDataApiClient {
     }
 
     public record PlaylistItem(
+            PlaylistSnippet snippet,
             PlaylistContentDetails contentDetails
+    ) {
+    }
+
+    public record PlaylistSnippet(
+            String publishedAt
     ) {
     }
 
