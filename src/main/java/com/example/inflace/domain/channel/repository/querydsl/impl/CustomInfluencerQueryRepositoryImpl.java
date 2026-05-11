@@ -2,7 +2,9 @@ package com.example.inflace.domain.channel.repository.querydsl.impl;
 
 import com.example.inflace.domain.channel.domain.QChannelCategory;
 import com.example.inflace.domain.channel.domain.QChannelBookmark;
+import com.example.inflace.domain.channel.domain.QChannelBrand;
 import com.example.inflace.domain.channel.domain.QYoutubeCategory;
+import com.example.inflace.domain.brand.domain.QBrand;
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.request.InfluencerSortCriteria;
 import com.example.inflace.domain.channel.dto.request.InfluencerUploadPeriod;
@@ -41,6 +43,8 @@ import static com.example.inflace.domain.user.domain.entity.QUser.user;
 @Repository
 @RequiredArgsConstructor
 public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQueryRepository {
+
+    private static final int RECENT_PPL_BRAND_LIMIT = 3;
 
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -97,6 +101,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                 .toList();
 
         Map<Long, List<String>> categoryMap = buildCategoryMap(channelIds);
+        Map<Long, List<String>> recentPplBrandMap = buildRecentPplBrandMap(channelIds);
         List<GetInfluencerSearchResponse> content = new ArrayList<>();
 
         for (Tuple row : pageRows) {
@@ -108,6 +113,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                     row.get(channel.channelHandle),
                     row.get(channel.profileImageUrl),
                     categoryMap.getOrDefault(channelId, List.of()),
+                    recentPplBrandMap.getOrDefault(channelId, List.of()),
                     row.get(channelStats.subscriberCount),
                     row.get(channelStats.avgEngagementRateRecent),
                     row.get(channelStats.avgViewsRecent),
@@ -150,6 +156,42 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
         }
 
         return categoryMap;
+    }
+
+    private Map<Long, List<String>> buildRecentPplBrandMap(List<Long> channelIds) {
+        if (channelIds.isEmpty()) {
+            return Map.of();
+        }
+
+        QChannelBrand channelBrandQuery = new QChannelBrand("channelBrandQuery");
+        QBrand brandQuery = new QBrand("brandQuery");
+
+        List<Tuple> brandRows = jpaQueryFactory
+                .select(
+                        channelBrandQuery.channel.id,
+                        brandQuery.name
+                )
+                .from(channelBrandQuery)
+                .join(channelBrandQuery.brand, brandQuery)
+                .where(channelBrandQuery.channel.id.in(channelIds))
+                .orderBy(
+                        channelBrandQuery.channel.id.asc(),
+                        channelBrandQuery.createdAt.desc()
+                )
+                .fetch();
+
+        Map<Long, List<String>> recentPplBrandMap = new HashMap<>();
+        for (Tuple brandRow : brandRows) {
+            Long channelId = brandRow.get(channelBrandQuery.channel.id);
+            String brandName = brandRow.get(brandQuery.name);
+
+            List<String> brandNames = recentPplBrandMap.computeIfAbsent(channelId, ignored -> new ArrayList<>());
+            if (brandNames.size() < RECENT_PPL_BRAND_LIMIT) {
+                brandNames.add(brandName);
+            }
+        }
+
+        return recentPplBrandMap;
     }
 
     private OrderSpecifier<?>[] buildOrderSpecifier(InfluencerSearchCondition searchCondition) {
