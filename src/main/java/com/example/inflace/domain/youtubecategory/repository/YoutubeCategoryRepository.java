@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface YoutubeCategoryRepository extends JpaRepository<YoutubeCategory, Long> {
     List<YoutubeCategory> findByYoutubeCategoryIdIn(List<Integer> youtubeCategoryIds);
+    List<YoutubeCategory> findByAssignableIsTrue();
 }
