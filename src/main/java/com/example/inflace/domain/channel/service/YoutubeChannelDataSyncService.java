@@ -10,7 +10,7 @@ import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelRespons
 import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
-import com.example.inflace.domain.channel.repository.YoutubeCategoryRepository;
+import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoStats;

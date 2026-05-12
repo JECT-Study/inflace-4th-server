@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.repository;
+package com.example.inflace.domain.youtubecategory.repository;
 
 import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
 import java.util.List;
