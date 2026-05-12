@@ -26,7 +26,7 @@ public interface InfluencerApi {
                     - 로그인한 사용자의 즐겨찾기 여부(`bookmarked`)가 각 인플루언서 항목에 함께 내려갑니다.
                     - 기본 정렬 기준: `engagement_rate`
                     - 기본 정렬 방향: `DESC`
-                    - 기본 최소 참여율: `5.0`
+                    - 기본 최소 참여율: `2.0`
                     - 기본 페이지 크기: `9`
                     - `categoryIds`는 `/api/v1/youtube-categories`에서 내려준 `id` 값을 반복 전달합니다. 예: `?categoryIds=1&categoryIds=2`
                     - 다음 페이지 요청 시에는 이전 응답의 `nextCursor` 값을 `cursor`로 그대로 전달합니다.
