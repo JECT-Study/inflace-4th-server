@@ -37,8 +37,10 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.example.inflace.domain.channel.domain.QChannel.channel;
+import static com.example.inflace.domain.channel.domain.QChannelBookmark.channelBookmark;
 import static com.example.inflace.domain.channel.domain.QChannelStats.channelStats;
 import static com.example.inflace.domain.user.domain.entity.QUser.user;
+import static com.example.inflace.domain.video.domain.QVideo.video;
 
 @Repository
 @RequiredArgsConstructor
@@ -85,6 +87,8 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                         buildSubscriberTo(searchCondition.subscriberTo()),
                         buildUploadPeriodPredicate(searchCondition.uploadPeriodEnum()),
                         buildOutlierRangeFrom(searchCondition.outlierRangeEnum()),
+                        buildBookmarkedOnly(searchCondition.bookmarkedOnly()),
+                        buildHasAdHistory(searchCondition.hasAdHistory()),
                         buildSortPredicate(searchCondition, cursor)
                 )
                 .orderBy(buildOrderSpecifier(searchCondition))
@@ -340,6 +344,33 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
         return new BooleanBuilder(
                 channelStats.avgOutlierScoreRecentExcludingTop5Pct.goe(outlierRange.minValueInclusive())
         );
+    }
+
+    private BooleanBuilder buildBookmarkedOnly(Boolean bookmarkedOnly) {
+        if (!Boolean.TRUE.equals(bookmarkedOnly)) {
+            return null;
+        }
+
+        return new BooleanBuilder(
+                channelBookmark.id.isNotNull()
+        );
+    }
+
+    private BooleanBuilder buildHasAdHistory(Boolean hasAdHistory) {
+        if (!Boolean.TRUE.equals(hasAdHistory)) {
+            return null;
+        }
+
+        BooleanExpression existsAdVideo = JPAExpressions
+                .selectOne()
+                .from(video)
+                .where(
+                        video.channel.id.eq(channel.id),
+                        video.isAdvertisement.isTrue()
+                )
+                .exists();
+
+        return new BooleanBuilder(existsAdVideo);
     }
 
     private BooleanBuilder buildUploadPeriodPredicate(InfluencerUploadPeriod uploadPeriod) {
