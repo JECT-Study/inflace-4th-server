@@ -28,7 +28,7 @@ public interface InfluencerApi {
                     - 기본 정렬 방향: `DESC`
                     - 기본 최소 참여율: `5.0`
                     - 기본 페이지 크기: `9`
-                    - `categoryNames`는 동일한 쿼리 파라미터를 반복 전달합니다. 예: `?categoryNames=게임&categoryNames=엔터테인먼트`
+                    - `categoryIds`는 `/api/v1/youtube-categories`에서 내려준 `id` 값을 반복 전달합니다. 예: `?categoryIds=1&categoryIds=2`
                     - 다음 페이지 요청 시에는 이전 응답의 `nextCursor` 값을 `cursor`로 그대로 전달합니다.
                     - 기존 검색 필터와 정렬 조건은 다음 페이지 요청에서도 동일하게 유지해야 합니다.
                     """

@@ -80,7 +80,7 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
                 .leftJoin(user).on(user.id.eq(channel.user.id))
                 .where(
                         buildChannelNameContains(searchCondition.channelName()),
-                        buildCategoryNameIn(searchCondition.categoryNames()),
+                        buildCategoryIdIn(searchCondition.categoryIds()),
                         buildEngagementRateFrom(searchCondition.engagementRateFrom()),
                         buildEngagementRateTo(searchCondition.engagementRateTo()),
                         buildSubscriberFrom(searchCondition.subscriberFrom()),
@@ -273,33 +273,29 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
         return new BooleanBuilder(channel.name.containsIgnoreCase(channelName));
     }
 
-    private BooleanBuilder buildCategoryNameIn(List<String> categoryNames) {
-        if (categoryNames == null || categoryNames.isEmpty()) {
+    private BooleanBuilder buildCategoryIdIn(List<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
             return null;
         }
 
         QChannelCategory channelCategorySubQuery = new QChannelCategory("channelCategorySubQuery");
-        QYoutubeCategory youtubeCategorySubQuery = new QYoutubeCategory("youtubeCategorySubQuery");
 
         return new BooleanBuilder(buildCategoryExistsExpression(
-                categoryNames,
-                channelCategorySubQuery,
-                youtubeCategorySubQuery
+                categoryIds,
+                channelCategorySubQuery
         ));
     }
 
     private BooleanExpression buildCategoryExistsExpression(
-            List<String> categoryNames,
-            QChannelCategory channelCategorySubQuery,
-            QYoutubeCategory youtubeCategorySubQuery
+            List<Long> categoryIds,
+            QChannelCategory channelCategorySubQuery
     ) {
         return JPAExpressions
                 .selectOne()
                 .from(channelCategorySubQuery)
-                .join(channelCategorySubQuery.category, youtubeCategorySubQuery)
                 .where(
                         channelCategorySubQuery.channel.id.eq(channel.id),
-                        youtubeCategorySubQuery.title.in(categoryNames)
+                        channelCategorySubQuery.category.id.in(categoryIds)
                 )
                 .exists();
     }
