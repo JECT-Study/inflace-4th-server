@@ -62,6 +62,18 @@ public record InfluencerSearchCondition(
         Long subscriberTo,
 
         @Schema(
+                description = "광고 이력 여부",
+                example = "false"
+        )
+        Boolean hasAdHistory,
+
+        @Schema(
+                description = "즐겨찾기만 필터",
+                example = "false"
+        )
+        Boolean bookmarkedOnly,
+
+        @Schema(
                 description = "아웃라이어 구간 필터. channel_stats의 최근 아웃라이어 평균 기준",
                 allowableValues = {"1.0X", "1.5X", "2.0X", "3.0X"},
                 example = "1.5X"
