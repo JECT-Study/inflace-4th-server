@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/youtube-categories")
 @RequiredArgsConstructor
-public class YoutubeCategoryController {
+public class YoutubeCategoryController implements YoutubeCategoryApi {
 
     private final YoutubeCategoryService youtubeCategoryService;
 
+    @Override
     @GetMapping("")
     public BaseResponse<GetYoutubeCategoriesResponse> getYoutubeCategories() {
         return new BaseResponse<>(youtubeCategoryService.getYoutubeCategories());
