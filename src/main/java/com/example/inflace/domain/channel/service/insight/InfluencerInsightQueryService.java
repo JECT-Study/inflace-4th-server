@@ -3,7 +3,7 @@ package com.example.inflace.domain.channel.service.insight;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
-import com.example.inflace.domain.channel.domain.YoutubeCategory;
+import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
 import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;

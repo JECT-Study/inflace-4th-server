@@ -1,5 +1,6 @@
 package com.example.inflace.domain.channel.domain;
 
+import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
 import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

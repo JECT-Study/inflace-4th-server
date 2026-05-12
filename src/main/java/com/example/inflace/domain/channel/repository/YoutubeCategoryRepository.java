@@ -1,6 +1,6 @@
 package com.example.inflace.domain.channel.repository;
 
-import com.example.inflace.domain.channel.domain.YoutubeCategory;
+import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -3,7 +3,6 @@ package com.example.inflace.domain.channel.repository.querydsl.impl;
 import com.example.inflace.domain.channel.domain.QChannelCategory;
 import com.example.inflace.domain.channel.domain.QChannelBookmark;
 import com.example.inflace.domain.channel.domain.QChannelBrand;
-import com.example.inflace.domain.channel.domain.QYoutubeCategory;
 import com.example.inflace.domain.brand.domain.QBrand;
 import com.example.inflace.domain.channel.dto.request.InfluencerSearchCondition;
 import com.example.inflace.domain.channel.dto.request.InfluencerSortCriteria;
@@ -13,6 +12,7 @@ import com.example.inflace.domain.channel.dto.response.GetInfluencerSearchRespon
 import com.example.inflace.domain.channel.repository.querydsl.InfluencerCursorCodec;
 import com.example.inflace.domain.channel.repository.querydsl.CustomInfluencerQueryRepository;
 import com.example.inflace.domain.video.domain.QVideo;
+import com.example.inflace.domain.youtubecategory.domain.QYoutubeCategory;
 import com.example.inflace.global.enums.SortOrder;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;

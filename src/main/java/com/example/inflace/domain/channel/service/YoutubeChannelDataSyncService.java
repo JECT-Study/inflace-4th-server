@@ -3,7 +3,7 @@ package com.example.inflace.domain.channel.service;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
-import com.example.inflace.domain.channel.domain.YoutubeCategory;
+import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
 import com.example.inflace.domain.channel.dto.ChannelDataSyncResult;
 
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
@@ -26,9 +26,7 @@ import com.example.inflace.global.util.AnalyticsCalculator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
