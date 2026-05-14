@@ -1,5 +1,6 @@
 package com.example.inflace.domain.brandcollaboration.service;
 
+import com.example.inflace.domain.brand.service.BrandService;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.domain.channel.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.brandcollaboration.dto.request.ChannelBrandHistorySearchCondition;
@@ -16,12 +17,15 @@ import com.example.inflace.global.response.CustomSort;
 import com.example.inflace.global.util.AnalyticsCalculator;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -39,6 +43,7 @@ public class ChannelBrandHistoryService {
     private final YoutubeSearchApiClient youtubeSearchApiClient;
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeCategoryRepository youtubeCategoryRepository;
+    private final BrandService brandService;
 
     public CursorSliceResponse<ChannelBrandHistoryVideoResponse> search(String channelId, ChannelBrandHistorySearchCondition condition) {
         String youtubePageToken = decodePageToken(condition.cursor(), condition.sortCriteriaValue());
@@ -79,7 +84,8 @@ public class ChannelBrandHistoryService {
         }
 
         Map<Integer, String> categoryTitleMap = buildCategoryTitleMap(filtered);
-        List<ChannelBrandHistoryVideoResponse> content = buildContent(filtered, categoryTitleMap);
+        Map<String, String> aliasToNameMap = collectAliasToNameMap(filtered);
+        List<ChannelBrandHistoryVideoResponse> content = buildContent(filtered, categoryTitleMap, aliasToNameMap);
 
         String nextCursor = encodeNextCursor(searchResponse.nextPageToken(), condition.sortCriteriaValue());
         return new CursorSliceResponse<>(
@@ -122,10 +128,11 @@ public class ChannelBrandHistoryService {
         }
 
         Map<Integer, String> categoryTitleMap = buildCategoryTitleMap(filtered);
+        Map<String, String> aliasToNameMap = collectAliasToNameMap(filtered);
 
         return new ChannelBrandHistoryAnalysisResponse(
                 filtered.size(),
-                computeBrandCounts(filtered),
+                computeBrandCounts(filtered, aliasToNameMap),
                 computeContentTypeDistribution(filtered),
                 computeCategoryDistribution(filtered, categoryTitleMap),
                 computeAvgViewsByContentType(filtered)
@@ -173,16 +180,33 @@ public class ChannelBrandHistoryService {
                 .collect(Collectors.toMap(c -> c.getYoutubeCategoryId(), c -> c.getTitle()));
     }
 
+    private Map<String, String> collectAliasToNameMap(List<YoutubeDataVideoResponse.Item> items) {
+        // tags + 제목 토큰을 후보로 올려 DB alias 매칭 범위 확대
+        Set<String> candidates = items.stream()
+                .filter(item -> item.snippet() != null)
+                .flatMap(item -> {
+                    Stream<String> tags = item.snippet().tags() != null
+                            ? item.snippet().tags().stream() : Stream.empty();
+                    Stream<String> titleTokens = StringUtils.hasText(item.snippet().title())
+                            ? Arrays.stream(item.snippet().title().split("[\\s\\[\\]()#,./|]+"))
+                            : Stream.empty();
+                    return Stream.concat(tags, titleTokens);
+                })
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toSet());
+        return brandService.resolveAliasToNameMap(candidates);
+    }
+
     private List<ChannelBrandHistoryVideoResponse> buildContent(
             List<YoutubeDataVideoResponse.Item> items,
-            Map<Integer, String> categoryTitleMap
+            Map<Integer, String> categoryTitleMap,
+            Map<String, String> aliasToNameMap
     ) {
         return items.stream()
                 .map(item -> {
                     String categoryName = resolveCategoryName(item, categoryTitleMap);
                     String videoFormat = resolveVideoFormat(item);
-                    List<String> brands = item.snippet() != null && item.snippet().tags() != null
-                            ? item.snippet().tags() : List.of();
+                    List<String> brands = extractBrands(item, aliasToNameMap);
 
                     return new ChannelBrandHistoryVideoResponse(
                             item.id(),
@@ -202,14 +226,27 @@ public class ChannelBrandHistoryService {
                 .toList();
     }
 
+    private List<String> extractBrands(YoutubeDataVideoResponse.Item item, Map<String, String> aliasToNameMap) {
+        if (item.snippet() == null) return List.of();
+        Stream<String> tags = item.snippet().tags() != null
+                ? item.snippet().tags().stream() : Stream.empty();
+        Stream<String> titleTokens = StringUtils.hasText(item.snippet().title())
+                ? Arrays.stream(item.snippet().title().split("[\\s\\[\\]()#,./|]+")) : Stream.empty();
+        return Stream.concat(tags, titleTokens)
+                .filter(StringUtils::hasText)
+                .map(token -> aliasToNameMap.get(token.toLowerCase()))
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
     private List<ChannelBrandHistoryAnalysisResponse.BrandCount> computeBrandCounts(
-            List<YoutubeDataVideoResponse.Item> items
+            List<YoutubeDataVideoResponse.Item> items,
+            Map<String, String> aliasToNameMap
     ) {
         return items.stream()
-                .filter(item -> item.snippet() != null && item.snippet().tags() != null)
-                .flatMap(item -> item.snippet().tags().stream())
-                .filter(StringUtils::hasText)
-                .collect(Collectors.groupingBy(tag -> tag, Collectors.counting()))
+                .flatMap(item -> extractBrands(item, aliasToNameMap).stream())
+                .collect(Collectors.groupingBy(brandName -> brandName, Collectors.counting()))
                 .entrySet().stream()
                 .map(e -> new ChannelBrandHistoryAnalysisResponse.BrandCount(e.getKey(), e.getValue().intValue()))
                 .sorted(Comparator.comparingInt(ChannelBrandHistoryAnalysisResponse.BrandCount::count).reversed())
