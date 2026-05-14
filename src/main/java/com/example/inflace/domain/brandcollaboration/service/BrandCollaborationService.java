@@ -73,7 +73,8 @@ public class BrandCollaborationService {
                 condition.languageCode(),
                 condition.pageSize(),
                 condition.startDate(),
-                condition.endDate()
+                condition.endDate(),
+                null
         );
 
         if (searchResponse == null || searchResponse.items() == null || searchResponse.items().isEmpty()) {
