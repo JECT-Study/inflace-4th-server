@@ -128,14 +128,13 @@ public class ChannelBrandHistoryService {
         }
 
         Map<Integer, String> categoryTitleMap = buildCategoryTitleMap(filtered);
-        Map<String, String> aliasToNameMap = collectAliasToNameMap(filtered);
 
         return new ChannelBrandHistoryAnalysisResponse(
                 filtered.size(),
-                computeBrandCounts(filtered, aliasToNameMap),
-                computeContentTypeDistribution(filtered),
+                computeAvgViewsByContentType(filtered),
                 computeCategoryDistribution(filtered, categoryTitleMap),
-                computeAvgViewsByContentType(filtered)
+                computeContentTypeDistribution(filtered),
+                null // TODO: adScore — 점수 산정 기준 기획 필요
         );
     }
 
@@ -240,19 +239,6 @@ public class ChannelBrandHistoryService {
                 .toList();
     }
 
-    private List<ChannelBrandHistoryAnalysisResponse.BrandCount> computeBrandCounts(
-            List<YoutubeDataVideoResponse.Item> items,
-            Map<String, String> aliasToNameMap
-    ) {
-        return items.stream()
-                .flatMap(item -> extractBrands(item, aliasToNameMap).stream())
-                .collect(Collectors.groupingBy(brandName -> brandName, Collectors.counting()))
-                .entrySet().stream()
-                .map(e -> new ChannelBrandHistoryAnalysisResponse.BrandCount(e.getKey(), e.getValue().intValue()))
-                .sorted(Comparator.comparingInt(ChannelBrandHistoryAnalysisResponse.BrandCount::count).reversed())
-                .toList();
-    }
-
     private List<ChannelBrandHistoryAnalysisResponse.ContentTypeShare> computeContentTypeDistribution(
             List<YoutubeDataVideoResponse.Item> items
     ) {
@@ -299,6 +285,7 @@ public class ChannelBrandHistoryService {
                 .entrySet().stream()
                 .map(e -> new ChannelBrandHistoryAnalysisResponse.CategoryShare(
                         e.getKey(),
+                        e.getValue().intValue(),
                         (int) Math.round((double) e.getValue() / total * 100)
                 ))
                 .sorted(Comparator.comparingInt(ChannelBrandHistoryAnalysisResponse.CategoryShare::percentage).reversed())
@@ -308,19 +295,27 @@ public class ChannelBrandHistoryService {
     private List<ChannelBrandHistoryAnalysisResponse.ContentTypeAvgViews> computeAvgViewsByContentType(
             List<YoutubeDataVideoResponse.Item> items
     ) {
-        Map<String, List<Long>> viewsByFormat = items.stream()
-                .collect(Collectors.groupingBy(
-                        this::resolveVideoFormat,
-                        Collectors.mapping(
-                                item -> parseLong(item.statistics() != null ? item.statistics().viewCount() : null),
-                                Collectors.toList()
-                        )
-                ));
+        Map<String, List<YoutubeDataVideoResponse.Item>> byFormat = items.stream()
+                .collect(Collectors.groupingBy(this::resolveVideoFormat));
 
-        return viewsByFormat.entrySet().stream()
+        return byFormat.entrySet().stream()
                 .map(e -> {
-                    long avg = (long) e.getValue().stream().mapToLong(Long::longValue).average().orElse(0);
-                    return new ChannelBrandHistoryAnalysisResponse.ContentTypeAvgViews(e.getKey(), avg);
+                    List<YoutubeDataVideoResponse.Item> group = e.getValue();
+                    long avgViews = (long) group.stream()
+                            .mapToLong(item -> parseLong(item.statistics() != null ? item.statistics().viewCount() : null))
+                            .average().orElse(0);
+                    double avgEngagementRate = group.stream()
+                            .mapToDouble(item -> {
+                                if (item.statistics() == null) return 0.0;
+                                return AnalyticsCalculator.engagementRate(
+                                        parseLong(item.statistics().likeCount()),
+                                        parseLong(item.statistics().commentCount()),
+                                        parseLong(item.statistics().viewCount())
+                                );
+                            })
+                            .average().orElse(0.0);
+                    return new ChannelBrandHistoryAnalysisResponse.ContentTypeAvgViews(
+                            e.getKey(), avgViews, Math.round(avgEngagementRate * 100.0) / 100.0);
                 })
                 .sorted(Comparator.comparing(ChannelBrandHistoryAnalysisResponse.ContentTypeAvgViews::format))
                 .toList();
@@ -379,7 +374,7 @@ public class ChannelBrandHistoryService {
     }
 
     private ChannelBrandHistoryAnalysisResponse emptyAnalysis() {
-        return new ChannelBrandHistoryAnalysisResponse(0, List.of(), List.of(), List.of(), List.of());
+        return new ChannelBrandHistoryAnalysisResponse(0, List.of(), List.of(), List.of(), null);
     }
 
     private long parseLong(String value) {
