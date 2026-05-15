@@ -42,6 +42,9 @@ public class ChannelBrand extends BaseTimeEntity {
     @Column(name = "matched_alias", nullable = false)
     private String matchedAlias;
 
+    @Column(name = "source_youtube_video_id", nullable = true)
+    private String sourceYoutubeVideoId;
+
     public static ChannelBrand of(Channel channel, Brand brand, String matchedAlias) {
         ChannelBrand relation = new ChannelBrand();
         relation.channel = channel;
