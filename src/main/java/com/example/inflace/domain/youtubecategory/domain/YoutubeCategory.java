@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.domain;
+package com.example.inflace.domain.youtubecategory.domain;
 
 import com.example.inflace.global.entity.BaseTimeEntity;
 import jakarta.persistence.Column;

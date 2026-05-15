@@ -31,10 +31,10 @@ public record InfluencerSearchCondition(
         String sortCriteria,
 
         @ArraySchema(
-                arraySchema = @Schema(description = "카테고리 필터. 동일한 query param을 반복 전달합니다."),
-                schema = @Schema(example = "게임")
+                arraySchema = @Schema(description = "카테고리 ID 필터. /api/v1/youtube-categories에서 내려준 id 값을 전달합니다."),
+                schema = @Schema(example = "1")
         )
-        List<String> categoryNames,
+        List<Long> categoryIds,
 
         @Schema(
                 description = "최소 참여율(%) 필터. 미입력 시 2.0",
@@ -105,7 +105,7 @@ public record InfluencerSearchCondition(
     private static final int DEFAULT_PAGE_SIZE = 9;
 
     public InfluencerSearchCondition {
-        categoryNames = categoryNames == null ? List.of() : categoryNames;
+        categoryIds = categoryIds == null ? List.of() : categoryIds;
         engagementRateFrom = engagementRateFrom == null ? 2.0 : engagementRateFrom;
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
