@@ -29,7 +29,8 @@ public class YoutubeSearchApiClient {
             String relevanceLanguage,
             int maxResults,
             String publishedAfter,
-            String publishedBefore
+            String publishedBefore,
+            String channelId
     ) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(youtubeProperties.dataApi().baseUrl())
@@ -37,10 +38,13 @@ public class YoutubeSearchApiClient {
                 .queryParam("part", "id")
                 .queryParam("type", "video")
                 .queryParam("videoPaidProductPlacement", "true")
-                .queryParam("q", q)
                 .queryParam("order", order)
                 .queryParam("maxResults", maxResults)
                 .queryParam("key", youtubeProperties.dataApi().apiKey());
+
+        if (StringUtils.hasText(q)) {
+            builder.queryParam("q", q);
+        }
 
         if (StringUtils.hasText(pageToken)) {
             builder.queryParam("pageToken", pageToken);
@@ -62,6 +66,9 @@ public class YoutubeSearchApiClient {
         }
         if (StringUtils.hasText(relevanceLanguage)) {
             builder.queryParam("relevanceLanguage", relevanceLanguage);
+        }
+        if (StringUtils.hasText(channelId)) {
+            builder.queryParam("channelId", channelId);
         }
 
         URI uri = builder.build().toUri();
