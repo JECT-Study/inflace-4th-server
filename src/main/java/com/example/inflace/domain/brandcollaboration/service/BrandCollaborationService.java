@@ -6,7 +6,7 @@ import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollabora
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationVideoResponse;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
-import com.example.inflace.domain.channel.repository.YoutubeCategoryRepository;
+import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.client.YoutubeSearchApiClient;
