@@ -25,7 +25,7 @@ public interface ChannelBrandHistoryApi {
                     - `videoPaidProductPlacement=true` 기반으로 유료 광고 영상을 필터링합니다.
                     - 기본 정렬 기준: `LATEST`, 기본 정렬 방향: `DESC` (ASC 미지원), 기본 페이지 크기: `9`
                     - 다음 페이지 요청 시 이전 응답의 `nextCursor`를 `cursor`로 전달합니다.
-                    - `brands`는 영상의 YouTube 태그(`snippet.tags`) 목록입니다.
+                    - `brands`는 영상 설명(`snippet.description`) 파싱 후 브랜드 alias 매핑 결과입니다.
                     """
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT})

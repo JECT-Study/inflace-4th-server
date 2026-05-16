@@ -31,6 +31,6 @@ public record ChannelBrandHistoryVideoResponse(
         @Schema(description = "영상 카테고리명", example = "뷰티/패션")
         String categoryName,
 
-        @Schema(description = "브랜드 태그 목록 (snippet.tags 기반)", example = "[\"APR\", \"메디큐브\"]")
+        @Schema(description = "브랜드 목록 (snippet.description 파싱 후 alias 매핑)", example = "[\"APR\", \"메디큐브\"]")
         List<String> brands
 ) {}
