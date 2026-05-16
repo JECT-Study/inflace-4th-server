@@ -2,7 +2,7 @@ package com.example.inflace.domain.brandcollaboration.service;
 
 import com.example.inflace.domain.brand.service.BrandService;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
-import com.example.inflace.domain.channel.repository.YoutubeCategoryRepository;
+import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.brandcollaboration.dto.request.ChannelBrandHistorySearchCondition;
 import com.example.inflace.domain.brandcollaboration.dto.response.ChannelBrandHistoryAnalysisResponse;
 import com.example.inflace.domain.brandcollaboration.dto.response.ChannelBrandHistoryVideoResponse;
@@ -180,17 +180,9 @@ public class ChannelBrandHistoryService {
     }
 
     private Map<String, String> collectAliasToNameMap(List<YoutubeDataVideoResponse.Item> items) {
-        // tags + 제목 토큰을 후보로 올려 DB alias 매칭 범위 확대
         Set<String> candidates = items.stream()
                 .filter(item -> item.snippet() != null)
-                .flatMap(item -> {
-                    Stream<String> tags = item.snippet().tags() != null
-                            ? item.snippet().tags().stream() : Stream.empty();
-                    Stream<String> titleTokens = StringUtils.hasText(item.snippet().title())
-                            ? Arrays.stream(item.snippet().title().split("[\\s\\[\\]()#,./|]+"))
-                            : Stream.empty();
-                    return Stream.concat(tags, titleTokens);
-                })
+                .flatMap(item -> descriptionTokens(item.snippet().description()))
                 .filter(StringUtils::hasText)
                 .collect(Collectors.toSet());
         return brandService.resolveAliasToNameMap(candidates);
@@ -227,16 +219,17 @@ public class ChannelBrandHistoryService {
 
     private List<String> extractBrands(YoutubeDataVideoResponse.Item item, Map<String, String> aliasToNameMap) {
         if (item.snippet() == null) return List.of();
-        Stream<String> tags = item.snippet().tags() != null
-                ? item.snippet().tags().stream() : Stream.empty();
-        Stream<String> titleTokens = StringUtils.hasText(item.snippet().title())
-                ? Arrays.stream(item.snippet().title().split("[\\s\\[\\]()#,./|]+")) : Stream.empty();
-        return Stream.concat(tags, titleTokens)
+        return descriptionTokens(item.snippet().description())
                 .filter(StringUtils::hasText)
                 .map(token -> aliasToNameMap.get(token.toLowerCase()))
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+    }
+
+    private Stream<String> descriptionTokens(String description) {
+        if (!StringUtils.hasText(description)) return Stream.empty();
+        return Arrays.stream(description.split("[\\s\\[\\]()#,./|!?:;@\"'\\-]+"));
     }
 
     private List<ChannelBrandHistoryAnalysisResponse.ContentTypeShare> computeContentTypeDistribution(
