@@ -33,6 +33,7 @@ public record ChannelBrandHistorySearchCondition(
         Integer pageSize
 ) {
     private static final int DEFAULT_PAGE_SIZE = 9;
+    private static final int MAX_PAGE_SIZE = 50;
 
     public ChannelBrandHistorySearchCondition {
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
@@ -41,7 +42,7 @@ public record ChannelBrandHistorySearchCondition(
         }
 
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
-        if (pageSize < 1) {
+        if (pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
 

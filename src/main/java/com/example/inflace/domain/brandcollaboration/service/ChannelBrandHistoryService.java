@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,7 +53,7 @@ public class ChannelBrandHistoryService {
     private final InfluencerInsightScoreCalculator scoreCalculator;
 
     public CursorSliceResponse<ChannelBrandHistoryVideoResponse> search(String channelId, ChannelBrandHistorySearchCondition condition) {
-        String youtubePageToken = decodePageToken(condition.cursor(), condition.sortCriteriaValue());
+        String youtubePageToken = decodePageToken(condition.cursor(), condition.sortCriteriaValue(), condition.sortOrder().name());
 
         YoutubeSearchListResponse searchResponse = youtubeSearchApiClient.search(
                 null,
@@ -81,7 +82,7 @@ public class ChannelBrandHistoryService {
         List<YoutubeDataVideoResponse.Item> filtered = applyVideoFormatFilter(videoItems, condition.videoFormatEnum());
 
         if (filtered.isEmpty()) {
-            String nextCursor = encodeNextCursor(searchResponse.nextPageToken(), condition.sortCriteriaValue());
+            String nextCursor = encodeNextCursor(searchResponse.nextPageToken(), condition.sortCriteriaValue(), condition.sortOrder().name());
             return new CursorSliceResponse<>(
                     List.of(),
                     new CursorSliceResponse.PageInfo(condition.pageSize(), 0, nextCursor, nextCursor != null),
@@ -93,7 +94,7 @@ public class ChannelBrandHistoryService {
         Map<String, String> aliasToNameMap = collectAliasToNameMap(filtered);
         List<ChannelBrandHistoryVideoResponse> content = buildContent(filtered, categoryTitleMap, aliasToNameMap);
 
-        String nextCursor = encodeNextCursor(searchResponse.nextPageToken(), condition.sortCriteriaValue());
+        String nextCursor = encodeNextCursor(searchResponse.nextPageToken(), condition.sortCriteriaValue(), condition.sortOrder().name());
         return new CursorSliceResponse<>(
                 content,
                 new CursorSliceResponse.PageInfo(condition.pageSize(), content.size(), nextCursor, nextCursor != null),
@@ -158,15 +159,9 @@ public class ChannelBrandHistoryService {
         if (format == ChannelVideoFormat.ALL) {
             return items;
         }
+        String target = format == ChannelVideoFormat.SHORT_FORM ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM;
         return items.stream()
-                .filter(item -> {
-                    if (item.contentDetails() == null || !StringUtils.hasText(item.contentDetails().duration())) {
-                        return true;
-                    }
-                    int durationSeconds = (int) AnalyticsCalculator.parseIso8601Duration(item.contentDetails().duration());
-                    boolean isShort = durationSeconds <= SHORTS_MAX_DURATION_SECONDS;
-                    return format == ChannelVideoFormat.SHORT_FORM ? isShort : !isShort;
-                })
+                .filter(item -> target.equals(resolveVideoFormat(item)))
                 .toList();
     }
 
@@ -234,7 +229,7 @@ public class ChannelBrandHistoryService {
         if (item.snippet() == null) return List.of();
         return descriptionTokens(item.snippet().description())
                 .filter(StringUtils::hasText)
-                .map(token -> aliasToNameMap.get(token.toLowerCase()))
+                .map(token -> aliasToNameMap.get(token.toLowerCase(Locale.ROOT)))
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -347,27 +342,29 @@ public class ChannelBrandHistoryService {
         }
     }
 
-    private String decodePageToken(String cursor, String expectedSortCriteria) {
+    private String decodePageToken(String cursor, String expectedSortCriteria, String expectedSortOrder) {
         if (!StringUtils.hasText(cursor)) {
             return null;
         }
         try {
             String decoded = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
-            String[] tokens = decoded.split("\\|", 2);
-            if (tokens.length != 2 || !tokens[0].equals(expectedSortCriteria)) {
+            String[] tokens = decoded.split("\\|", 3);
+            if (tokens.length != 3
+                    || !tokens[0].equals(expectedSortCriteria)
+                    || !tokens[1].equals(expectedSortOrder)) {
                 throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
             }
-            return tokens[1];
+            return tokens[2];
         } catch (IllegalArgumentException e) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
     }
 
-    private String encodeNextCursor(String youtubePageToken, String sortCriteria) {
+    private String encodeNextCursor(String youtubePageToken, String sortCriteria, String sortOrder) {
         if (!StringUtils.hasText(youtubePageToken)) {
             return null;
         }
-        String raw = sortCriteria + "|" + youtubePageToken;
+        String raw = sortCriteria + "|" + sortOrder + "|" + youtubePageToken;
         return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
 
