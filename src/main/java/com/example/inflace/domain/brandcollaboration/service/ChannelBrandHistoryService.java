@@ -410,8 +410,11 @@ public class ChannelBrandHistoryService {
                 (int) Math.round(adScore),
                 scoreToLabel(adScore),
                 scoreToLabel(vsScore),
+                Math.round(cv * 100.0) / 100.0,
                 scoreToLabel(shScore),
-                scoreToLabel(ceScore)
+                Math.round(subscriberHealthRate * 10.0) / 10.0,
+                scoreToLabel(ceScore),
+                Math.round(collaborationRate * 10.0) / 10.0
         );
     }
 

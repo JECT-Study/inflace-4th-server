@@ -48,10 +48,21 @@ public record ChannelBrandHistoryAnalysisResponse(
     ) {}
 
     public record AdScore(
+            @Schema(description = "광고 적합도 종합 점수 (0~100)", example = "87")
             int score,
+            @Schema(description = "종합 점수 등급", example = "높음")
             String label,
+            @Schema(description = "조회수 안정성 등급", example = "높음")
             String viewStability,
+            @Schema(description = "조회수 변동계수 (낮을수록 안정적)", example = "0.82")
+            double viewStabilityCv,
+            @Schema(description = "구독 건강도 등급", example = "높음")
             String subscriptionHealth,
-            String collaborationExperience
+            @Schema(description = "구독자 대비 평균 조회 비율 (%)", example = "15.2")
+            double subscriptionHealthRate,
+            @Schema(description = "협찬 경험도 등급", example = "높음")
+            String collaborationExperience,
+            @Schema(description = "전체 영상 중 PPL 영상 비율 (%)", example = "22.0")
+            double collaborationRate
     ) {}
 }
