@@ -2,6 +2,8 @@ package com.example.inflace.domain.brandcollaboration.service;
 
 import com.example.inflace.domain.brand.service.BrandService;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
+import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
+import com.example.inflace.domain.channel.service.insight.InfluencerInsightScoreCalculator;
 import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.brandcollaboration.dto.request.ChannelBrandHistorySearchCondition;
 import com.example.inflace.domain.brandcollaboration.dto.response.ChannelBrandHistoryAnalysisResponse;
@@ -27,14 +29,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChannelBrandHistoryService {
 
     private static final String VIDEO_PARTS = "snippet,statistics,contentDetails";
+    private static final String CHANNEL_STATS_PARTS = "statistics";
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
     private static final int ANALYSIS_MAX_VIDEOS = 50; // YouTube Search API maxResults 상한
     private static final String FORMAT_LONG_FORM = "LONG_FORM";
@@ -44,6 +49,7 @@ public class ChannelBrandHistoryService {
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeCategoryRepository youtubeCategoryRepository;
     private final BrandService brandService;
+    private final InfluencerInsightScoreCalculator scoreCalculator;
 
     public CursorSliceResponse<ChannelBrandHistoryVideoResponse> search(String channelId, ChannelBrandHistorySearchCondition condition) {
         String youtubePageToken = decodePageToken(condition.cursor(), condition.sortCriteriaValue());
@@ -128,13 +134,20 @@ public class ChannelBrandHistoryService {
         }
 
         Map<Integer, String> categoryTitleMap = buildCategoryTitleMap(filtered);
+        ChannelBrandHistoryAnalysisResponse.AdScore adScore;
+        try {
+            adScore = computeAdScore(channelId, filtered);
+        } catch (Exception e) {
+            log.warn("adScore 계산 실패: channelId={}, error={}", channelId, e.getMessage(), e);
+            adScore = null;
+        }
 
         return new ChannelBrandHistoryAnalysisResponse(
                 filtered.size(),
                 computeAvgViewsByContentType(filtered),
                 computeCategoryDistribution(filtered, categoryTitleMap),
                 computeContentTypeDistribution(filtered),
-                null // TODO: adScore — 점수 산정 기준 기획 필요
+                adScore
         );
     }
 
@@ -364,6 +377,59 @@ public class ChannelBrandHistoryService {
                 new CursorSliceResponse.PageInfo(condition.pageSize(), 0, null, false),
                 CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
         );
+    }
+
+    private ChannelBrandHistoryAnalysisResponse.AdScore computeAdScore(
+            String channelId,
+            List<YoutubeDataVideoResponse.Item> items
+    ) {
+        YoutubeDataChannelResponse channelResponse = youtubeDataApiClient.getYoutubeChannels(channelId, CHANNEL_STATS_PARTS);
+        if (channelResponse == null || channelResponse.items() == null || channelResponse.items().isEmpty()) {
+            return null;
+        }
+        YoutubeDataChannelResponse.Statistics stats = channelResponse.items().getFirst().statistics();
+        if (stats == null) return null;
+
+        long subscriberCount = parseLong(stats.subscriberCount());
+        long totalVideoCount = parseLong(stats.videoCount());
+
+        double avgViews = items.stream()
+                .mapToLong(item -> parseLong(item.statistics() != null ? item.statistics().viewCount() : null))
+                .average().orElse(0.0);
+
+        double cv = computeCoefficientOfVariation(items, avgViews);
+        double subscriberHealthRate = subscriberCount > 0 ? (avgViews / subscriberCount) * 100.0 : 0.0;
+        double collaborationRate = totalVideoCount > 0 ? ((double) items.size() / totalVideoCount) * 100.0 : 0.0;
+
+        double vsScore = scoreCalculator.viewStabilityScore(cv);
+        double shScore = scoreCalculator.subscriberHealthScore(subscriberHealthRate);
+        double ceScore = scoreCalculator.sponsorshipExperienceScore(collaborationRate);
+        double adScore = scoreCalculator.advertisementScore(vsScore, shScore, ceScore);
+
+        return new ChannelBrandHistoryAnalysisResponse.AdScore(
+                (int) Math.round(adScore),
+                scoreToLabel(adScore),
+                scoreToLabel(vsScore),
+                scoreToLabel(shScore),
+                scoreToLabel(ceScore)
+        );
+    }
+
+    private double computeCoefficientOfVariation(List<YoutubeDataVideoResponse.Item> items, double avgViews) {
+        if (items.isEmpty() || avgViews <= 0.0) return 0.0;
+        double variance = items.stream()
+                .mapToDouble(item -> {
+                    double v = parseLong(item.statistics() != null ? item.statistics().viewCount() : null);
+                    return Math.pow(v - avgViews, 2);
+                })
+                .average().orElse(0.0);
+        return Math.sqrt(variance) / avgViews;
+    }
+
+    private String scoreToLabel(double score) {
+        if (score >= 70.0) return "높음";
+        if (score >= 40.0) return "보통";
+        return "낮음";
     }
 
     private ChannelBrandHistoryAnalysisResponse emptyAnalysis() {
