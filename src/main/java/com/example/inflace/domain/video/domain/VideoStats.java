@@ -51,25 +51,25 @@ public class VideoStats extends BaseTimeEntity {
     public VideoStats(Video video, Long viewCount, Long likeCount, Long commentCount,
                       Double vph, Double outlierScore, Double risingScore, LocalDateTime collectedAt) {
         this.video = video;
-        this.viewCount = viewCount;
-        this.likeCount = likeCount;
-        this.commentCount = commentCount;
-        this.vph = vph;
-        this.outlierScore = outlierScore;
+        this.viewCount = viewCount == null ? 0L : viewCount;
+        this.likeCount = likeCount == null ? 0L : likeCount;
+        this.commentCount = commentCount == null ? 0L : commentCount;
+        this.vph = vph == null ? 0.0 : vph;
+        this.outlierScore = outlierScore == null ? 0.0 : outlierScore;
         this.risingScore = risingScore;
-        this.collectedAt = collectedAt;
+        this.collectedAt = collectedAt == null ? LocalDateTime.now() : collectedAt;
     }
 
     public void update(Long viewCount, Long likeCount, Long commentCount,
                        Double vph, Double outlierScore, Double risingScore,
                        LocalDateTime collectedAt) {
-        this.viewCount = viewCount;
-        this.likeCount = likeCount;
-        this.commentCount = commentCount;
-        this.vph = vph;
-        this.outlierScore = outlierScore;
+        this.viewCount = viewCount == null ? 0L : viewCount;
+        this.likeCount = likeCount == null ? 0L : likeCount;
+        this.commentCount = commentCount == null ? 0L : commentCount;
+        this.vph = vph == null ? 0.0 : vph;
+        this.outlierScore = outlierScore == null ? 0.0 : outlierScore;
         this.risingScore = risingScore;
-        this.collectedAt = collectedAt;
+        this.collectedAt = collectedAt == null ? LocalDateTime.now() : collectedAt;
     }
 
     public void update(Long viewCount, Long likeCount, Long commentCount, LocalDateTime collectedAt) {
