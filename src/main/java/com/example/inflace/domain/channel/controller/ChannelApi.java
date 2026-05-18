@@ -47,7 +47,7 @@ public interface ChannelApi {
             summary = "인기 급상승 영상 Top 5",
             description = "영상 타입별로 채널의 인기 급상승 Top 5 영상을 조회합니다. "
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<ChannelTopVideosResponse> getTopVideos(
             @PathVariable Long channelId,
             @RequestParam String contentType
@@ -57,42 +57,42 @@ public interface ChannelApi {
             summary = "참여율 차트",
             description = "채널의 롱폼/쇼츠 평균 참여율과 영상별 참여율 Top 5 리스트를 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<ChannelEngagementRateResponse> getEngagementRateVideos(@PathVariable Long channelId);
 
     @Operation(
             summary = "신규 유입 비율 TOP 영상",
             description = "채널의 신규 유입 비율이 높은 상위 5개 영상을 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.ANALYTICS_DATA_NOT_FOUND})
     BaseResponse<ChannelNewSubscriberResponse> getNewSubscriberVideos(@PathVariable Long channelId);
 
     @Operation(
             summary = "핵심 지표 카드(KPI)",
             description = "채널의 핵심 지표 카드를 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
     BaseResponse<ChannelKpiResponse> getChannelKpi(@PathVariable Long channelId);
 
     @Operation(
             summary = "구독자/비구독자 비율",
             description = "채널의 구독자 조회수와 비구독자 조회수 비율을 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.CHANNEL_STATS_NOT_FOUND, ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND, ErrorDefine.ANALYTICS_DATA_NOT_FOUND})
     BaseResponse<ChannelSubscriberPatternResponse> getSubscriberPattern(@PathVariable Long channelId);
 
     @Operation(
             summary = "구독자 분포",
             description = "채널의 국가별, 연령별, 성별 분포를 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.CHANNEL_STATS_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND})
     BaseResponse<ChannelSubscriberDistributionResponse> getSubscriberDistribution(@PathVariable Long channelId);
 
     @Operation(
             summary = "영상 목록 조회",
             description = "내 채널의 영상목록을 조회합니다. 기간 필터는 yyyy-MM-dd 형식의 startDate/endDate로 전달합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.INVALID_DATE_FORMAT, ErrorDefine.INVALID_DATE_RANGE})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.INVALID_DATE_FORMAT, ErrorDefine.INVALID_DATE_RANGE})
     BaseResponse<CursorSliceResponse<ChannelVideosResponse.ChannelVideoItem>> getChannelVideos(
             @PathVariable Long channelId,
             @RequestParam(required = false) String keyword,
@@ -109,7 +109,7 @@ public interface ChannelApi {
             summary = "구독자 추이",
             description = "범위별 구독자 추이 6개 포인트를 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<ChannelSubscriberTrendResponse> getSubscriberTrend(
             @PathVariable Long channelId,
             @RequestParam(defaultValue = "30D") String range

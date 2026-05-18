@@ -28,7 +28,7 @@ public interface VideoApi {
                     "조회수, 좋아요, 댓글, 공유수, CTR, 참여율, 신규 유입률, VPH 등 주요 지표를 반환합니다. <br>" +
                     "DB에 데이터가 없을 경우 YouTube Analytics API를 호출하여 저장 후 반환합니다."
     )
-    @ApiErrorDefines(ErrorDefine.VIDEO_NOT_FOUND)
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.VIDEO_STATS_NOT_FOUND, ErrorDefine.ANALYTICS_DATA_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<VideoStatsResponse> getVideoStats(@PathVariable("videoId") Long videoId);
 
     @Operation(
