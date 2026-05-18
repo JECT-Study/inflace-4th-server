@@ -69,6 +69,7 @@ public class YoutubeChannelDataSyncService {
         upsertChannelStats(channel, channelItem.statistics());
         syncChannelVideos(googleId, channel, channelItem.statistics());
         refreshCalculatedChannelStats(channel);
+        refreshVideoRisingScores(channel);
         refreshChannelCategories(channel);
 
         return new ChannelDataSyncResult(channel, videoRepository.findByChannelId(channel.getId()));
