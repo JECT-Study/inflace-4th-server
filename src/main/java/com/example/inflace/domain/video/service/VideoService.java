@@ -62,7 +62,9 @@ public class VideoService {
 
         VideoStats videoStats = videoStatsRepository.findByVideoId(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
-        VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId).orElse(null);
+        VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND));
+        validateVideoStatsAnalytics(videoAnalytics);
 
         return VideoStatsResponse.from(videoStats, videoAnalytics, 0L, 0L);
     }
@@ -127,6 +129,15 @@ public class VideoService {
     private void validateVideoOwnership(Video video, UUID userId) {
         if (!video.getChannel().getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
+        }
+    }
+
+    private void validateVideoStatsAnalytics(VideoAnalytics analytics) {
+        if (analytics.getShareCount() == null
+                || analytics.getSubscribersGained() == null
+                || analytics.getCtr() == null
+                || analytics.getUnsubscribedViewCount() == null) {
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
         }
     }
 

@@ -130,6 +130,7 @@ public class ChannelService {
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
             VideoAnalytics videoAnalytics = videoAnalyticsMap.get(video.getId());
+            validateNewSubscriberAnalytics(videoStats, videoAnalytics);
             items.add(ChannelNewSubscriberResponse.NewSubscriberVideo.from(rank, video, videoStats, videoAnalytics));
             rank++;
         }
@@ -192,6 +193,17 @@ public class ChannelService {
         }
     }
 
+    private void validateNewSubscriberAnalytics(VideoStats videoStats, VideoAnalytics videoAnalytics) {
+        if (videoStats == null
+                || videoStats.getViewCount() == null
+                || videoAnalytics == null
+                || videoAnalytics.getSubscribersGained() == null
+                || videoAnalytics.getUnsubscribedViewerPercentage() == null
+                || videoAnalytics.getAverageViewPercentage() == null) {
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
+        }
+    }
+
     public ChannelSubscriberPatternResponse getSubscriberPattern(Long channelId) {
         validateChannelExists(channelId);
 
@@ -199,11 +211,18 @@ public class ChannelService {
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
         ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
+        validateSubscriberPatternAnalytics(channelStats, channelAnalytics);
 
         return ChannelSubscriberPatternResponse.from(
                 channelStats.getTotalViewCount(),
                 channelAnalytics.getSubscriberViewCount()
         );
+    }
+
+    private void validateSubscriberPatternAnalytics(ChannelStats channelStats, ChannelAnalytics channelAnalytics) {
+        if (channelStats.getTotalViewCount() == null || channelAnalytics.getSubscriberViewCount() == null) {
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
+        }
     }
 
     @ReadOnlyTransactional
