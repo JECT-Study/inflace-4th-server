@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Inflace 안내'">Inflace 안내</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f6f7f9; font-family: Arial, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: #1f2937;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f6f7f9; padding: 32px 16px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid #e5e7eb;">
+                <tr>
+                    <td style="padding: 28px 32px 16px;">
+                        <h1 style="margin: 0; font-size: 22px; line-height: 1.35; color: #111827;" th:text="${title} ?: 'Inflace 안내 메일입니다'">
+                            Inflace 안내 메일입니다
+                        </h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0 32px 24px;">
+                        <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7;" th:if="${name != null}">
+                            <span th:text="${name}">사용자</span>님, 안녕하세요.
+                        </p>
+                        <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.7;" th:text="${message} ?: '요청하신 안내 내용을 전달드립니다.'">
+                            요청하신 안내 내용을 전달드립니다.
+                        </p>
+                        <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #6b7280;" th:if="${description != null}" th:text="${description}">
+                            추가 안내 문구가 표시됩니다.
+                        </p>
+                    </td>
+                </tr>
+                <tr th:if="${actionUrl != null and actionText != null}">
+                    <td style="padding: 0 32px 28px;">
+                        <a th:href="${actionUrl}" th:text="${actionText}" style="display: inline-block; padding: 12px 18px; background-color: #111827; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700;">
+                            자세히 보기
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 20px 32px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                        본 메일은 Inflace 서비스 이용 과정에서 발송된 안내 메일입니다.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
