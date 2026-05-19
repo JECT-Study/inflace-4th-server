@@ -77,7 +77,10 @@ public class ChannelService {
 
     @ReadOnlyTransactional
     public ChannelTopVideosResponse getTopVideos(Long channelId, String contentType) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         VideoType parsedContentType;
         try {
@@ -100,7 +103,10 @@ public class ChannelService {
 
     @ReadOnlyTransactional
     public ChannelEngagementRateResponse getEngagementRateVideos(Long channelId) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         List<Video> allVideos = videoRepository.findByChannelId(channelId);
         Map<Long, VideoStats> allVideoStatsMap = getVideoStatsMap(allVideos);
@@ -115,7 +121,10 @@ public class ChannelService {
 
     @ReadOnlyTransactional
     public ChannelNewSubscriberResponse getNewSubscriberVideos(Long channelId) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         List<Video> videos = videoRepository.findTopNewSubscriberVideos(
                 channelId,
@@ -130,6 +139,7 @@ public class ChannelService {
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
             VideoAnalytics videoAnalytics = videoAnalyticsMap.get(video.getId());
+            validateNewSubscriberAnalytics(videoStats, videoAnalytics);
             items.add(ChannelNewSubscriberResponse.NewSubscriberVideo.from(rank, video, videoStats, videoAnalytics));
             rank++;
         }
@@ -139,7 +149,10 @@ public class ChannelService {
 
     @ReadOnlyTransactional
     public ChannelKpiResponse getChannelKpi(Long channelId) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
@@ -192,13 +205,28 @@ public class ChannelService {
         }
     }
 
+    private void validateNewSubscriberAnalytics(VideoStats videoStats, VideoAnalytics videoAnalytics) {
+        if (videoStats == null
+                || videoStats.getViewCount() == null
+                || videoAnalytics == null
+                || videoAnalytics.getSubscribersGained() == null
+                || videoAnalytics.getUnsubscribedViewerPercentage() == null
+                || videoAnalytics.getAverageViewPercentage() == null) {
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
+        }
+    }
+
     public ChannelSubscriberPatternResponse getSubscriberPattern(Long channelId) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
         ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
+        validateSubscriberPatternAnalytics(channelStats, channelAnalytics);
 
         return ChannelSubscriberPatternResponse.from(
                 channelStats.getTotalViewCount(),
@@ -206,9 +234,18 @@ public class ChannelService {
         );
     }
 
+    private void validateSubscriberPatternAnalytics(ChannelStats channelStats, ChannelAnalytics channelAnalytics) {
+        if (channelStats.getTotalViewCount() == null || channelAnalytics.getSubscriberViewCount() == null) {
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
+        }
+    }
+
     @ReadOnlyTransactional
     public ChannelSubscriberDistributionResponse getSubscriberDistribution(Long channelId) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
@@ -233,7 +270,10 @@ public class ChannelService {
             String cursor,
             Integer size
     ) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         ChannelVideoSort parsedSort;
         try {
@@ -290,7 +330,10 @@ public class ChannelService {
 
     @ReadOnlyTransactional
     public ChannelSubscriberTrendResponse getSubscriberTrend(Long channelId, String rangeValue) {
-        validateChannelExists(channelId);
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        validateChannelOwnership(channel, userId);
 
         ChannelSubscriberTrendRange range = ChannelSubscriberTrendRange.from(rangeValue);
         SubscriberLog latestHistory = subscriberLogRepository

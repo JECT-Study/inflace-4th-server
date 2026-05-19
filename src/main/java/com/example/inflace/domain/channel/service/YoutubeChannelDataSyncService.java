@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -100,7 +101,7 @@ public class YoutubeChannelDataSyncService {
     }
 
     private void upsertChannelStats(Channel channel, YoutubeDataChannelResponse.Statistics statistics) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Long subscriberCount = statistics == null ? null : toLong(statistics.subscriberCount());
         Long totalViewCount = statistics == null ? null : toLong(statistics.viewCount());
         Long totalVideoCount = statistics == null ? null : toLong(statistics.videoCount());
@@ -186,15 +187,13 @@ public class YoutubeChannelDataSyncService {
             ChannelStats channelStats,
             YoutubeDataChannelResponse.Statistics channelStatistics
     ) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         YoutubeDataVideoResponse.Statistics statistics = item.statistics();
         Long viewCount = statistics == null ? null : toLong(statistics.viewCount());
         Long likeCount = statistics == null ? null : toLong(statistics.likeCount());
         Long commentCount = statistics == null ? null : toLong(statistics.commentCount());
         Double vph = calculateViewsPerHour(viewCount, video.getPublishedAt(), now);
         Double outlierScore = calculateOutlierScore(viewCount, channelStats, channelStatistics);
-        Double engagementRate = calculateEngagementRate(likeCount, commentCount, viewCount);
-        Double risingScore = calculateRisingScore(engagementRate, channelStats.getAvgEngagementRate(), outlierScore);
 
         videoStatsRepository.findByVideoId(video.getId())
                 .ifPresentOrElse(
@@ -204,7 +203,7 @@ public class YoutubeChannelDataSyncService {
                                 commentCount,
                                 vph,
                                 outlierScore,
-                                risingScore,
+                                null,
                                 now
                         ),
                         () -> videoStatsRepository.save(VideoStats.builder()
@@ -214,7 +213,7 @@ public class YoutubeChannelDataSyncService {
                                 .commentCount(commentCount)
                                 .vph(vph)
                                 .outlierScore(outlierScore)
-                                .risingScore(risingScore)
+                                .risingScore(null)
                                 .collectedAt(now)
                                 .build())
                 );
@@ -256,7 +255,7 @@ public class YoutubeChannelDataSyncService {
 
         List<Video> videos = videoRepository.findByChannelId(channel.getId());
         if (videos.isEmpty()) {
-            channelStats.updateCalculatedMetrics(0, 0.0, 0.0, 0.0, LocalDateTime.now());
+            channelStats.updateCalculatedMetrics(0, 0.0, 0.0, 0.0, LocalDateTime.now(ZoneOffset.UTC));
             return;
         }
 
@@ -265,35 +264,35 @@ public class YoutubeChannelDataSyncService {
                 ).stream()
                 .collect(Collectors.toMap(videoStats -> videoStats.getVideo().getId(), Function.identity()));
 
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now(ZoneOffset.UTC).minusDays(30);
         int recentUploadCount30d = (int) videos.stream()
                 .filter(video -> video.getPublishedAt() != null && !video.getPublishedAt().isBefore(thirtyDaysAgo))
                 .count();
 
         List<Video> recentVideos = videos.stream()
+                .filter(video -> video.getPublishedAt() != null && !video.getPublishedAt().isBefore(thirtyDaysAgo))
                 .sorted(Comparator.comparing(Video::getPublishedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .limit(RECENT_VIDEO_SAMPLE_SIZE)
                 .toList();
 
-        double avgViewsRecentN = recentVideos.stream()
-                .map(Video::getId)
-                .map(videoStatsMap::get)
-                .filter(videoStats -> videoStats != null && videoStats.getViewCount() != null)
-                .mapToLong(VideoStats::getViewCount)
-                .average()
-                .orElse(0.0);
+        long totalViews = 0;
+        long totalLikes = 0;
+        long totalComments = 0;
+        for (Video video : recentVideos) {
+            VideoStats videoStats = videoStatsMap.get(video.getId());
+            if (videoStats == null) {
+                continue;
+            }
+            totalViews += defaultLong(videoStats.getViewCount());
+            totalLikes += defaultLong(videoStats.getLikeCount());
+            totalComments += defaultLong(videoStats.getCommentCount());
+        }
 
-        double avgEngagementRateRecentN = recentVideos.stream()
-                .map(Video::getId)
-                .map(videoStatsMap::get)
-                .filter(videoStats -> videoStats != null)
-                .mapToDouble(videoStats -> AnalyticsCalculator.engagementRate(
-                        videoStats.getLikeCount(),
-                        videoStats.getCommentCount(),
-                        videoStats.getViewCount()
-                ))
-                .average()
-                .orElse(0.0);
+        double avgViewsRecentN = recentVideos.isEmpty()
+                ? 0.0
+                : round((double) totalViews / recentVideos.size(), 2);
+        double avgEngagementRateRecentN = totalViews > 0
+                ? round(((double) (totalLikes + totalComments) / totalViews) * 100.0, 2)
+                : 0.0;
 
         double avgOutlierScoreRecentExcludingTop5Pct =
                 calculateAverageOutlierScoreRecentExcludingTop5Pct(recentVideos, videoStatsMap, channelStats);
@@ -303,7 +302,7 @@ public class YoutubeChannelDataSyncService {
                 avgViewsRecentN,
                 avgEngagementRateRecentN,
                 avgOutlierScoreRecentExcludingTop5Pct,
-                LocalDateTime.now()
+                LocalDateTime.now(ZoneOffset.UTC)
         );
     }
 
@@ -325,7 +324,7 @@ public class YoutubeChannelDataSyncService {
                 ).stream()
                 .collect(Collectors.toMap(videoStats -> videoStats.getVideo().getId(), Function.identity()));
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         for (Video video : videos) {
             VideoStats videoStats = videoStatsMap.get(video.getId());
             if (videoStats == null) {
@@ -466,7 +465,7 @@ public class YoutubeChannelDataSyncService {
         if (!StringUtils.hasText(publishedAt)) {
             return null;
         }
-        return OffsetDateTime.parse(publishedAt).toLocalDateTime();
+        return OffsetDateTime.parse(publishedAt).withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
     }
 
     private Integer parseDurationSeconds(YoutubeDataVideoResponse.ContentDetails contentDetails) {
@@ -540,10 +539,8 @@ public class YoutubeChannelDataSyncService {
             ChannelStats channelStats
     ) {
         List<Double> outlierScores = recentVideos.stream()
-                .map(Video::getId)
-                .map(videoStatsMap::get)
-                .filter(videoStats -> videoStats != null)
-                .map(videoStats -> calculateOutlierScore(videoStats.getViewCount(), channelStats, null))
+                .map(video -> videoStatsMap.get(video.getId()))
+                .map(videoStats -> calculateOutlierScore(videoStats == null ? 0L : videoStats.getViewCount(), channelStats, null))
                 .filter(Objects::nonNull)
                 .sorted(Comparator.reverseOrder())
                 .toList();

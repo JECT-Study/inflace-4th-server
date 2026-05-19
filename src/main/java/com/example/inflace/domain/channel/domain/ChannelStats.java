@@ -59,22 +59,22 @@ public class ChannelStats extends BaseTimeEntity {
                         Double avgEngagementRateRecent, Double avgOutlierScoreRecentExcludingTop5Pct,
                         LocalDateTime collectedAt) {
         this.channel = channel;
-        this.subscriberCount = subscriberCount;
-        this.totalViewCount = totalViewCount;
-        this.totalVideoCount = totalVideoCount;
-        this.recentUploadCount30d = recentUploadCount30d;
-        this.avgViewsRecent = avgViewsRecent;
-        this.avgEngagementRateRecent = avgEngagementRateRecent;
-        this.avgOutlierScoreRecentExcludingTop5Pct = avgOutlierScoreRecentExcludingTop5Pct;
-        this.collectedAt = collectedAt;
+        this.subscriberCount = subscriberCount == null ? 0L : subscriberCount;
+        this.totalViewCount = totalViewCount == null ? 0L : totalViewCount;
+        this.totalVideoCount = totalVideoCount == null ? 0L : totalVideoCount;
+        this.recentUploadCount30d = recentUploadCount30d == null ? 0 : recentUploadCount30d;
+        this.avgViewsRecent = avgViewsRecent == null ? 0.0 : avgViewsRecent;
+        this.avgEngagementRateRecent = avgEngagementRateRecent == null ? 0.0 : avgEngagementRateRecent;
+        this.avgOutlierScoreRecentExcludingTop5Pct = avgOutlierScoreRecentExcludingTop5Pct == null ? 0.0 : avgOutlierScoreRecentExcludingTop5Pct;
+        this.collectedAt = collectedAt == null ? LocalDateTime.now() : collectedAt;
     }
 
     public void update(Long subscriberCount, Long totalViewCount, Long totalVideoCount,
                        LocalDateTime collectedAt) {
-        this.subscriberCount = subscriberCount;
-        this.totalViewCount = totalViewCount;
-        this.totalVideoCount = totalVideoCount;
-        this.collectedAt = collectedAt;
+        this.subscriberCount = subscriberCount == null ? 0L : subscriberCount;
+        this.totalViewCount = totalViewCount == null ? 0L : totalViewCount;
+        this.totalVideoCount = totalVideoCount == null ? 0L : totalVideoCount;
+        this.collectedAt = collectedAt == null ? LocalDateTime.now() : collectedAt;
     }
 
     public void updateCalculatedMetrics(
@@ -84,11 +84,11 @@ public class ChannelStats extends BaseTimeEntity {
             Double avgOutlierScoreRecentExcludingTop5Pct,
             LocalDateTime collectedAt
     ) {
-        this.recentUploadCount30d = recentUploadCount30d;
-        this.avgViewsRecent = avgViewsRecent;
-        this.avgEngagementRateRecent = avgEngagementRateRecent;
-        this.avgOutlierScoreRecentExcludingTop5Pct = avgOutlierScoreRecentExcludingTop5Pct;
-        this.collectedAt = collectedAt;
+        this.recentUploadCount30d = recentUploadCount30d == null ? 0 : recentUploadCount30d;
+        this.avgViewsRecent = avgViewsRecent == null ? 0.0 : avgViewsRecent;
+        this.avgEngagementRateRecent = avgEngagementRateRecent == null ? 0.0 : avgEngagementRateRecent;
+        this.avgOutlierScoreRecentExcludingTop5Pct = avgOutlierScoreRecentExcludingTop5Pct == null ? 0.0 : avgOutlierScoreRecentExcludingTop5Pct;
+        this.collectedAt = collectedAt == null ? LocalDateTime.now() : collectedAt;
     }
 
     public Double getAvgEngagementRate() {
