@@ -46,6 +46,20 @@ public interface UserApi {
     BaseResponse<UserProfileResponse> updatePreferences(@RequestBody UserPreferenceUpdateRequest request);
 
     @Operation(
+            summary = "마이페이지 프로필 이미지 업로드 URL 발급",
+            description = "현재 로그인한 유저의 프로필 이미지를 S3에 직접 업로드할 수 있는 presigned URL을 발급합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.INVALID_PROFILE_IMAGE, ErrorDefine.PROFILE_IMAGE_UPLOAD_FAILED})
+    BaseResponse<ProfileImageUploadUrlResponse> createProfileImageUploadUrl(@RequestBody ProfileImageUploadUrlRequest request);
+
+    @Operation(
+            summary = "마이페이지 프로필 이미지 수정",
+            description = "S3 업로드가 완료된 프로필 이미지 object key를 검증하고 현재 로그인한 유저의 프로필 이미지 URL을 수정합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND, ErrorDefine.INVALID_PROFILE_IMAGE, ErrorDefine.PROFILE_IMAGE_UPLOAD_FAILED})
+    BaseResponse<UserProfileResponse> updateProfileImage(@RequestBody ProfileImageUpdateRequest request);
+
+    @Operation(
             summary = "회원 탈퇴",
             description = "현재 로그인된 유저를 영구 삭제합니다 (복구 불가)"
     )

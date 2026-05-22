@@ -64,4 +64,8 @@ public class User extends SoftDeleteTimeEntity {
 
         return user;
     }
+
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
 }

@@ -20,6 +20,9 @@ import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.user.infra.UserRegistrationResult;
 import com.example.inflace.domain.user.infra.UserTypeRepository;
 import com.example.inflace.domain.user.presentation.OnboardingRequest;
+import com.example.inflace.domain.user.presentation.ProfileImageUpdateRequest;
+import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlRequest;
+import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlResponse;
 import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
 import com.example.inflace.domain.user.presentation.UserPreferenceUpdateRequest;
 import com.example.inflace.domain.user.presentation.UserProfileResponse;
@@ -30,6 +33,7 @@ import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.security.util.SecurityUtils;
+import com.example.inflace.infra.aws.s3.S3ImageStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +54,7 @@ public class UserService {
     private final ChannelCategoryRepository channelCategoryRepository;
     private final ChannelStatsRepository channelStatsRepository;
     private final VideoRepository videoRepository;
+    private final S3ImageStorageService imageStorageService;
 
     @Transactional
     public UserRegistrationResult registerIfNotExists(String sub, String name, String email, String profileImage, Plan plan) {
@@ -143,6 +148,23 @@ public class UserService {
         userNeedRepository.saveAll(request.needs().stream()
                 .map(need -> new UserNeed(need, user))
                 .toList());
+
+        return getProfile();
+    }
+
+    public ProfileImageUploadUrlResponse createProfileImageUploadUrl(ProfileImageUploadUrlRequest request) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        return imageStorageService.createProfileImageUploadUrl(userId, request.contentType(), request.fileSize());
+    }
+
+    @Transactional
+    public UserProfileResponse updateProfileImage(ProfileImageUpdateRequest request) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        String profileImageUrl = imageStorageService.confirmProfileImageUpload(userId, request.objectKey());
+        user.updateProfileImage(profileImageUrl);
 
         return getProfile();
     }

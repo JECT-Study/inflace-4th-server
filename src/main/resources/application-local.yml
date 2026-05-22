@@ -34,3 +34,10 @@ cors:
   allowed:
     origins:
       - http://localhost:3000
+
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET:inflace-4th-prod}
+    region: ${AWS_REGION:ap-northeast-2}
+    profile-image-prefix: ${AWS_S3_PROFILE_IMAGE_PREFIX:users}
+    public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
