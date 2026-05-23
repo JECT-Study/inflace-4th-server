@@ -20,7 +20,7 @@ public record ChannelBrandHistorySearchCondition(
         @Schema(description = "영상 카테고리 ID", example = "26")
         String categoryId,
 
-        @Schema(description = "정렬 기준", allowableValues = {"LATEST", "VIEW_COUNT"}, defaultValue = "LATEST")
+        @Schema(description = "정렬 기준", allowableValues = {"LATEST", "VIEW_COUNT", "LIKE_COUNT"}, defaultValue = "LATEST")
         String sortCriteria,
 
         @Schema(description = "정렬 방향", allowableValues = {"DESC"}, defaultValue = "DESC")
