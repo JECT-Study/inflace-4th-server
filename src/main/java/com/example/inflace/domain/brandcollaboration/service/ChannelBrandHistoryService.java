@@ -106,12 +106,15 @@ public class ChannelBrandHistoryService {
                 .collect(Collectors.toMap(Video::getId, v -> v));
 
         Map<Integer, String> categoryTitleMap = buildCategoryTitleMapFromDbVideos(videoMap.values());
-        Map<String, String> aliasToNameMap = collectAliasToNameMapFromDbVideos(videoMap.values());
+        Map<String, String> aliasToNameMap = collectAliasToNameMap(videoMap.values());
+
+        Integer parsedCategoryId = parseCategoryId(condition.categoryId());
 
         List<ChannelBrandHistoryVideoResponse> content = result.videos().stream()
                 .map(item -> {
                     Video video = videoMap.get(item.videoId());
                     if (video == null) return null;
+                    if (parsedCategoryId != null && !parsedCategoryId.equals(video.getCategoryId())) return null;
                     String categoryName = video.getCategoryId() != null
                             ? categoryTitleMap.get(video.getCategoryId()) : null;
                     String format = Boolean.TRUE.equals(item.isShort()) ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM;
@@ -208,12 +211,10 @@ public class ChannelBrandHistoryService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
-        if (categoryIds.isEmpty()) return Map.of();
-        return youtubeCategoryRepository.findByYoutubeCategoryIdIn(categoryIds).stream()
-                .collect(Collectors.toMap(c -> c.getYoutubeCategoryId(), c -> c.getTitle()));
+        return resolveCategoryTitleMap(categoryIds);
     }
 
-    private Map<String, String> collectAliasToNameMapFromDbVideos(Collection<Video> videos) {
+    private Map<String, String> collectAliasToNameMap(Collection<Video> videos) {
         Set<String> candidates = videos.stream()
                 .flatMap(v -> descriptionTokens(v.getDescription()))
                 .filter(StringUtils::hasText)
@@ -235,6 +236,15 @@ public class ChannelBrandHistoryService {
         try {
             return OffsetDateTime.parse(rfc3339).toLocalDate();
         } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Integer parseCategoryId(String categoryId) {
+        if (!StringUtils.hasText(categoryId)) return null;
+        try {
+            return Integer.parseInt(categoryId);
+        } catch (NumberFormatException e) {
             return null;
         }
     }
@@ -263,14 +273,12 @@ public class ChannelBrandHistoryService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+        return resolveCategoryTitleMap(categoryIds);
+    }
 
-        if (categoryIds.isEmpty()) {
-            return Map.of();
-        }
-
-        return youtubeCategoryRepository
-                .findByYoutubeCategoryIdIn(categoryIds)
-                .stream()
+    private Map<Integer, String> resolveCategoryTitleMap(List<Integer> categoryIds) {
+        if (categoryIds.isEmpty()) return Map.of();
+        return youtubeCategoryRepository.findByYoutubeCategoryIdIn(categoryIds).stream()
                 .collect(Collectors.toMap(c -> c.getYoutubeCategoryId(), c -> c.getTitle()));
     }
 
