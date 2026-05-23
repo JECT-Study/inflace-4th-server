@@ -56,6 +56,22 @@ public class UserController implements UserApi {
     }
 
     @Override
+    @PostMapping("/profile-image/upload-url")
+    public BaseResponse<ProfileImageUploadUrlResponse> createProfileImageUploadUrl(
+            @Valid @RequestBody ProfileImageUploadUrlRequest request
+    ) {
+        return new BaseResponse<>(userService.createProfileImageUploadUrl(request));
+    }
+
+    @Override
+    @PutMapping("/profile-image")
+    public BaseResponse<UserProfileResponse> updateProfileImage(
+            @Valid @RequestBody ProfileImageUpdateRequest request
+    ) {
+        return new BaseResponse<>(userService.updateProfileImage(request));
+    }
+
+    @Override
     @DeleteMapping("/delete")
     public ResponseEntity<BaseResponse<Void>> withdraw() {
         userService.withdraw();

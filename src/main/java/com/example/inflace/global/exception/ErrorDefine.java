@@ -23,6 +23,8 @@ public enum ErrorDefine {
     USER_NOT_FOUND("USER_404", HttpStatus.NOT_FOUND, "Not Found: User not found"),
     ONBOARDING_INVALID_REQUEST("USER_400", HttpStatus.BAD_REQUEST, "Bad Request: Role and need are required"),
     USER_ALREADY_DELETED("USER_404_DELETED", HttpStatus.NOT_FOUND, "Not Found: User already deleted"),
+    INVALID_PROFILE_IMAGE("USER_400_PROFILE_IMAGE", HttpStatus.BAD_REQUEST, "Bad Request: Invalid profile image"),
+    PROFILE_IMAGE_UPLOAD_FAILED("USER_500_PROFILE_IMAGE_UPLOAD", HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error: Failed to upload profile image"),
 
     // VIDEO
     VIDEO_NOT_FOUND("VIDEO_404", HttpStatus.NOT_FOUND, "Not Found: Video not found"),
