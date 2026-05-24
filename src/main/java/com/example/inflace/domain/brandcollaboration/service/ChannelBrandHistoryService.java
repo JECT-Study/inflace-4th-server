@@ -1,14 +1,23 @@
 package com.example.inflace.domain.brandcollaboration.service;
 
 import com.example.inflace.domain.brand.service.BrandService;
+import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.dto.ChannelVideoSliceResult;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
+import com.example.inflace.domain.channel.dto.request.ChannelVideoSort;
+import com.example.inflace.domain.channel.dto.request.ChannelVideosRequest;
+import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
+import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.service.insight.InfluencerInsightScoreCalculator;
 import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.brandcollaboration.dto.request.ChannelBrandHistorySearchCondition;
 import com.example.inflace.domain.brandcollaboration.dto.response.ChannelBrandHistoryAnalysisResponse;
 import com.example.inflace.domain.brandcollaboration.dto.response.ChannelBrandHistoryVideoResponse;
+import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
+import com.example.inflace.domain.video.repository.VideoQueryRepository;
+import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.global.client.YoutubeDataApiClient;
 import com.example.inflace.global.client.YoutubeSearchApiClient;
 import com.example.inflace.global.client.YoutubeSearchApiClient.YoutubeSearchListResponse;
@@ -18,14 +27,20 @@ import com.example.inflace.global.response.CursorSliceResponse;
 import com.example.inflace.global.response.CustomSort;
 import com.example.inflace.global.util.AnalyticsCalculator;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,55 +66,91 @@ public class ChannelBrandHistoryService {
     private final YoutubeCategoryRepository youtubeCategoryRepository;
     private final BrandService brandService;
     private final InfluencerInsightScoreCalculator scoreCalculator;
+    private final ChannelRepository channelRepository;
+    private final VideoQueryRepository videoQueryRepository;
+    private final VideoRepository videoRepository;
 
     public CursorSliceResponse<ChannelBrandHistoryVideoResponse> search(String channelId, ChannelBrandHistorySearchCondition condition) {
-        String youtubePageToken = decodePageToken(condition.cursor(), condition.sortCriteriaValue(), condition.sortOrder().name());
-
-        YoutubeSearchListResponse searchResponse = youtubeSearchApiClient.search(
-                null,
-                youtubePageToken,
-                condition.youtubeOrder(),
-                null,
-                condition.categoryId(),
-                null,
-                null,
-                condition.pageSize(),
-                condition.startDate(),
-                condition.endDate(),
-                channelId
-        );
-
-        if (searchResponse == null || searchResponse.items() == null || searchResponse.items().isEmpty()) {
+        Optional<Channel> channelOpt = channelRepository.findByYoutubeChannelId(channelId);
+        if (channelOpt.isEmpty()) {
             return emptyResponse(condition);
         }
 
-        List<String> videoIds = searchResponse.items().stream()
-                .map(item -> item.id().videoId())
-                .filter(StringUtils::hasText)
-                .toList();
+        String dbCursor = decodePageToken(condition.cursor(), condition.sortCriteriaValue(), condition.sortOrder().name());
+        ChannelVideosRequest request = new ChannelVideosRequest(
+                null,
+                parseRfc3339ToLocalDate(condition.startDate()),
+                parseRfc3339ToLocalDate(condition.endDate()),
+                toChannelVideoSort(condition.sortCriteriaValue()),
+                condition.videoFormatEnum(),
+                true,
+                dbCursor,
+                condition.pageSize(),
+                parseCategoryId(condition.categoryId())
+        );
 
-        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(videoIds, VIDEO_PARTS);
-        List<YoutubeDataVideoResponse.Item> filtered = applyVideoFormatFilter(videoItems, condition.videoFormatEnum());
+        ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelOpt.get().getId(), request);
 
-        if (filtered.isEmpty()) {
-            String nextCursor = encodeNextCursor(searchResponse.nextPageToken(), condition.sortCriteriaValue(), condition.sortOrder().name());
+        if (result.videos().isEmpty()) {
+            String nextCursor = encodeNextCursor(result.nextCursor(), condition.sortCriteriaValue(), condition.sortOrder().name());
             return new CursorSliceResponse<>(
                     List.of(),
-                    new CursorSliceResponse.PageInfo(condition.pageSize(), 0, nextCursor, nextCursor != null),
+                    new CursorSliceResponse.PageInfo(condition.pageSize(), 0, nextCursor, result.hasNext()),
                     CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
             );
         }
 
-        Map<Integer, String> categoryTitleMap = buildCategoryTitleMap(filtered);
-        Map<String, String> aliasToNameMap = collectAliasToNameMap(filtered);
-        List<ChannelBrandHistoryVideoResponse> content = buildContent(filtered, categoryTitleMap, aliasToNameMap);
+        List<Long> dbVideoIds = result.videos().stream()
+                .map(ChannelVideosResponse.ChannelVideoItem::videoId)
+                .toList();
+        Map<Long, Video> videoMap = videoRepository.findAllById(dbVideoIds).stream()
+                .collect(Collectors.toMap(Video::getId, v -> v));
 
-        String nextCursor = encodeNextCursor(searchResponse.nextPageToken(), condition.sortCriteriaValue(), condition.sortOrder().name());
+        Map<Integer, String> categoryTitleMap = buildCategoryTitleMapFromDbVideos(videoMap.values());
+        Map<String, String> aliasToNameMap = collectAliasToNameMap(videoMap.values());
+
+        List<ChannelBrandHistoryVideoResponse> content = result.videos().stream()
+                .map(item -> {
+                    Video video = videoMap.get(item.videoId());
+                    if (video == null) return null;
+                    String categoryName = video.getCategoryId() != null
+                            ? categoryTitleMap.get(video.getCategoryId()) : null;
+                    String format = Boolean.TRUE.equals(item.isShort()) ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM;
+                    List<String> brands = extractBrandsFromDescription(video.getDescription(), aliasToNameMap);
+                    String publishedAt = item.publishedAt() != null
+                            ? item.publishedAt().atOffset(ZoneOffset.UTC)
+                                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            : null;
+                    return new ChannelBrandHistoryVideoResponse(
+                            video.getYoutubeVideoId(),
+                            item.title(),
+                            item.thumbnailUrl(),
+                            publishedAt,
+                            item.viewCount() != null ? item.viewCount() : 0L,
+                            item.likeCount() != null ? item.likeCount() : 0L,
+                            item.commentCount() != null ? item.commentCount() : 0L,
+                            format,
+                            categoryName,
+                            brands
+                    );
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        String nextCursor = encodeNextCursor(result.nextCursor(), condition.sortCriteriaValue(), condition.sortOrder().name());
         return new CursorSliceResponse<>(
                 content,
-                new CursorSliceResponse.PageInfo(condition.pageSize(), content.size(), nextCursor, nextCursor != null),
+                new CursorSliceResponse.PageInfo(condition.pageSize(), content.size(), nextCursor, result.hasNext()),
                 CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
         );
+    }
+
+    private ChannelVideoSort toChannelVideoSort(String sortCriteria) {
+        return switch (sortCriteria) {
+            case "VIEW_COUNT" -> ChannelVideoSort.VIEWS;
+            case "LIKE_COUNT" -> ChannelVideoSort.LIKES;
+            default -> ChannelVideoSort.LATEST;
+        };
     }
 
     // https://developers.google.com/youtube/v3/docs/search/list
@@ -152,6 +203,51 @@ public class ChannelBrandHistoryService {
         );
     }
 
+    private Map<Integer, String> buildCategoryTitleMapFromDbVideos(Collection<Video> videos) {
+        List<Integer> categoryIds = videos.stream()
+                .map(Video::getCategoryId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        return resolveCategoryTitleMap(categoryIds);
+    }
+
+    private Map<String, String> collectAliasToNameMap(Collection<Video> videos) {
+        Set<String> candidates = videos.stream()
+                .flatMap(v -> descriptionTokens(v.getDescription()))
+                .filter(StringUtils::hasText)
+                .map(token -> token.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
+        return brandService.resolveAliasToNameMap(candidates);
+    }
+
+    private List<String> extractBrandsFromDescription(String description, Map<String, String> aliasToNameMap) {
+        return descriptionTokens(description)
+                .filter(StringUtils::hasText)
+                .map(token -> aliasToNameMap.get(token.toLowerCase(Locale.ROOT)))
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private LocalDate parseRfc3339ToLocalDate(String rfc3339) {
+        if (!StringUtils.hasText(rfc3339)) return null;
+        try {
+            return OffsetDateTime.parse(rfc3339).toLocalDate();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Integer parseCategoryId(String categoryId) {
+        if (!StringUtils.hasText(categoryId)) return null;
+        try {
+            return Integer.parseInt(categoryId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private List<YoutubeDataVideoResponse.Item> applyVideoFormatFilter(
             List<YoutubeDataVideoResponse.Item> items,
             ChannelVideoFormat format
@@ -176,63 +272,13 @@ public class ChannelBrandHistoryService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
+        return resolveCategoryTitleMap(categoryIds);
+    }
 
-        if (categoryIds.isEmpty()) {
-            return Map.of();
-        }
-
-        return youtubeCategoryRepository
-                .findByYoutubeCategoryIdIn(categoryIds)
-                .stream()
+    private Map<Integer, String> resolveCategoryTitleMap(List<Integer> categoryIds) {
+        if (categoryIds.isEmpty()) return Map.of();
+        return youtubeCategoryRepository.findByYoutubeCategoryIdIn(categoryIds).stream()
                 .collect(Collectors.toMap(c -> c.getYoutubeCategoryId(), c -> c.getTitle()));
-    }
-
-    private Map<String, String> collectAliasToNameMap(List<YoutubeDataVideoResponse.Item> items) {
-        Set<String> candidates = items.stream()
-                .filter(item -> item.snippet() != null)
-                .flatMap(item -> descriptionTokens(item.snippet().description()))
-                .filter(StringUtils::hasText)
-                .collect(Collectors.toSet());
-        return brandService.resolveAliasToNameMap(candidates);
-    }
-
-    private List<ChannelBrandHistoryVideoResponse> buildContent(
-            List<YoutubeDataVideoResponse.Item> items,
-            Map<Integer, String> categoryTitleMap,
-            Map<String, String> aliasToNameMap
-    ) {
-        return items.stream()
-                .map(item -> {
-                    String categoryName = resolveCategoryName(item, categoryTitleMap);
-                    String videoFormat = resolveVideoFormat(item);
-                    List<String> brands = extractBrands(item, aliasToNameMap);
-
-                    return new ChannelBrandHistoryVideoResponse(
-                            item.id(),
-                            item.snippet() != null ? item.snippet().title() : null,
-                            item.snippet() != null && item.snippet().thumbnails() != null
-                                    && item.snippet().thumbnails().high() != null
-                                    ? item.snippet().thumbnails().high().url() : null,
-                            item.snippet() != null ? item.snippet().publishedAt() : null,
-                            parseLong(item.statistics() != null ? item.statistics().viewCount() : null),
-                            parseLong(item.statistics() != null ? item.statistics().likeCount() : null),
-                            parseLong(item.statistics() != null ? item.statistics().commentCount() : null),
-                            videoFormat,
-                            categoryName,
-                            brands
-                    );
-                })
-                .toList();
-    }
-
-    private List<String> extractBrands(YoutubeDataVideoResponse.Item item, Map<String, String> aliasToNameMap) {
-        if (item.snippet() == null) return List.of();
-        return descriptionTokens(item.snippet().description())
-                .filter(StringUtils::hasText)
-                .map(token -> aliasToNameMap.get(token.toLowerCase(Locale.ROOT)))
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
     }
 
     private Stream<String> descriptionTokens(String description) {
@@ -328,18 +374,6 @@ public class ChannelBrandHistoryService {
         }
         int seconds = (int) AnalyticsCalculator.parseIso8601Duration(item.contentDetails().duration());
         return seconds <= SHORTS_MAX_DURATION_SECONDS ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM;
-    }
-
-    private String resolveCategoryName(YoutubeDataVideoResponse.Item item, Map<Integer, String> categoryTitleMap) {
-        if (item.snippet() == null || !StringUtils.hasText(item.snippet().categoryId())) {
-            return null;
-        }
-        try {
-            int categoryId = Integer.parseInt(item.snippet().categoryId());
-            return categoryTitleMap.get(categoryId);
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 
     private String decodePageToken(String cursor, String expectedSortCriteria, String expectedSortOrder) {

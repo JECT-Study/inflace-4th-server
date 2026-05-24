@@ -10,4 +10,5 @@ public interface ChannelRepository extends JpaRepository<Channel, Long> {
     boolean existsByUser_Id(UUID userId);
     Optional<Channel> findByUser_Id(UUID userId);
     Optional<Channel> findByUser_IdAndYoutubeChannelId(UUID userId, String youtubeChannelId);
+    Optional<Channel> findByYoutubeChannelId(String youtubeChannelId);
 }

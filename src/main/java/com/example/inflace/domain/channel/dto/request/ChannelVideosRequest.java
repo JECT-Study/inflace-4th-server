@@ -12,7 +12,8 @@ public record ChannelVideosRequest(
         ChannelVideoFormat format,
         Boolean isAd,
         String cursor,
-        Integer size
+        Integer size,
+        Integer categoryId
 ) {
     private static final int DEFAULT_SIZE = 12;
     private static final int MAX_SIZE = 50;
