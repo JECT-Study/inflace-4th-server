@@ -4,6 +4,7 @@ public final class SecurityAllowedPaths {
 
     private static final String[] ALLOWED_PATHS = {
             "/api/v1/auth/login",
+            "/api/v1/local/auth/login",
             "/api/v1/auth/reissue",
             "/health-check",
             "/v3/api-docs/**",

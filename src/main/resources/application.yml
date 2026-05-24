@@ -38,6 +38,10 @@ youtube:
   oauth:
     redirect-uri: ${YOUTUBE_REDIRECT_URI}
 
+local-login:
+  google-redirect-uri: ${GOOGLE_LOCAL_REDIRECT_URI}
+  youtube-redirect-uri: ${YOUTUBE_LOCAL_REDIRECT_URI}
+
 channel:
   sync:
     cooldown-millis: ${CHANNEL_SYNC_COOLDOWN_MILLIS}
