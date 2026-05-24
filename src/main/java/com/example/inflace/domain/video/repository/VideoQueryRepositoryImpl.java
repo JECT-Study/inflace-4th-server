@@ -49,6 +49,10 @@ public class VideoQueryRepositoryImpl implements VideoQueryRepository {
             predicate.and(video.isAdvertisement.eq(request.isAd()));
         }
 
+        if (request.categoryId() != null) {
+            predicate.and(video.categoryId.eq(request.categoryId()));
+        }
+
         BooleanExpression publishedAtCondition = buildPublishedAtCondition(request, video);
         if (publishedAtCondition != null) {
             predicate.and(publishedAtCondition);

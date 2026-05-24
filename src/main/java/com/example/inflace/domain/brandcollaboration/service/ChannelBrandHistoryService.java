@@ -85,7 +85,8 @@ public class ChannelBrandHistoryService {
                 condition.videoFormatEnum(),
                 true,
                 dbCursor,
-                condition.pageSize()
+                condition.pageSize(),
+                parseCategoryId(condition.categoryId())
         );
 
         ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelOpt.get().getId(), request);
@@ -108,13 +109,10 @@ public class ChannelBrandHistoryService {
         Map<Integer, String> categoryTitleMap = buildCategoryTitleMapFromDbVideos(videoMap.values());
         Map<String, String> aliasToNameMap = collectAliasToNameMap(videoMap.values());
 
-        Integer parsedCategoryId = parseCategoryId(condition.categoryId());
-
         List<ChannelBrandHistoryVideoResponse> content = result.videos().stream()
                 .map(item -> {
                     Video video = videoMap.get(item.videoId());
                     if (video == null) return null;
-                    if (parsedCategoryId != null && !parsedCategoryId.equals(video.getCategoryId())) return null;
                     String categoryName = video.getCategoryId() != null
                             ? categoryTitleMap.get(video.getCategoryId()) : null;
                     String format = Boolean.TRUE.equals(item.isShort()) ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM;
@@ -218,6 +216,7 @@ public class ChannelBrandHistoryService {
         Set<String> candidates = videos.stream()
                 .flatMap(v -> descriptionTokens(v.getDescription()))
                 .filter(StringUtils::hasText)
+                .map(token -> token.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toSet());
         return brandService.resolveAliasToNameMap(candidates);
     }

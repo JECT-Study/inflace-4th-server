@@ -300,7 +300,8 @@ public class ChannelService {
                 parsedFormat,
                 isAd,
                 cursor,
-                size
+                size,
+                null
         );
         ChannelVideoSliceResult result = videoQueryRepository.findChannelVideos(channelId, request);
 
