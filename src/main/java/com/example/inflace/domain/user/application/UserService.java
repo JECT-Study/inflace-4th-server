@@ -27,6 +27,7 @@ import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlRespons
 import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
 import com.example.inflace.domain.user.presentation.UserPreferenceUpdateRequest;
 import com.example.inflace.domain.user.presentation.UserProfileResponse;
+import com.example.inflace.domain.user.presentation.WithdrawRequest;
 import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.repository.VideoRepository;
@@ -73,9 +74,10 @@ public class UserService {
     }
 
     @Transactional
-    public void withdraw() {
+    public void withdraw(WithdrawRequest request) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         userCommandRepository.softDeleteUser(userId);
+        userCommandRepository.insertWithdrawalRecord(userId, request.reason(), request.detail());
         authTokenRedisService.deleteRefreshToken(userId);
         SecurityUtils.clear();
     }

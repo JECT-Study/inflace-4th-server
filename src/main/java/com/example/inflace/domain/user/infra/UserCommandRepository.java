@@ -3,6 +3,7 @@ package com.example.inflace.domain.user.infra;
 import com.example.inflace.domain.user.domain.enums.Need;
 import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.domain.enums.UserRole;
+import com.example.inflace.domain.user.domain.enums.WithdrawalReason;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.util.UuidV7Generator;
@@ -54,6 +55,13 @@ public class UserCommandRepository {
         if (affected == 0) {
             throw new ApiException(ErrorDefine.USER_NOT_FOUND);
         }
+    }
+
+    public void insertWithdrawalRecord(UUID userId, WithdrawalReason reason, String detail) {
+        jdbcTemplate.update(
+                "INSERT INTO user_withdrawal (user_id, reason, detail, created_at) VALUES (?, ?, ?, now())",
+                userId, reason.name(), detail
+        );
     }
 
     public void insertUserTypes(UUID userId, List<UserRole> roles) {

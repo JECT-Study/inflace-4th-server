@@ -76,8 +76,8 @@ public class UserController implements UserApi {
 
     @Override
     @DeleteMapping("/delete")
-    public ResponseEntity<BaseResponse<Void>> withdraw() {
-        userService.withdraw();
+    public ResponseEntity<BaseResponse<Void>> withdraw(@Valid @RequestBody WithdrawRequest request) {
+        userService.withdraw(request);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, authCookieUtils.buildDeleteRefreshTokenCookie().toString())
                 .body(new BaseResponse<>(null));
