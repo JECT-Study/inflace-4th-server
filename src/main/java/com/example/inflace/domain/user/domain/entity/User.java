@@ -13,6 +13,7 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
 
@@ -24,6 +25,7 @@ import java.util.UUID;
                 columnNames = "provider_id"
         )
 )
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends SoftDeleteTimeEntity {

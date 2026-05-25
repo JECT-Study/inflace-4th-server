@@ -1,6 +1,7 @@
 package com.example.inflace.domain.user.application;
 
 import com.example.inflace.domain.auth.presentation.dto.UserDetailsResponse;
+import com.example.inflace.domain.auth.service.AuthTokenRedisService;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
@@ -55,6 +56,7 @@ public class UserService {
     private final ChannelStatsRepository channelStatsRepository;
     private final VideoRepository videoRepository;
     private final S3ImageStorageService imageStorageService;
+    private final AuthTokenRedisService authTokenRedisService;
 
     @Transactional
     public UserRegistrationResult registerIfNotExists(String sub, String name, String email, String profileImage, Plan plan) {
@@ -73,7 +75,9 @@ public class UserService {
     @Transactional
     public void withdraw() {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
-        userCommandRepository.deleteUser(userId);
+        userCommandRepository.softDeleteUser(userId);
+        authTokenRedisService.deleteRefreshToken(userId);
+        SecurityUtils.clear();
     }
 
     @ReadOnlyTransactional

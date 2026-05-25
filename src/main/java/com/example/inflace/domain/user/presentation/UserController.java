@@ -1,9 +1,11 @@
 package com.example.inflace.domain.user.presentation;
 
+import com.example.inflace.domain.auth.util.AuthCookieUtils;
 import com.example.inflace.domain.user.application.UserService;
 import com.example.inflace.global.response.BaseResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController implements UserApi {
 
     private final UserService userService;
+    private final AuthCookieUtils authCookieUtils;
 
     @Override
     @PostMapping("/onboarding")
@@ -75,6 +78,8 @@ public class UserController implements UserApi {
     @DeleteMapping("/delete")
     public ResponseEntity<BaseResponse<Void>> withdraw() {
         userService.withdraw();
-        return ResponseEntity.ok(new BaseResponse<>(null));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, authCookieUtils.buildDeleteRefreshTokenCookie().toString())
+                .body(new BaseResponse<>(null));
     }
 }

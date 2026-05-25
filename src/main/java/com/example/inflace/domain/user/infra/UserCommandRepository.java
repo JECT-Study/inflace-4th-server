@@ -3,6 +3,8 @@ package com.example.inflace.domain.user.infra;
 import com.example.inflace.domain.user.domain.enums.Need;
 import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.domain.enums.UserRole;
+import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.util.UuidV7Generator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,6 +30,7 @@ public class UserCommandRepository {
         on conflict (provider_id)
         do update set
             provider_id = excluded.provider_id,
+            deleted_at = null,
             updated_at = now()
         returning user_id, (xmax = 0) as inserted
     """, newUserId, sub, name, email, profileImage, plan.name());
@@ -40,6 +43,17 @@ public class UserCommandRepository {
 
     public void deleteUser(UUID userId) {
         jdbcTemplate.update("delete from users where user_id = ?", userId);
+    }
+
+    public void softDeleteUser(UUID userId) {
+        int affected = jdbcTemplate.update("""
+                UPDATE users
+                SET deleted_at = now(), updated_at = now()
+                WHERE user_id = ? AND deleted_at IS NULL
+                """, userId);
+        if (affected == 0) {
+            throw new ApiException(ErrorDefine.USER_NOT_FOUND);
+        }
     }
 
     public void insertUserTypes(UUID userId, List<UserRole> roles) {
