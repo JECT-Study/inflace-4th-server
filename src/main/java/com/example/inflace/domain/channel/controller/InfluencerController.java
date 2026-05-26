@@ -55,7 +55,10 @@ public class InfluencerController implements InfluencerApi {
     public BaseResponse<GetInfluencerInsightResponse> getInfluencerInsight(
             @PathVariable Long channelId
     ) {
-        return new BaseResponse<>(influencerService.getInfluencerInsight(channelId));
+        return new BaseResponse<>(influencerService.getInfluencerInsight(
+                channelId,
+                SecurityUtils.getAuthenticatedUserId()
+        ));
     }
 
     @Override

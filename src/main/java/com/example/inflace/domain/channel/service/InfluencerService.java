@@ -104,10 +104,12 @@ public class InfluencerService {
         );
     }
 
-    public GetInfluencerInsightResponse getInfluencerInsight(Long channelId) {
+    public GetInfluencerInsightResponse getInfluencerInsight(Long channelId, UUID userId) {
         InfluencerInsightQueryResult queryResult = influencerInsightQueryService.getInsightQueryResult(channelId);
         influencerInsightRedisRepository.saveInsightQueryResult(channelId, queryResult);
-        return queryResult.insight();
+        boolean bookmarked = channelBookmarkRepository.existsByChannelIdAndUserId(channelId, userId);
+
+        return queryResult.insight().withBookmarked(bookmarked);
     }
 
     public GetInfluencerInsightSummaryResponse getInfluencerInsightSummary(Long channelId) {
