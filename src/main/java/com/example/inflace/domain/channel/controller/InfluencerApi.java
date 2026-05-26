@@ -87,6 +87,7 @@ public interface InfluencerApi {
                     
                     - 영상이 50개 이상인 채널만 조회 가능합니다.
                     - 기본 채널 정보로 `channelName`, `categories`, `channelHandle`, `joinedAt`, `subscriberCount`를 함께 반환합니다.
+                    - 로그인한 사용자의 즐겨찾기 여부(`bookmarked`)가 함께 내려갑니다.
                     - 이 API는 지표 조회 전용이며 OpenAI 요약 생성은 별도 API에서 수행합니다.
                     - 조회한 인사이트 계산값은 Redis에 캐시되며 AI 요약 API에서 재사용될 수 있습니다.
                     """
