@@ -1,6 +1,8 @@
 package com.example.inflace.domain.user.application;
 
 import com.example.inflace.domain.auth.presentation.dto.UserDetailsResponse;
+import com.example.inflace.domain.auth.service.AuthTokenRedisService;
+import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
@@ -26,6 +28,7 @@ import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlRespons
 import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
 import com.example.inflace.domain.user.presentation.UserPreferenceUpdateRequest;
 import com.example.inflace.domain.user.presentation.UserProfileResponse;
+import com.example.inflace.domain.user.presentation.WithdrawRequest;
 import com.example.inflace.domain.user.presentation.YoutubeLinkedResponse;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.repository.VideoRepository;
@@ -33,6 +36,8 @@ import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.security.util.SecurityUtils;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.example.inflace.infra.aws.s3.S3ImageStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -55,6 +60,8 @@ public class UserService {
     private final ChannelStatsRepository channelStatsRepository;
     private final VideoRepository videoRepository;
     private final S3ImageStorageService imageStorageService;
+    private final AuthTokenRedisService authTokenRedisService;
+    private final GoogleAccessTokenStore googleAccessTokenStore;
 
     @Transactional
     public UserRegistrationResult registerIfNotExists(String sub, String name, String email, String profileImage, Plan plan) {
@@ -71,9 +78,23 @@ public class UserService {
     }
 
     @Transactional
-    public void withdraw() {
+    public void withdraw(WithdrawRequest request) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
-        userCommandRepository.deleteUser(userId);
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        userCommandRepository.softDeleteUser(userId);
+        userCommandRepository.insertWithdrawalRecord(userId, request.reason(), request.detail());
+
+        String providerId = user.getProviderId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                authTokenRedisService.deleteRefreshToken(userId);
+                googleAccessTokenStore.deleteTokens(providerId);
+                SecurityUtils.clear();
+            }
+        });
     }
 
     @ReadOnlyTransactional

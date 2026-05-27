@@ -28,3 +28,9 @@ cors:
   allowed:
     origins:
       - https://www.inflace.site
+
+user:
+  withdrawal:
+    purge:
+      retention-days: ${USER_WITHDRAWAL_PURGE_RETENTION_DAYS}
+      cron: ${USER_WITHDRAWAL_PURGE_CRON}

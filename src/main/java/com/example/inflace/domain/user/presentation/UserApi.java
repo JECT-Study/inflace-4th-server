@@ -61,8 +61,8 @@ public interface UserApi {
 
     @Operation(
             summary = "회원 탈퇴",
-            description = "현재 로그인된 유저를 영구 삭제합니다 (복구 불가)"
+            description = "탈퇴 사유를 기재하고 현재 로그인된 유저를 탈퇴 처리합니다."
     )
     @ApiErrorDefines(ErrorDefine.USER_NOT_FOUND)
-    ResponseEntity<BaseResponse<Void>> withdraw();
+    ResponseEntity<BaseResponse<Void>> withdraw(@RequestBody WithdrawRequest request);
 }

@@ -28,3 +28,9 @@ cors:
     origins:
       - https://www.inflace.site
       - http://localhost:3000
+
+user:
+  withdrawal:
+    purge:
+      retention-days: ${USER_WITHDRAWAL_PURGE_RETENTION_DAYS}
+      cron: ${USER_WITHDRAWAL_PURGE_CRON}

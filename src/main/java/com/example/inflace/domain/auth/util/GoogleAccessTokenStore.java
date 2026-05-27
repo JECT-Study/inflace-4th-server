@@ -50,6 +50,11 @@ public class GoogleAccessTokenStore {
         return authTokenRedisRepository.get(googleRefreshTokenKey(googleId));
     }
 
+    public void deleteTokens(String googleId) {
+        authTokenRedisRepository.delete(googleAccessTokenKey(googleId));
+        authTokenRedisRepository.delete(googleRefreshTokenKey(googleId));
+    }
+
     private String googleAccessTokenKey(String googleId) {
         return GOOGLE_ACCESS_TOKEN_PREFIX + googleId;
     }
