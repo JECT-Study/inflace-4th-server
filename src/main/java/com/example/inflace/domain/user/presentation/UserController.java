@@ -1,6 +1,5 @@
 package com.example.inflace.domain.user.presentation;
 
-import com.example.inflace.domain.auth.presentation.dto.UserDetailsResponse;
 import com.example.inflace.domain.auth.util.AuthCookieUtils;
 import com.example.inflace.domain.user.application.UserService;
 import com.example.inflace.global.response.BaseResponse;
@@ -27,8 +26,8 @@ public class UserController implements UserApi {
 
     @Override
     @GetMapping("/me")
-    public BaseResponse<UserDetailsResponse> getUserDetailsInfo() {
-        return new BaseResponse<>(userService.getUserDetails(SecurityUtils.getAuthenticatedUserId()));
+    public BaseResponse<GetUserMeResponse> getUserDetailsInfo() {
+        return new BaseResponse<>(userService.getUserDetailsInfo(SecurityUtils.getAuthenticatedUserId()));
     }
 
     @Override

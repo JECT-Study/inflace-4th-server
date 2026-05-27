@@ -3,11 +3,7 @@ package com.example.inflace.domain.auth.facade;
 import com.example.inflace.domain.auth.application.OAuthStrategyRouter;
 import com.example.inflace.domain.auth.presentation.dto.*;
 import com.example.inflace.domain.auth.service.AuthTokenRedisService;
-import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.domain.channel.dto.response.UserChannelDetailsResponse;
-import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.application.UserService;
-import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.user.infra.UserRegistrationResult;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -23,10 +19,8 @@ public class AuthFacade {
 
     private final OAuthStrategyRouter oAuthStrategyRouter;
     private final UserService userService;
-    private final UserReadRepository userReadRepository;
     private final JwtProvider jwtProvider;
     private final AuthTokenRedisService authTokenRedisService;
-    private final ChannelRepository channelRepository;
 
     public AuthFacadeLoginResponse login(LoginRequest request) {
         OAuthUserInfo userInfo = oAuthStrategyRouter.getStrategy(request.provider()).getUserInfo(request.code());
@@ -41,8 +35,6 @@ public class AuthFacade {
 
         UserDetailsResponse userDetails = userService.getUserDetails(result.userId());
 
-        Channel channel = channelRepository.findByUser_Id(userDetails.id()).orElse(null);
-
         String accessToken = jwtProvider.createAccessToken(userDetails.id(), userDetails.userRoles());
         String refreshToken = jwtProvider.createRefreshToken(userDetails.id());
 
@@ -51,7 +43,7 @@ public class AuthFacade {
         return AuthFacadeLoginResponse.of(
                 new TokenData(accessToken, refreshToken),
                 userDetails,
-                channel != null ? UserChannelDetailsResponse.from(channel) : null
+                userService.getUserChannelDetails(userDetails.id())
         );
     }
 

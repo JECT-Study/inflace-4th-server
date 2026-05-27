@@ -1,6 +1,5 @@
 package com.example.inflace.domain.user.presentation;
 
-import com.example.inflace.domain.auth.presentation.dto.UserDetailsResponse;
 import com.example.inflace.global.exception.ApiErrorDefines;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.BaseResponse;
@@ -14,10 +13,10 @@ public interface UserApi {
 
     @Operation(
             summary = "현재 로그인 유저 정보 조회",
-            description = "로그인 응답의 userDetails와 동일한 현재 로그인 유저 정보를 조회합니다."
+            description = "로그인 응답의 userDetails, userChannelDetails와 동일한 현재 로그인 유저 정보를 조회합니다."
     )
     @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND})
-    BaseResponse<UserDetailsResponse> getUserDetailsInfo();
+    BaseResponse<GetUserMeResponse> getUserDetailsInfo();
 
     @Operation(
             summary = "온보딩",
