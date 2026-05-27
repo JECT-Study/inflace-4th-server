@@ -1,8 +1,10 @@
 package com.example.inflace.domain.user.presentation;
 
+import com.example.inflace.domain.auth.presentation.dto.UserDetailsResponse;
 import com.example.inflace.domain.auth.util.AuthCookieUtils;
 import com.example.inflace.domain.user.application.UserService;
 import com.example.inflace.global.response.BaseResponse;
+import com.example.inflace.global.security.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +24,12 @@ public class UserController implements UserApi {
 
     private final UserService userService;
     private final AuthCookieUtils authCookieUtils;
+
+    @Override
+    @GetMapping("/me")
+    public BaseResponse<UserDetailsResponse> getUserDetailsInfo() {
+        return new BaseResponse<>(userService.getUserDetails(SecurityUtils.getAuthenticatedUserId()));
+    }
 
     @Override
     @PostMapping("/onboarding")
