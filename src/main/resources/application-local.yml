@@ -30,6 +30,12 @@ channel:
   sync:
     cooldown-millis: 3600
 
+user:
+  withdrawal:
+    purge:
+      retention-days: 30
+      cron: "0 0 2 * * *"
+
 cors:
   allowed:
     origins:

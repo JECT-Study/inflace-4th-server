@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -62,6 +63,14 @@ public class UserCommandRepository {
                 "INSERT INTO user_withdrawal (user_id, reason, detail, created_at) VALUES (?, ?, ?, now())",
                 userId, reason.name(), detail
         );
+    }
+
+    public int purgeWithdrawnUsers(LocalDateTime threshold) {
+        return jdbcTemplate.update("""
+                DELETE FROM users
+                WHERE deleted_at IS NOT NULL
+                  AND deleted_at < ?
+                """, threshold);
     }
 
     public void insertUserTypes(UUID userId, List<UserRole> roles) {
