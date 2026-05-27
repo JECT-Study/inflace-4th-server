@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS user_withdrawal (
     detail     TEXT,
     created_at TIMESTAMP    NOT NULL,
     CONSTRAINT fk_user_withdrawal_user
-        FOREIGN KEY (user_id) REFERENCES users (user_id)
+        FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
