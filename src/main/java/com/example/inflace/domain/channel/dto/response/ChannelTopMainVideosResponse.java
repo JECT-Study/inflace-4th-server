@@ -22,13 +22,13 @@ public record ChannelTopMainVideosResponse(
             Long commentCount,
             Double engagementRate,
             LocalDateTime publishedAt,
-            Double ctr
+            Double avd
     ) {
         public static ChannelTopMainVideo of(long rank, Video video, VideoStats stats, VideoAnalytics analytics) {
             long viewCount = 0L;
             long likeCount = 0L;
             long commentCount = 0L;
-            double ctr = 0.0;
+            double avd = 0.0;
             double engagementRate = 0.0;
 
             if (stats != null) {
@@ -39,11 +39,11 @@ public record ChannelTopMainVideosResponse(
                         stats.getLikeCount(), stats.getCommentCount(), stats.getViewCount());
             }
             if (analytics != null) {
-                ctr = Objects.requireNonNullElse(analytics.getCtr(), 0.0);
+                avd = Objects.requireNonNullElse(analytics.getAvgWatchDuration(), 0.0);
             }
 
             return new ChannelTopMainVideo(rank, video.getId(), video.getTitle(), video.getThumbnailUrl(),
-                    viewCount, likeCount, commentCount, engagementRate, video.getPublishedAt(), ctr);
+                    viewCount, likeCount, commentCount, engagementRate, video.getPublishedAt(), avd);
         }
     }
 }
