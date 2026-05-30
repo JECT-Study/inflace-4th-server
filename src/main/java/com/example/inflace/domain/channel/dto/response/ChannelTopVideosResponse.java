@@ -15,7 +15,7 @@ public record ChannelTopVideosResponse(
             String thumbnailUrl,
             Long viewCount,
             Double engagementRate,
-            Double ctr,
+            Double avd,
             Double retentionRate
     ){
         public static ChannelTopVideo from(int rank, Video video, VideoStats videoStats, VideoAnalytics videoAnalytics) {
@@ -26,7 +26,7 @@ public record ChannelTopVideosResponse(
                     video.getThumbnailUrl(),
                     videoStats != null ? videoStats.getViewCount() : 0L,
                     videoStats != null && videoStats.getRisingScore() != null ? videoStats.getRisingScore() : 0.0,
-                    videoAnalytics != null && videoAnalytics.getCtr() != null ? videoAnalytics.getCtr() : 0.0,
+                    videoAnalytics != null && videoAnalytics.getAvgWatchDuration() != null ? videoAnalytics.getAvgWatchDuration() : 0.0,
                     videoAnalytics != null && videoAnalytics.getAverageViewPercentage() != null
                             ? videoAnalytics.getAverageViewPercentage() : 0.0
             );
