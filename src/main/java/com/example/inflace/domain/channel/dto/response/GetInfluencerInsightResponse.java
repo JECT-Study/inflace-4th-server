@@ -29,6 +29,9 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "총 구독자 수", example = "125000")
         Long subscriberCount,
 
+        @Schema(description = "현재 로그인 유저의 즐겨찾기 여부", example = "true")
+        boolean bookmarked,
+
         @ArraySchema(
                 arraySchema = @Schema(description = "채널 카테고리 목록"),
                 schema = @Schema(example = "게임")
@@ -50,6 +53,25 @@ public record GetInfluencerInsightResponse(
         @Schema(description = "롱폼 vs 숏폼 분석")
         FormatAnalysis formatAnalysis
 ) {
+    public GetInfluencerInsightResponse withBookmarked(boolean bookmarked) {
+        return new GetInfluencerInsightResponse(
+                channelId,
+                channelName,
+                channelHandle,
+                profileImageUrl,
+                bannerImageUrl,
+                joinedAt,
+                subscriberCount,
+                bookmarked,
+                categories,
+                audience,
+                content,
+                activity,
+                advertisement,
+                formatAnalysis
+        );
+    }
+
     public record Audience(
             @Schema(description = "팬층 종합 점수", example = "84.5")
             double score,

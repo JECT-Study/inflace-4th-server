@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface ChannelBookmarkRepository extends JpaRepository<ChannelBookmark, Long> {
     void deleteByChannelAndUser(Channel channel, User user);
     List<ChannelBookmark> findByUserId(UUID userId);
+    boolean existsByChannelIdAndUserId(Long channelId, UUID userId);
 }
