@@ -6,6 +6,7 @@ import com.example.inflace.domain.auth.util.GoogleAccessTokenStore;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
+import com.example.inflace.domain.channel.dto.response.UserChannelDetailsResponse;
 import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
 import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
@@ -26,6 +27,7 @@ import com.example.inflace.domain.user.presentation.ProfileImageUpdateRequest;
 import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlRequest;
 import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlResponse;
 import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
+import com.example.inflace.domain.user.presentation.GetUserMeResponse;
 import com.example.inflace.domain.user.presentation.UserPreferenceUpdateRequest;
 import com.example.inflace.domain.user.presentation.UserProfileResponse;
 import com.example.inflace.domain.user.presentation.WithdrawRequest;
@@ -75,6 +77,21 @@ public class UserService {
         List<UserRole> userRoles = userReadRepository.findUserRolesByUserId(userId);
 
         return UserDetailsResponse.of(user, userRoles);
+    }
+
+    @ReadOnlyTransactional
+    public GetUserMeResponse getUserDetailsInfo(UUID userId) {
+        return new GetUserMeResponse(
+                getUserDetails(userId),
+                getUserChannelDetails(userId)
+        );
+    }
+
+    @ReadOnlyTransactional
+    public UserChannelDetailsResponse getUserChannelDetails(UUID userId) {
+        return channelRepository.findByUser_Id(userId)
+                .map(UserChannelDetailsResponse::from)
+                .orElse(null);
     }
 
     @Transactional

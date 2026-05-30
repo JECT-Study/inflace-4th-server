@@ -12,6 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface UserApi {
 
     @Operation(
+            summary = "현재 로그인 유저 정보 조회",
+            description = "로그인 응답의 userDetails, userChannelDetails와 동일한 현재 로그인 유저 정보를 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND})
+    BaseResponse<GetUserMeResponse> getUserDetailsInfo();
+
+    @Operation(
             summary = "온보딩",
             description = "유저 역할과 필요 항목을 저장합니다."
     )
