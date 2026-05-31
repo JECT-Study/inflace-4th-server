@@ -6,5 +6,6 @@ public enum WithdrawalReason {
     EXPENSIVE_PLAN,                 // 구독 플랜 가격이 부담돼요
     DASHBOARD_DIFFICULT,            // 대시보드 사용이 어려워요
     SWITCHING_TO_OTHER_TOOL,        // 다른 마케팅/채널 분석 툴로 이동해요
-    TEMPORARY_USE                   // 일시적으로 사용
+    TEMPORARY_USE,                  // 일시적으로 사용
+    OTHER                           // 기타
 }
