@@ -32,5 +32,5 @@ cors:
 user:
   withdrawal:
     purge:
-      retention-days: ${USER_WITHDRAWAL_PURGE_RETENTION_DAYS}
-      cron: ${USER_WITHDRAWAL_PURGE_CRON}
+      retention-days: 30
+      cron: "0 0 1 * * *"
