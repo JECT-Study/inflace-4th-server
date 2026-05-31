@@ -34,7 +34,7 @@ public class VideoService {
     private final VideoTagRepository videoTagRepository;
     private final AudienceRetentionRepository audienceRetentionRepository;
 
-    @ReadOnlyTransactional
+    @Transactional(readOnly=true)
     public VideoMetaResponse getVideoMeta(Long videoId) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         // 영상 목록에서 클릭 후 이동, 외부 API 필요하지 않음
@@ -51,7 +51,7 @@ public class VideoService {
         return VideoMetaResponse.from(video, hashtags);
     }
 
-    @ReadOnlyTransactional
+    @Transactional(readOnly=true)
     public VideoStatsResponse getVideoStats(Long videoId) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
@@ -69,7 +69,7 @@ public class VideoService {
         return VideoStatsResponse.from(videoStats, videoAnalytics, 0L, 0L);
     }
 
-    @ReadOnlyTransactional
+    @Transactional(readOnly=true)
     public AudienceRetentionResponse getRetention(Long videoId) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
@@ -87,7 +87,7 @@ public class VideoService {
         return AudienceRetentionResponse.from(retentionList, durationSeconds);
     }
 
-    @ReadOnlyTransactional
+    @Transactional(readOnly=true)
     public DropPointsResponse getDropPoints(Long videoId) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
@@ -111,7 +111,7 @@ public class VideoService {
         return DropPointsResponse.from(retentionList, durationSeconds);
     }
 
-    @ReadOnlyTransactional
+    @Transactional(readOnly=true)
     public RetentionSummaryResponse getRetentionSummary(Long videoId) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         Video video = videoRepository.findById(videoId)
