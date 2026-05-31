@@ -11,7 +11,6 @@ import com.example.inflace.domain.video.repository.VideoAnalyticsRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.domain.video.repository.VideoTagRepository;
-import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.security.util.SecurityUtils;
