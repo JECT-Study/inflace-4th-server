@@ -81,6 +81,7 @@ jobs:
             docker stop inflace || true
             docker rm inflace || true
             docker run -d --name inflace -p 8080:8080 \
+              --memory=1200m \
               -e SPRING_PROFILES_ACTIVE=$ENVIRONMENT \
               -e DB_URL=$DB_URL \
               -e DB_USERNAME=$DB_USERNAME \

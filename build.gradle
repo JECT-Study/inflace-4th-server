@@ -103,7 +103,7 @@ jib {
         ports = ['8080']
         creationTime = 'USE_CURRENT_TIMESTAMP'
         jvmFlags = [
-                '-XX:MaxRAMPercentage=65.0',
+                '-XX:MaxRAMPercentage=70.0',
                 '-Duser.timezone=Asia/Seoul'
         ]
         environment = [
