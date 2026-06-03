@@ -41,6 +41,9 @@ public class User extends SoftDeleteTimeEntity {
 
     private String email;
 
+    @Column(name = "alarm_email")
+    private String alarmEmail;
+
     @Column(name = "provider_id", nullable = false, unique = true)
     private String providerId;
 
@@ -52,6 +55,7 @@ public class User extends SoftDeleteTimeEntity {
             String name,
             String profileImage,
             String email,
+            String alarmEmail,
             String providerId,
             Plan plan
     ) {
@@ -61,6 +65,7 @@ public class User extends SoftDeleteTimeEntity {
         user.name = name;
         user.profileImage = profileImage;
         user.email = email;
+        user.alarmEmail = alarmEmail;
         user.providerId = providerId;
         user.plan = plan;
 
@@ -69,5 +74,9 @@ public class User extends SoftDeleteTimeEntity {
 
     public void updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
+    }
+
+    public void updateAlarmEmail(String alarmEmail) {
+        this.alarmEmail = alarmEmail;
     }
 }

@@ -27,15 +27,15 @@ public class UserCommandRepository {
         UUID newUserId = UuidV7Generator.next();
 
         Map<String, Object> result = jdbcTemplate.queryForMap("""
-        insert into users (user_id, provider_id, name, email, profile_image, plan, created_at, updated_at)
-        values (?, ?, ?, ?, ?, ?, now(), now())
+        insert into users (user_id, provider_id, name, email, alarm_email, profile_image, plan, created_at, updated_at)
+        values (?, ?, ?, ?, ?, ?, ?, now(), now())
         on conflict (provider_id)
         do update set
             provider_id = excluded.provider_id,
             deleted_at = null,
             updated_at = now()
         returning user_id, (xmax = 0) as inserted
-    """, newUserId, sub, name, email, profileImage, plan.name());
+    """, newUserId, sub, name, email, email, profileImage, plan.name());
 
         UUID userId = (UUID) result.get("user_id");
         boolean isNew = (Boolean) result.get("inserted");
