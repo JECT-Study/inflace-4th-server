@@ -12,11 +12,14 @@ import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.user.domain.entity.User;
+import com.example.inflace.domain.user.domain.entity.UserAlarm;
 import com.example.inflace.domain.user.domain.entity.UserNeed;
 import com.example.inflace.domain.user.domain.entity.UserType;
+import com.example.inflace.domain.user.domain.enums.AlarmType;
 import com.example.inflace.domain.user.domain.enums.Need;
 import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.domain.enums.UserRole;
+import com.example.inflace.domain.user.infra.UserAlarmRepository;
 import com.example.inflace.domain.user.infra.UserCommandRepository;
 import com.example.inflace.domain.user.infra.UserNeedRepository;
 import com.example.inflace.domain.user.infra.UserReadRepository;
@@ -26,6 +29,11 @@ import com.example.inflace.domain.user.presentation.OnboardingRequest;
 import com.example.inflace.domain.user.presentation.ProfileImageUpdateRequest;
 import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlRequest;
 import com.example.inflace.domain.user.presentation.ProfileImageUploadUrlResponse;
+import com.example.inflace.domain.user.presentation.UserAlarmEmailUpdateRequest;
+import com.example.inflace.domain.user.presentation.UserAlarmEmailUpdateResponse;
+import com.example.inflace.domain.user.presentation.UserAlarmUpdateRequest;
+import com.example.inflace.domain.user.presentation.UserAlarmUpdateResponse;
+import com.example.inflace.domain.user.presentation.UserAlarmsResponse;
 import com.example.inflace.domain.user.presentation.UserChannelMainResponse;
 import com.example.inflace.domain.user.presentation.GetUserMeResponse;
 import com.example.inflace.domain.user.presentation.UserPreferenceUpdateRequest;
@@ -45,8 +53,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +68,7 @@ public class UserService {
 
     private final UserReadRepository userReadRepository;
     private final UserCommandRepository userCommandRepository;
+    private final UserAlarmRepository userAlarmRepository;
     private final UserTypeRepository userTypeRepository;
     private final UserNeedRepository userNeedRepository;
     private final ChannelRepository channelRepository;
@@ -215,6 +229,50 @@ public class UserService {
         userCommandRepository.insertNeeds(userId, request.needs());
     }
 
+    @Transactional
+    public UserAlarmsResponse getAlarms() {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+        List<UserAlarm> alarms = getOrCreateUserAlarms(user);
+
+        return new UserAlarmsResponse(
+                user.getAlarmEmail(),
+                alarms.stream()
+                        .map(alarm -> new UserAlarmsResponse.AlarmInfo(
+                                alarm.getAlarmType(),
+                                alarm.isEnabled()
+                        ))
+                        .toList()
+        );
+    }
+
+    @Transactional
+    public UserAlarmUpdateResponse updateAlarm(UserAlarmUpdateRequest request) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        UserAlarm userAlarm = userAlarmRepository.findByUser_IdAndAlarmType(userId, request.alarmType())
+                .orElseGet(() -> userAlarmRepository.save(
+                        UserAlarm.of(user, request.alarmType(), request.enabled())
+                ));
+        userAlarm.updateEnabled(request.enabled());
+
+        return new UserAlarmUpdateResponse(userAlarm.getAlarmType(), userAlarm.isEnabled());
+    }
+
+    @Transactional
+    public UserAlarmEmailUpdateResponse updateAlarmEmail(UserAlarmEmailUpdateRequest request) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        user.updateAlarmEmail(request.alarmEmail());
+
+        return new UserAlarmEmailUpdateResponse(user.getAlarmEmail());
+    }
+
     private List<UserRole> getUserRoles(UUID userId) {
         return userTypeRepository.findAllByUser_Id(userId).stream()
                 .map(UserType::getRole)
@@ -224,6 +282,26 @@ public class UserService {
     private List<Need> getUserNeeds(UUID userId) {
         return userNeedRepository.findAllByUser_Id(userId).stream()
                 .map(UserNeed::getNeed)
+                .toList();
+    }
+
+    private List<UserAlarm> getOrCreateUserAlarms(User user) {
+        List<UserAlarm> alarms = userAlarmRepository.findAllByUser_Id(user.getId());
+        Map<AlarmType, UserAlarm> alarmByType = alarms.stream()
+                .collect(Collectors.toMap(UserAlarm::getAlarmType, Function.identity()));
+
+        List<UserAlarm> missingAlarms = Arrays.stream(AlarmType.values())
+                .filter(alarmType -> !alarmByType.containsKey(alarmType))
+                .map(alarmType -> UserAlarm.of(user, alarmType, false))
+                .toList();
+
+        if (!missingAlarms.isEmpty()) {
+            userAlarmRepository.saveAll(missingAlarms);
+            missingAlarms.forEach(alarm -> alarmByType.put(alarm.getAlarmType(), alarm));
+        }
+
+        return alarmByType.values().stream()
+                .sorted(Comparator.comparingInt(alarm -> alarm.getAlarmType().ordinal()))
                 .toList();
     }
 }

@@ -89,4 +89,26 @@ public class UserController implements UserApi {
                 .header(HttpHeaders.SET_COOKIE, authCookieUtils.buildDeleteRefreshTokenCookie().toString())
                 .body(new BaseResponse<>(null));
     }
+
+    @Override
+    @GetMapping("/alarms")
+    public BaseResponse<UserAlarmsResponse> getAlarms() {
+        return new BaseResponse<>(userService.getAlarms());
+    }
+
+    @Override
+    @PutMapping("/alarms")
+    public BaseResponse<UserAlarmUpdateResponse> updateAlarm(
+            @Valid @RequestBody UserAlarmUpdateRequest request
+    ) {
+        return new BaseResponse<>(userService.updateAlarm(request));
+    }
+
+    @Override
+    @PutMapping("/alarms/email")
+    public BaseResponse<UserAlarmEmailUpdateResponse> updateAlarmEmail(
+            @Valid @RequestBody UserAlarmEmailUpdateRequest request
+    ) {
+        return new BaseResponse<>(userService.updateAlarmEmail(request));
+    }
 }
