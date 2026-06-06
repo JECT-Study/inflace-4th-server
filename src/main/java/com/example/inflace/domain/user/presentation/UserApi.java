@@ -72,4 +72,25 @@ public interface UserApi {
     )
     @ApiErrorDefines(ErrorDefine.USER_NOT_FOUND)
     ResponseEntity<BaseResponse<Void>> withdraw(@RequestBody WithdrawRequest request);
+
+    @Operation(
+            summary = "마이페이지 알림 설정 조회",
+            description = "현재 로그인한 유저의 알림 수신 이메일과 알림 종류별 수신 여부를 조회합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND})
+    BaseResponse<UserAlarmsResponse> getAlarms();
+
+    @Operation(
+            summary = "마이페이지 알림 수신 여부 수정",
+            description = "현재 로그인한 유저의 특정 알림 종류 수신 여부를 수정합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND})
+    BaseResponse<UserAlarmUpdateResponse> updateAlarm(@RequestBody UserAlarmUpdateRequest request);
+
+    @Operation(
+            summary = "마이페이지 알림 수신 이메일 수정",
+            description = "현재 로그인한 유저의 알림 수신 이메일을 수정합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.USER_NOT_FOUND})
+    BaseResponse<UserAlarmEmailUpdateResponse> updateAlarmEmail(@RequestBody UserAlarmEmailUpdateRequest request);
 }
