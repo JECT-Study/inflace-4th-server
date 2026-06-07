@@ -126,36 +126,50 @@ public class BrandCollaborationService {
     }
 
     public BrandCollaborationTrendsResponse analyzeTrends(BrandCollaborationTrendsRequest request) {
-        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(
-                request.youtubeVideoIds(), TRENDS_VIDEO_PARTS);
+        List<YoutubeDataVideoResponse.Item> videoItems;
+        Map<String, YoutubeDataChannelResponse.Item> channelMap;
+        long avgSubscribers, minSubscribers, maxSubscribers;
+        Double uploadIntervalDays;
+        List<BrandCollaborationTrendsResponse.CategoryShare> categoryDistribution;
 
-        if (videoItems.isEmpty()) {
+        try {
+            videoItems = youtubeDataApiClient.getYoutubeVideos(request.youtubeVideoIds(), TRENDS_VIDEO_PARTS);
+
+            if (videoItems.isEmpty()) {
+                return new BrandCollaborationTrendsResponse(
+                        new BrandCollaborationTrendsResponse.ContentKeywords(List.of(), null),
+                        null,
+                        null
+                );
+            }
+
+            // channels.list (snippet,statistics,contentDetails) — 구독자 통계 + 업로드 플레이리스트 ID 확보
+            channelMap = fetchChannelMap(videoItems, CHANNEL_PARTS_WITH_STATS);
+
+            // 구독자 수: channels.list statistics.subscriberCount 직접 계산
+            List<Long> subCounts = channelMap.values().stream()
+                    .filter(c -> c.statistics() != null)
+                    .map(c -> parseLong(c.statistics().subscriberCount()))
+                    .filter(count -> count > 0)
+                    .sorted()
+                    .toList();
+            avgSubscribers = subCounts.isEmpty() ? 0L : (long) subCounts.stream().mapToLong(Long::longValue).average().orElse(0);
+            minSubscribers = subCounts.isEmpty() ? 0L : subCounts.getFirst();
+            maxSubscribers = subCounts.isEmpty() ? 0L : subCounts.getLast();
+
+            // 업로드 간격: 채널별 uploads 플레이리스트 최근 10개 publishedAt → 평균 간격(일)
+            uploadIntervalDays = computeAvgUploadDays(channelMap);
+
+            // 카테고리 분포: 영상 snippet.categoryId → YoutubeCategory 테이블 룩업 후 비율 계산
+            categoryDistribution = computeCategoryDistribution(videoItems);
+        } catch (RuntimeException e) {
+            log.warn("Failed to fetch YouTube data for trends analysis. videoCount={}", request.youtubeVideoIds().size(), e);
             return new BrandCollaborationTrendsResponse(
                     new BrandCollaborationTrendsResponse.ContentKeywords(List.of(), null),
                     null,
                     null
             );
         }
-
-        // channels.list (snippet,statistics,contentDetails) — 구독자 통계 + 업로드 플레이리스트 ID 확보
-        Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(videoItems, CHANNEL_PARTS_WITH_STATS);
-
-        // 구독자 수: channels.list statistics.subscriberCount 직접 계산
-        List<Long> subCounts = channelMap.values().stream()
-                .filter(c -> c.statistics() != null)
-                .map(c -> parseLong(c.statistics().subscriberCount()))
-                .filter(count -> count > 0)
-                .sorted()
-                .toList();
-        long avgSubscribers = subCounts.isEmpty() ? 0L : (long) subCounts.stream().mapToLong(Long::longValue).average().orElse(0);
-        long minSubscribers = subCounts.isEmpty() ? 0L : subCounts.getFirst();
-        long maxSubscribers = subCounts.isEmpty() ? 0L : subCounts.getLast();
-
-        // 업로드 간격: 채널별 uploads 플레이리스트 최근 10개 publishedAt → 평균 간격(일)
-        Double uploadIntervalDays = computeAvgUploadDays(channelMap);
-
-        // 카테고리 분포: 영상 snippet.categoryId → YoutubeCategory 테이블 룩업 후 비율 계산
-        List<BrandCollaborationTrendsResponse.CategoryShare> categoryDistribution = computeCategoryDistribution(videoItems);
 
         try {
             // AI: commonKeywords, keywordSummary, strategyInsight
