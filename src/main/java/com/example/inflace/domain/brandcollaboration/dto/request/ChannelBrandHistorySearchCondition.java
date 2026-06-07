@@ -64,7 +64,4 @@ public record ChannelBrandHistorySearchCondition(
         }
     }
 
-    public String youtubeOrder() {
-        return "VIEW_COUNT".equals(sortCriteriaValue()) ? "viewCount" : "date";
-    }
 }

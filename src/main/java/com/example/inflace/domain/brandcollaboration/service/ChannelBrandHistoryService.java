@@ -2,25 +2,22 @@ package com.example.inflace.domain.brandcollaboration.service;
 
 import com.example.inflace.domain.brand.service.BrandService;
 import com.example.inflace.domain.channel.domain.Channel;
+import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.dto.ChannelVideoSliceResult;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoSort;
 import com.example.inflace.domain.channel.dto.request.ChannelVideosRequest;
 import com.example.inflace.domain.channel.dto.response.ChannelVideosResponse;
-import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
+import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.channel.service.insight.InfluencerInsightScoreCalculator;
 import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.brandcollaboration.dto.request.ChannelBrandHistorySearchCondition;
 import com.example.inflace.domain.brandcollaboration.dto.response.ChannelBrandHistoryAnalysisResponse;
 import com.example.inflace.domain.brandcollaboration.dto.response.ChannelBrandHistoryVideoResponse;
 import com.example.inflace.domain.video.domain.Video;
-import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.domain.video.repository.VideoQueryRepository;
 import com.example.inflace.domain.video.repository.VideoRepository;
-import com.example.inflace.global.client.YoutubeDataApiClient;
-import com.example.inflace.global.client.YoutubeSearchApiClient;
-import com.example.inflace.global.client.YoutubeSearchApiClient.YoutubeSearchListResponse;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.response.CursorSliceResponse;
@@ -54,19 +51,15 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class ChannelBrandHistoryService {
 
-    private static final String VIDEO_PARTS = "snippet,statistics,contentDetails";
-    private static final String CHANNEL_STATS_PARTS = "statistics";
-    private static final int SHORTS_MAX_DURATION_SECONDS = 180;
-    private static final int ANALYSIS_MAX_VIDEOS = 50; // YouTube Search API maxResults 상한
+    private static final int ANALYSIS_MAX_VIDEOS = 50;
     private static final String FORMAT_LONG_FORM = "LONG_FORM";
     private static final String FORMAT_SHORT_FORM = "SHORT_FORM";
 
-    private final YoutubeSearchApiClient youtubeSearchApiClient;
-    private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeCategoryRepository youtubeCategoryRepository;
     private final BrandService brandService;
     private final InfluencerInsightScoreCalculator scoreCalculator;
     private final ChannelRepository channelRepository;
+    private final ChannelStatsRepository channelStatsRepository;
     private final VideoQueryRepository videoQueryRepository;
     private final VideoRepository videoRepository;
 
@@ -153,52 +146,52 @@ public class ChannelBrandHistoryService {
         };
     }
 
-    // https://developers.google.com/youtube/v3/docs/search/list
     public ChannelBrandHistoryAnalysisResponse analysis(String channelId, ChannelBrandHistorySearchCondition condition) {
-        YoutubeSearchListResponse searchResponse = youtubeSearchApiClient.search(
+        Optional<Channel> channelOpt = channelRepository.findByYoutubeChannelId(channelId);
+        if (channelOpt.isEmpty()) {
+            return emptyAnalysis();
+        }
+        Channel channel = channelOpt.get();
+
+        ChannelVideosRequest request = new ChannelVideosRequest(
                 null,
-                null,
-                condition.youtubeOrder(),
-                null,
-                condition.categoryId(),
-                null,
+                parseRfc3339ToLocalDate(condition.startDate()),
+                parseRfc3339ToLocalDate(condition.endDate()),
+                ChannelVideoSort.LATEST,
+                condition.videoFormatEnum(),
+                true,
                 null,
                 ANALYSIS_MAX_VIDEOS,
-                condition.startDate(),
-                condition.endDate(),
-                channelId
+                parseCategoryId(condition.categoryId())
         );
 
-        if (searchResponse == null || searchResponse.items() == null || searchResponse.items().isEmpty()) {
+        List<ChannelVideosResponse.ChannelVideoItem> videos = videoQueryRepository
+                .findChannelVideos(channel.getId(), request)
+                .videos();
+
+        if (videos.isEmpty()) {
             return emptyAnalysis();
         }
 
-        List<String> videoIds = searchResponse.items().stream()
-                .map(item -> item.id().videoId())
-                .filter(StringUtils::hasText)
-                .toList();
+        List<Long> videoIds = videos.stream().map(ChannelVideosResponse.ChannelVideoItem::videoId).toList();
+        Map<Long, Video> videoMap = videoRepository.findAllById(videoIds).stream()
+                .collect(Collectors.toMap(Video::getId, v -> v));
 
-        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(videoIds, VIDEO_PARTS);
-        List<YoutubeDataVideoResponse.Item> filtered = applyVideoFormatFilter(videoItems, condition.videoFormatEnum());
+        Map<Integer, String> categoryTitleMap = buildCategoryTitleMapFromDbVideos(videoMap.values());
 
-        if (filtered.isEmpty()) {
-            return emptyAnalysis();
-        }
-
-        Map<Integer, String> categoryTitleMap = buildCategoryTitleMap(filtered);
         ChannelBrandHistoryAnalysisResponse.AdScore adScore;
         try {
-            adScore = computeAdScore(channelId, filtered);
+            adScore = computeAdScore(channel.getId(), videos);
         } catch (Exception e) {
             log.warn("adScore 계산 실패: channelId={}, error={}", channelId, e.getMessage(), e);
             adScore = null;
         }
 
         return new ChannelBrandHistoryAnalysisResponse(
-                filtered.size(),
-                computeAvgViewsByContentType(filtered),
-                computeCategoryDistribution(filtered, categoryTitleMap),
-                computeContentTypeDistribution(filtered),
+                videos.size(),
+                computeAvgViewsByContentType(videos),
+                computeCategoryDistribution(videos, videoMap, categoryTitleMap),
+                computeContentTypeDistribution(videos),
                 adScore
         );
     }
@@ -248,33 +241,6 @@ public class ChannelBrandHistoryService {
         }
     }
 
-    private List<YoutubeDataVideoResponse.Item> applyVideoFormatFilter(
-            List<YoutubeDataVideoResponse.Item> items,
-            ChannelVideoFormat format
-    ) {
-        if (format == ChannelVideoFormat.ALL) {
-            return items;
-        }
-        String target = format == ChannelVideoFormat.SHORT_FORM ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM;
-        return items.stream()
-                .filter(item -> target.equals(resolveVideoFormat(item)))
-                .toList();
-    }
-
-    private Map<Integer, String> buildCategoryTitleMap(List<YoutubeDataVideoResponse.Item> items) {
-        List<Integer> categoryIds = items.stream()
-                .map(item -> item.snippet() != null ? item.snippet().categoryId() : null)
-                .filter(StringUtils::hasText)
-                .map(id -> {
-                    try { return Integer.parseInt(id); }
-                    catch (NumberFormatException e) { return null; }
-                })
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
-        return resolveCategoryTitleMap(categoryIds);
-    }
-
     private Map<Integer, String> resolveCategoryTitleMap(List<Integer> categoryIds) {
         if (categoryIds.isEmpty()) return Map.of();
         return youtubeCategoryRepository.findByYoutubeCategoryIdIn(categoryIds).stream()
@@ -287,93 +253,48 @@ public class ChannelBrandHistoryService {
     }
 
     private List<ChannelBrandHistoryAnalysisResponse.ContentTypeShare> computeContentTypeDistribution(
-            List<YoutubeDataVideoResponse.Item> items
+            List<ChannelVideosResponse.ChannelVideoItem> items
     ) {
-        long shortCount = items.stream().filter(item -> FORMAT_SHORT_FORM.equals(resolveVideoFormat(item))).count();
-        long longCount = items.size() - shortCount;
-        int total = items.size();
-
-        List<ChannelBrandHistoryAnalysisResponse.ContentTypeShare> result = new ArrayList<>();
-        if (longCount > 0) {
-            result.add(new ChannelBrandHistoryAnalysisResponse.ContentTypeShare(
-                    FORMAT_LONG_FORM, (int) longCount, (int) Math.round((double) longCount / total * 100)));
-        }
-        if (shortCount > 0) {
-            result.add(new ChannelBrandHistoryAnalysisResponse.ContentTypeShare(
-                    FORMAT_SHORT_FORM, (int) shortCount, (int) Math.round((double) shortCount / total * 100)));
-        }
-        return result;
+        long shortCount = items.stream().filter(v -> Boolean.TRUE.equals(v.isShort())).count();
+        return buildContentTypeShares(shortCount, items.size() - shortCount);
     }
 
     private List<ChannelBrandHistoryAnalysisResponse.CategoryShare> computeCategoryDistribution(
-            List<YoutubeDataVideoResponse.Item> items,
+            List<ChannelVideosResponse.ChannelVideoItem> items,
+            Map<Long, Video> videoMap,
             Map<Integer, String> categoryTitleMap
     ) {
         List<Integer> categoryIds = items.stream()
-                .map(item -> item.snippet() != null ? item.snippet().categoryId() : null)
-                .filter(StringUtils::hasText)
-                .map(id -> {
-                    try { return Integer.parseInt(id); }
-                    catch (NumberFormatException e) { return null; }
-                })
+                .map(v -> videoMap.get(v.videoId()))
+                .filter(Objects::nonNull)
+                .map(Video::getCategoryId)
                 .filter(Objects::nonNull)
                 .toList();
-
-        if (categoryIds.isEmpty()) {
-            return List.of();
-        }
-
-        int total = categoryIds.size();
-        return categoryIds.stream()
-                .collect(Collectors.groupingBy(
-                        id -> categoryTitleMap.getOrDefault(id, "기타"),
-                        Collectors.counting()
-                ))
-                .entrySet().stream()
-                .map(e -> new ChannelBrandHistoryAnalysisResponse.CategoryShare(
-                        e.getKey(),
-                        e.getValue().intValue(),
-                        (int) Math.round((double) e.getValue() / total * 100)
-                ))
-                .sorted(Comparator.comparingInt(ChannelBrandHistoryAnalysisResponse.CategoryShare::percentage).reversed())
-                .toList();
+        return buildCategoryShares(categoryIds, categoryTitleMap);
     }
 
     private List<ChannelBrandHistoryAnalysisResponse.ContentTypeAvgViews> computeAvgViewsByContentType(
-            List<YoutubeDataVideoResponse.Item> items
+            List<ChannelVideosResponse.ChannelVideoItem> items
     ) {
-        Map<String, List<YoutubeDataVideoResponse.Item>> byFormat = items.stream()
-                .collect(Collectors.groupingBy(this::resolveVideoFormat));
-
+        Map<String, List<ChannelVideosResponse.ChannelVideoItem>> byFormat = items.stream()
+                .collect(Collectors.groupingBy(v -> Boolean.TRUE.equals(v.isShort()) ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM));
         return byFormat.entrySet().stream()
                 .map(e -> {
-                    List<YoutubeDataVideoResponse.Item> group = e.getValue();
+                    List<ChannelVideosResponse.ChannelVideoItem> group = e.getValue();
                     long avgViews = (long) group.stream()
-                            .mapToLong(item -> parseLong(item.statistics() != null ? item.statistics().viewCount() : null))
+                            .mapToLong(v -> v.viewCount() != null ? v.viewCount() : 0L)
                             .average().orElse(0);
                     double avgEngagementRate = group.stream()
-                            .mapToDouble(item -> {
-                                if (item.statistics() == null) return 0.0;
-                                return AnalyticsCalculator.engagementRate(
-                                        parseLong(item.statistics().likeCount()),
-                                        parseLong(item.statistics().commentCount()),
-                                        parseLong(item.statistics().viewCount())
-                                );
-                            })
+                            .mapToDouble(v -> AnalyticsCalculator.engagementRate(
+                                    v.likeCount() != null ? v.likeCount() : 0L,
+                                    v.commentCount() != null ? v.commentCount() : 0L,
+                                    v.viewCount() != null ? v.viewCount() : 0L))
                             .average().orElse(0.0);
                     return new ChannelBrandHistoryAnalysisResponse.ContentTypeAvgViews(
                             e.getKey(), avgViews, Math.round(avgEngagementRate * 100.0) / 100.0);
                 })
                 .sorted(Comparator.comparing(ChannelBrandHistoryAnalysisResponse.ContentTypeAvgViews::format))
                 .toList();
-    }
-
-    private String resolveVideoFormat(YoutubeDataVideoResponse.Item item) {
-        if (item.contentDetails() == null || !StringUtils.hasText(item.contentDetails().duration())) {
-            return FORMAT_LONG_FORM;
-        }
-        int seconds = (int) AnalyticsCalculator.parseIso8601Duration(item.contentDetails().duration());
-        return seconds <= SHORTS_MAX_DURATION_SECONDS ? FORMAT_SHORT_FORM : FORMAT_LONG_FORM;
     }
 
     private String decodePageToken(String cursor, String expectedSortCriteria, String expectedSortOrder) {
@@ -411,23 +332,18 @@ public class ChannelBrandHistoryService {
     }
 
     private ChannelBrandHistoryAnalysisResponse.AdScore computeAdScore(
-            String channelId,
-            List<YoutubeDataVideoResponse.Item> items
+            Long channelId,
+            List<ChannelVideosResponse.ChannelVideoItem> items
     ) {
-        YoutubeDataChannelResponse channelResponse = youtubeDataApiClient.getYoutubeChannels(channelId, CHANNEL_STATS_PARTS);
-        if (channelResponse == null || channelResponse.items() == null || channelResponse.items().isEmpty()) {
-            return null;
-        }
-        YoutubeDataChannelResponse.Statistics stats = channelResponse.items().getFirst().statistics();
-        if (stats == null) return null;
+        ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channelId).orElse(null);
+        if (channelStats == null) return null;
 
-        long subscriberCount = parseLong(stats.subscriberCount());
-        long totalVideoCount = parseLong(stats.videoCount());
+        long subscriberCount = channelStats.getSubscriberCount();
+        long totalVideoCount = channelStats.getTotalVideoCount() != null ? channelStats.getTotalVideoCount() : 0L;
 
         double avgViews = items.stream()
-                .mapToLong(item -> parseLong(item.statistics() != null ? item.statistics().viewCount() : null))
+                .mapToLong(v -> v.viewCount() != null ? v.viewCount() : 0L)
                 .average().orElse(0.0);
-
         double cv = computeCoefficientOfVariation(items, avgViews);
         double subscriberHealthRate = subscriberCount > 0 ? (avgViews / subscriberCount) * 100.0 : 0.0;
         double collaborationRate = totalVideoCount > 0 ? ((double) items.size() / totalVideoCount) * 100.0 : 0.0;
@@ -449,13 +365,10 @@ public class ChannelBrandHistoryService {
         );
     }
 
-    private double computeCoefficientOfVariation(List<YoutubeDataVideoResponse.Item> items, double avgViews) {
+    private double computeCoefficientOfVariation(List<ChannelVideosResponse.ChannelVideoItem> items, double avgViews) {
         if (items.isEmpty() || avgViews <= 0.0) return 0.0;
         double variance = items.stream()
-                .mapToDouble(item -> {
-                    double v = parseLong(item.statistics() != null ? item.statistics().viewCount() : null);
-                    return Math.pow(v - avgViews, 2);
-                })
+                .mapToDouble(item -> Math.pow((item.viewCount() != null ? item.viewCount() : 0L) - avgViews, 2))
                 .average().orElse(0.0);
         return Math.sqrt(variance) / avgViews;
     }
@@ -470,14 +383,29 @@ public class ChannelBrandHistoryService {
         return new ChannelBrandHistoryAnalysisResponse(0, List.of(), List.of(), List.of(), null);
     }
 
-    private long parseLong(String value) {
-        if (!StringUtils.hasText(value)) {
-            return 0L;
-        }
-        try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException e) {
-            return 0L;
-        }
+    private List<ChannelBrandHistoryAnalysisResponse.ContentTypeShare> buildContentTypeShares(long shortCount, long longCount) {
+        int total = (int) (shortCount + longCount);
+        List<ChannelBrandHistoryAnalysisResponse.ContentTypeShare> result = new ArrayList<>();
+        if (longCount > 0) result.add(new ChannelBrandHistoryAnalysisResponse.ContentTypeShare(
+                FORMAT_LONG_FORM, (int) longCount, (int) Math.round((double) longCount / total * 100)));
+        if (shortCount > 0) result.add(new ChannelBrandHistoryAnalysisResponse.ContentTypeShare(
+                FORMAT_SHORT_FORM, (int) shortCount, (int) Math.round((double) shortCount / total * 100)));
+        return result;
     }
+
+    private List<ChannelBrandHistoryAnalysisResponse.CategoryShare> buildCategoryShares(
+            List<Integer> categoryIds, Map<Integer, String> categoryTitleMap
+    ) {
+        if (categoryIds.isEmpty()) return List.of();
+        int total = categoryIds.size();
+        return categoryIds.stream()
+                .collect(Collectors.groupingBy(id -> categoryTitleMap.getOrDefault(id, "기타"), Collectors.counting()))
+                .entrySet().stream()
+                .map(e -> new ChannelBrandHistoryAnalysisResponse.CategoryShare(
+                        e.getKey(), e.getValue().intValue(),
+                        (int) Math.round((double) e.getValue() / total * 100)))
+                .sorted(Comparator.comparingInt(ChannelBrandHistoryAnalysisResponse.CategoryShare::percentage).reversed())
+                .toList();
+    }
+
 }
