@@ -1,6 +1,7 @@
 package com.example.inflace.global.security.config;
 
 import com.example.inflace.domain.idempotency.service.IdempotencyService;
+import com.example.inflace.global.filter.MdcFilter;
 import com.example.inflace.global.filter.IdempotencyKeyFilter;
 import com.example.inflace.global.response.ApiFilterErrorResponseWriter;
 import com.example.inflace.global.properties.CorsAllowedOriginsProperties;
@@ -56,6 +57,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new MdcFilter(), JwtAuthenticationFilter.class)
                 .addFilterAfter(
                         new IdempotencyKeyFilter(idempotencyService, apiFilterErrorResponseWriter),
                         JwtAuthenticationFilter.class
@@ -81,4 +83,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

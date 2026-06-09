@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.slf4j.MDC;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -75,6 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             PreAuthenticatedAuthenticationToken authentication =
                     new PreAuthenticatedAuthenticationToken(authUser, token, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            MDC.put("userId", userId.toString());
         } catch (JwtAuthenticationException e) {
             SecurityContextHolder.clearContext();
             customAuthenticationEntryPoint.commence(request, response, e);
