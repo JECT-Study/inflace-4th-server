@@ -23,8 +23,7 @@ public class ApiFilterErrorResponseWriter {
     public void write(
             HttpServletRequest request,
             HttpServletResponse response,
-            ErrorDefine errorDefine,
-            String message
+            ErrorDefine errorDefine
     ) throws IOException {
         CustomCorsHeaderConfigurer.setCorsHeader(request, response, corsAllowedOriginsProperties.getOrigins());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
@@ -34,7 +33,7 @@ public class ApiFilterErrorResponseWriter {
         BaseResponse<Void> errorResponse = BaseResponse.<Void>builder()
                 .isSuccess(false)
                 .responseDto(null)
-                .error(new ExceptionResponse(errorDefine, message))
+                .error(new ExceptionResponse(errorDefine))
                 .build();
 
         objectMapper.writeValue(response.getWriter(), errorResponse);

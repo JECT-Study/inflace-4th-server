@@ -23,15 +23,10 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
     ) throws IOException {
-        String message = accessDeniedException != null && accessDeniedException.getMessage() != null
-                ? accessDeniedException.getMessage()
-                : "Forbidden";
-
         apiFilterErrorResponseWriter.write(
                 request,
                 response,
-                ErrorDefine.AUTH_FORBIDDEN,
-                message
+                ErrorDefine.AUTH_FORBIDDEN
         );
     }
 }

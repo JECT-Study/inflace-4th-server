@@ -4,7 +4,6 @@ import com.example.inflace.global.exception.ErrorDefine;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @Builder
@@ -16,15 +15,5 @@ public class ExceptionResponse {
     public ExceptionResponse(ErrorDefine errorDefine) {
         this.code = errorDefine.getErrorCode();
         this.message = errorDefine.getMessage();
-    }
-
-    public ExceptionResponse(ErrorDefine errorDefine, String message) {
-        this.code = errorDefine.getErrorCode();
-        this.message = message != null ? message : errorDefine.getMessage();
-    }
-
-    public ExceptionResponse(Exception e) {
-        this.code = Integer.toString(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        this.message = e.getMessage();
     }
 }

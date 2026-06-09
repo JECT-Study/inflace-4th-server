@@ -1,6 +1,7 @@
 package com.example.inflace.global.exception;
 
 import com.example.inflace.global.response.BaseResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.concurrent.CompletionException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalRestExceptionHandler {
     @ExceptionHandler(value = {ApiException.class})
     public ResponseEntity<?> handleApiException(ApiException e) {
@@ -28,7 +30,8 @@ public class GlobalRestExceptionHandler {
 
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<?> handleException(Exception e) {
-        return BaseResponse.toResponseEntity(e);
+        log.error("Unexpected server error", e);
+        return BaseResponse.toInternalServerErrorResponse();
     }
 
     @ExceptionHandler(CompletionException.class)
@@ -39,7 +42,8 @@ public class GlobalRestExceptionHandler {
             return BaseResponse.toResponseEntity(apiException);
         }
 
-        return BaseResponse.toResponseEntity(e);
+        log.error("Unexpected async server error", e);
+        return BaseResponse.toInternalServerErrorResponse();
     }
 
 }
