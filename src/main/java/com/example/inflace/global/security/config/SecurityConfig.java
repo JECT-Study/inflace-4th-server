@@ -37,7 +37,6 @@ public class SecurityConfig {
     private final CorsAllowedOriginsProperties corsAllowedOriginsProperties;
     private final IdempotencyService idempotencyService;
     private final ApiFilterErrorResponseWriter apiFilterErrorResponseWriter;
-    private final MdcFilter mdcFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -58,7 +57,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(mdcFilter, JwtAuthenticationFilter.class)
+                .addFilterBefore(new MdcFilter(), JwtAuthenticationFilter.class)
                 .addFilterAfter(
                         new IdempotencyKeyFilter(idempotencyService, apiFilterErrorResponseWriter),
                         JwtAuthenticationFilter.class
@@ -85,8 +84,4 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public MdcFilter mdcFilter() {
-        return new MdcFilter();
-    }
 }
