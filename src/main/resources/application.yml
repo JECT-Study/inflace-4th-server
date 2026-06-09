@@ -52,3 +52,7 @@ aws:
     region: ${AWS_REGION}
     profile-image-prefix: ${AWS_S3_PROFILE_IMAGE_PREFIX}
     public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
+
+discord:
+  error:
+    webhook-url: ${DISCORD_ERROR_WEBHOOK_URL:}
