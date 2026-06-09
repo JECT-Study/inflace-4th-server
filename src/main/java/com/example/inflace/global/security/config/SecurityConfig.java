@@ -1,9 +1,6 @@
 package com.example.inflace.global.security.config;
 
-import com.example.inflace.domain.idempotency.service.IdempotencyService;
 import com.example.inflace.global.filter.MdcFilter;
-import com.example.inflace.global.filter.IdempotencyKeyFilter;
-import com.example.inflace.global.response.ApiFilterErrorResponseWriter;
 import com.example.inflace.global.properties.CorsAllowedOriginsProperties;
 import com.example.inflace.global.security.custom.CustomAccessDeniedHandler;
 import com.example.inflace.global.security.custom.CustomAuthenticationEntryPoint;
@@ -35,9 +32,6 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CorsAllowedOriginsProperties corsAllowedOriginsProperties;
-    private final IdempotencyService idempotencyService;
-    private final ApiFilterErrorResponseWriter apiFilterErrorResponseWriter;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -58,10 +52,6 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new MdcFilter(), JwtAuthenticationFilter.class)
-                .addFilterAfter(
-                        new IdempotencyKeyFilter(idempotencyService, apiFilterErrorResponseWriter),
-                        JwtAuthenticationFilter.class
-                )
                 .build();
     }
 
