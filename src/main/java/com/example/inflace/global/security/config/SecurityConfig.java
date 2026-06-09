@@ -1,6 +1,7 @@
 package com.example.inflace.global.security.config;
 
 import com.example.inflace.domain.idempotency.service.IdempotencyService;
+import com.example.inflace.global.filter.MdcFilter;
 import com.example.inflace.global.filter.IdempotencyKeyFilter;
 import com.example.inflace.global.response.ApiFilterErrorResponseWriter;
 import com.example.inflace.global.properties.CorsAllowedOriginsProperties;
@@ -36,6 +37,7 @@ public class SecurityConfig {
     private final CorsAllowedOriginsProperties corsAllowedOriginsProperties;
     private final IdempotencyService idempotencyService;
     private final ApiFilterErrorResponseWriter apiFilterErrorResponseWriter;
+    private final MdcFilter mdcFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -56,9 +58,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(mdcFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(
                         new IdempotencyKeyFilter(idempotencyService, apiFilterErrorResponseWriter),
-                        JwtAuthenticationFilter.class
+                        MdcFilter.class
                 )
                 .build();
     }
@@ -80,5 +83,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public MdcFilter mdcFilter() {
+        return new MdcFilter();
     }
 }
