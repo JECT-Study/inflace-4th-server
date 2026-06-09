@@ -67,7 +67,7 @@ class MdcFilterTest {
     }
 
     @Test
-    void 인증이_없으면_userId는_기본_문구를_쓴다() throws Exception {
+    void 인증이_없으면_userId는_미인증_요청을_쓴다() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/channels");
         MockHttpServletResponse response = new MockHttpServletResponse();
         AtomicReference<String> userId = new AtomicReference<>();
@@ -76,7 +76,7 @@ class MdcFilterTest {
 
         mdcFilter.doFilter(request, response, chain);
 
-        assertThat(userId.get()).isEqualTo("인증 불필요 요청");
+        assertThat(userId.get()).isEqualTo("미인증 요청");
         assertThat(MDC.get("userId")).isNull();
     }
 }

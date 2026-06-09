@@ -58,7 +58,7 @@ public class MdcFilter extends OncePerRequestFilter {
     private String resolveUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
-            return "인증 불필요 요청";
+            return "미인증 요청";
         }
 
         Object principal = authentication.getPrincipal();
@@ -66,6 +66,6 @@ public class MdcFilter extends OncePerRequestFilter {
             return authUser.userId().toString();
         }
 
-        return "인증 불필요 요청";
+        return "미인증 요청";
     }
 }

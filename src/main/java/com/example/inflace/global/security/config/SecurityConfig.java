@@ -58,10 +58,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(mdcFilter, JwtAuthenticationFilter.class)
+                .addFilterBefore(mdcFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(
                         new IdempotencyKeyFilter(idempotencyService, apiFilterErrorResponseWriter),
-                        MdcFilter.class
+                        JwtAuthenticationFilter.class
                 )
                 .build();
     }
