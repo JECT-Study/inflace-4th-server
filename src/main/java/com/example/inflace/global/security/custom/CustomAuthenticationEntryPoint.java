@@ -25,18 +25,15 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             AuthenticationException authException
     ) throws IOException {
         ErrorDefine errorDefine = ErrorDefine.AUTHENTICATION_FAILED;
-        String message = ErrorDefine.AUTHENTICATION_FAILED.getMessage();
 
         if (authException instanceof JwtAuthenticationException jwtAuthenticationException) {
             errorDefine = jwtAuthenticationException.getError();
-            message = jwtAuthenticationException.getMessage();
         }
 
         apiFilterErrorResponseWriter.write(
                 request,
                 response,
-                errorDefine,
-                message
+                errorDefine
         );
     }
 }

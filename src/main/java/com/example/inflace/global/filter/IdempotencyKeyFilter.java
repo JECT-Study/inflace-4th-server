@@ -74,8 +74,7 @@ public class IdempotencyKeyFilter extends OncePerRequestFilter {
             apiFilterErrorResponseWriter.write(
                     request,
                     response,
-                    ErrorDefine.DUPLICATE_IDEMPOTENCY_REQUEST,
-                    ErrorDefine.DUPLICATE_IDEMPOTENCY_REQUEST.getMessage()
+                    ErrorDefine.DUPLICATE_IDEMPOTENCY_REQUEST
             );
             return;
         }

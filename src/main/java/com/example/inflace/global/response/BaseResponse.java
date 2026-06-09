@@ -1,6 +1,7 @@
 package com.example.inflace.global.response;
 
 import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.exception.InvalidateArgumentExceptionDTO;
 import com.example.inflace.global.exception.JSONConvertExceptionDTO;
 import io.micrometer.common.lang.Nullable;
@@ -55,13 +56,13 @@ public class BaseResponse<T> {
                                 .build());
     }
 
-    public static ResponseEntity<Object> toResponseEntity(Exception e) {
+    public static ResponseEntity<Object> toInternalServerErrorResponse() {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                         BaseResponse.builder()
                                 .isSuccess(false)
                                 .responseDto(null)
-                                .error(new ExceptionResponse(e))
+                                .error(new ExceptionResponse(ErrorDefine.INTERNAL_SERVER_ERROR))
                                 .build());
     }
 

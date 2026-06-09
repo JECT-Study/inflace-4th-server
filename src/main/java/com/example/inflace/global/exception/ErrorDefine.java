@@ -11,6 +11,7 @@ public enum ErrorDefine {
     INVALID_DATE_FORMAT("COMMON_400_DATE_FORMAT", HttpStatus.BAD_REQUEST, "Bad Request: Invalid date format"),
     INVALID_DATE_RANGE("COMMON_400_DATE_RANGE", HttpStatus.BAD_REQUEST, "Bad Request: Invalid date range"),
     DUPLICATE_IDEMPOTENCY_REQUEST("COMMON_409_IDEMPOTENCY", HttpStatus.CONFLICT, "Conflict: Duplicate idempotency request"),
+    INTERNAL_SERVER_ERROR("500", HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error"),
     AUTH_UNSUPPORTED_PROVIDER("AUTH_401", HttpStatus.BAD_REQUEST, "Bad Request: Unsupported OAuth Provider"),
     AUTHENTICATION_FAILED("AUTH_401_UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Unauthorized: Authentication required"),
     INVALID_ACCESS_TOKEN("AUTH_401_ACCESS", HttpStatus.UNAUTHORIZED, "Unauthorized: Invalid access token"),
