@@ -134,7 +134,7 @@ public class UserService {
         return new YoutubeLinkedResponse(channelRepository.existsByUser_Id(userId));
     }
 
-    @ReadOnlyTransactional
+    @Transactional(readOnly = true)
     public UserChannelMainResponse getMainChannelInfo() {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         User user = userReadRepository.getReferenceById(userId);
