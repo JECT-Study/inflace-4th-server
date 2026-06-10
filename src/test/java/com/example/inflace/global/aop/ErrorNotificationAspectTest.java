@@ -60,11 +60,10 @@ class ErrorNotificationAspectTest {
                 "write",
                 null,
                 null,
-                ErrorDefine.DUPLICATE_IDEMPOTENCY_REQUEST,
-                ErrorDefine.DUPLICATE_IDEMPOTENCY_REQUEST.getMessage()
+                ErrorDefine.DUPLICATE_IDEMPOTENCY_REQUEST
         );
 
-        aspect.notifyFilterError(joinPoint);
+        aspect.notifyFilterError(joinPoint, ErrorDefine.DUPLICATE_IDEMPOTENCY_REQUEST);
 
         verify(notificationService).notifyAsync(
                 org.mockito.ArgumentMatchers.eq("ApiFilterErrorResponseWriter.write"),
@@ -112,11 +111,10 @@ class ErrorNotificationAspectTest {
                 "write",
                 null,
                 null,
-                ErrorDefine.AUTHENTICATION_FAILED,
-                ErrorDefine.AUTHENTICATION_FAILED.getMessage()
+                ErrorDefine.AUTHENTICATION_FAILED
         );
 
-        aspect.notifyFilterError(joinPoint);
+        aspect.notifyFilterError(joinPoint, ErrorDefine.AUTHENTICATION_FAILED);
 
         verify(notificationService, never()).notifyAsync(
                 org.mockito.ArgumentMatchers.anyString(),
