@@ -2,9 +2,13 @@ version: "3.9" # Docker Compose 파일 버전
 
 services:
   postgres:
-    image: postgres:17
+    build:
+      context: .
+      dockerfile: docker/postgres-pgbigm/Dockerfile
+    image: inflace-postgres-pgbigm:17
     container_name: inflace-postgres-17
     restart: always
+    command: postgres -c shared_preload_libraries=pg_bigm
     environment:
       POSTGRES_USER: inflace
       POSTGRES_PASSWORD: password
