@@ -56,17 +56,17 @@ public class ErrorNotificationAspect {
         );
     }
 
-    @AfterReturning("execution(* com.example.inflace.global.response.ApiFilterErrorResponseWriter.write(..))")
-    public void notifyFilterError(JoinPoint joinPoint) {
-        Object[] arguments = joinPoint.getArgs();
-        ErrorDefine errorDefine = (ErrorDefine) arguments[2];
-        String message = (String) arguments[3];
-
+    @AfterReturning(
+            value = "execution(* com.example.inflace.global.response.ApiFilterErrorResponseWriter.write(..))"
+                    + " && args(*, *, errorDefine)",
+            argNames = "errorDefine"
+    )
+    public void notifyFilterError(JoinPoint joinPoint, ErrorDefine errorDefine) {
         if (!shouldNotify(errorDefine)) {
             return;
         }
 
-        notify(resolveSource(joinPoint), new ApiException(errorDefine), errorDefine, message);
+        notify(resolveSource(joinPoint), new ApiException(errorDefine), errorDefine, errorDefine.getMessage());
     }
 
     private boolean shouldNotify(Throwable exception) {
