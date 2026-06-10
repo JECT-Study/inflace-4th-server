@@ -19,6 +19,8 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -270,7 +272,11 @@ public class CustomInfluencerQueryRepositoryImpl implements CustomInfluencerQuer
             return null;
         }
 
-        return new BooleanBuilder(channel.name.containsIgnoreCase(channelName));
+        StringExpression likePattern = Expressions.stringTemplate(
+                "cast(function('likequery', lower({0})) as string)",
+                channelName
+        );
+        return new BooleanBuilder(channel.name.lower().like(likePattern, '\\'));
     }
 
     private BooleanBuilder buildCategoryIdIn(List<Long> categoryIds) {
