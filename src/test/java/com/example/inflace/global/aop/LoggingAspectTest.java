@@ -1,12 +1,21 @@
 package com.example.inflace.global.aop;
 
+import com.example.inflace.domain.auth.service.AuthTokenRedisService;
+import com.example.inflace.global.controller.HealthCheckController;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.MDC;
+import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -72,6 +81,74 @@ class LoggingAspectTest {
         }
     }
 
+    @Test
+    void 헬스_체크_컨트롤러는_로깅_대상에서_제외한다() throws NoSuchMethodException {
+        assertThat(matches(
+                aroundExpression("logControllerExecution"),
+                HealthCheckController.class,
+                "healthCheck",
+                String.class
+        )).isFalse();
+    }
+
+    @Test
+    void 일반_컨트롤러는_로깅_대상에_포함한다() throws NoSuchMethodException {
+        assertThat(matches(aroundExpression("logControllerExecution"), TestController.class, "getChannel"))
+                .isTrue();
+    }
+
+    @Test
+    void 레디스_서비스는_실행_로깅_대상에서_제외한다() throws NoSuchMethodException {
+        assertThat(matches(
+                aroundExpression("logServiceExecution"),
+                AuthTokenRedisService.class,
+                "saveLogoutAccessToken",
+                String.class,
+                long.class
+        ))
+                .isFalse();
+    }
+
+    @Test
+    void 레디스_서비스는_예외_로깅_대상에_포함한다() throws NoSuchMethodException {
+        assertThat(matches(
+                afterThrowingExpression("logServiceException"),
+                AuthTokenRedisService.class,
+                "saveLogoutAccessToken",
+                String.class,
+                long.class
+        ))
+                .isTrue();
+    }
+
+    @Test
+    void 일반_서비스는_로깅_대상에_포함한다() throws NoSuchMethodException {
+        assertThat(matches(aroundExpression("logServiceExecution"), TestService.class, "syncChannel"))
+                .isTrue();
+    }
+
+    private String aroundExpression(String methodName) throws NoSuchMethodException {
+        return LoggingAspect.class
+                .getMethod(methodName, ProceedingJoinPoint.class)
+                .getAnnotation(Around.class)
+                .value();
+    }
+
+    private String afterThrowingExpression(String methodName) throws NoSuchMethodException {
+        return LoggingAspect.class
+                .getMethod(methodName, org.aspectj.lang.JoinPoint.class, Throwable.class)
+                .getAnnotation(AfterThrowing.class)
+                .pointcut();
+    }
+
+    private boolean matches(String expression, Class<?> targetType, String methodName, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
+        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+        pointcut.setExpression(expression);
+        Method method = targetType.getMethod(methodName, parameterTypes);
+        return pointcut.matches(method, targetType);
+    }
+
     private ProceedingJoinPoint joinPoint(String methodName, Object result) {
         ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
         MethodSignature signature = mock(MethodSignature.class);
@@ -102,5 +179,19 @@ class LoggingAspectTest {
     }
 
     private static final class TestTarget {
+    }
+
+    @RestController
+    public static final class TestController {
+
+        public void getChannel() {
+        }
+    }
+
+    @Service
+    public static final class TestService {
+
+        public void syncChannel() {
+        }
     }
 }
