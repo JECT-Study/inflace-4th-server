@@ -18,12 +18,18 @@ import java.util.Map;
 @Slf4j
 public class LoggingAspect {
 
-    @Around("within(@org.springframework.web.bind.annotation.RestController *)")
+    @Around("""
+            within(@org.springframework.web.bind.annotation.RestController *)
+            && !within(com.example.inflace.global.controller.HealthCheckController)
+            """)
     public Object logControllerExecution(ProceedingJoinPoint joinPoint) throws Throwable {
         return logExecution(joinPoint, "controller");
     }
 
-    @Around("within(@org.springframework.stereotype.Service *)")
+    @Around("""
+            within(@org.springframework.stereotype.Service *)
+            && !within(com.example.inflace..*RedisService)
+            """)
     public Object logServiceExecution(ProceedingJoinPoint joinPoint) throws Throwable {
         return logExecution(joinPoint, "service");
     }
