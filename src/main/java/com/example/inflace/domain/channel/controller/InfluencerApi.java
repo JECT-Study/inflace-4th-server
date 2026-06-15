@@ -85,7 +85,7 @@ public interface InfluencerApi {
             description = """
                     특정 인플루언서 채널의 팬층, 콘텐츠, 활동, 롱폼/숏폼 지표를 종합 조회합니다.
                     
-                    - 영상이 50개 이상인 채널만 조회 가능합니다.
+                    - 영상이 10개 이상인 채널만 조회 가능합니다.
                     - 기본 채널 정보로 `channelName`, `categories`, `channelHandle`, `joinedAt`, `subscriberCount`를 함께 반환합니다.
                     - 로그인한 사용자의 즐겨찾기 여부(`bookmarked`)가 함께 내려갑니다.
                     - 이 API는 지표 조회 전용이며 OpenAI 요약 생성은 별도 API에서 수행합니다.
