@@ -25,7 +25,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class InfluencerInsightQueryService {
 
-    private static final int MIN_VIDEO_COUNT_FOR_INSIGHT = 50;
+    private static final int MIN_VIDEO_COUNT_FOR_INSIGHT = 10;
     private static final int MAX_RECENT_VIDEO_DESCRIPTION_COUNT = 10;
 
     private final ChannelRepository channelRepository;
