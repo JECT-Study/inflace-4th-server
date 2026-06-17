@@ -10,6 +10,7 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+      default_batch_fetch_size: 1000
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
