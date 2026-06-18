@@ -47,6 +47,10 @@ public class YoutubeChannelAnalyticsPersistenceService {
             Channel channel,
             YoutubeAnalyticsSyncData.ChannelAnalyticsData data
     ) {
+        if (!data.update()) {
+            return;
+        }
+
         channelAnalyticsRepository.findByChannel_Id(channel.getId())
                 .ifPresentOrElse(
                         analytics -> analytics.update(

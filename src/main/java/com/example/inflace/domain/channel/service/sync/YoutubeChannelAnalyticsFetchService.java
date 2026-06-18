@@ -104,6 +104,7 @@ public class YoutubeChannelAnalyticsFetchService {
                 : toInteger(summary.get("averageViewDuration"));
 
         return new YoutubeAnalyticsSyncData.ChannelAnalyticsData(
+                !summary.isEmpty(),
                 startDate,
                 endDate,
                 now,
@@ -335,11 +336,7 @@ public class YoutubeChannelAnalyticsFetchService {
             } catch (ApiException e) {
                 log.warn("Failed to sync audience retention. videoId={} youtubeVideoId={} startDate={} endDate={}",
                         video.videoId(), video.youtubeVideoId(), startDate, endDate, e);
-                result.add(new YoutubeAnalyticsSyncData.AudienceRetentionData(
-                        video.videoId(),
-                        List.of(),
-                        null
-                ));
+                continue;
             }
         }
         return result;

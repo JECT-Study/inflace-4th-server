@@ -12,6 +12,7 @@ public record YoutubeAnalyticsSyncData(
         List<AudienceRetentionData> audienceRetentions
 ) {
     public record ChannelAnalyticsData(
+            boolean update,
             LocalDate startDate,
             LocalDate endDate,
             LocalDateTime collectedAt,
