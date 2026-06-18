@@ -37,9 +37,9 @@ public record InfluencerSearchCondition(
         List<Long> categoryIds,
 
         @Schema(
-                description = "최소 참여율(%) 필터. 미입력 시 2.0",
-                defaultValue = "2.0",
-                example = "2.0"
+                description = "최소 참여율(%) 필터. 미입력 시 0.0",
+                defaultValue = "0.0",
+                example = "0.0"
         )
         Double engagementRateFrom,
 
@@ -106,7 +106,7 @@ public record InfluencerSearchCondition(
 
     public InfluencerSearchCondition {
         categoryIds = categoryIds == null ? List.of() : categoryIds;
-        engagementRateFrom = engagementRateFrom == null ? 2.0 : engagementRateFrom;
+        engagementRateFrom = engagementRateFrom == null ? 0.0 : engagementRateFrom;
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
         cursor = StringUtils.hasText(cursor) ? cursor : null;
