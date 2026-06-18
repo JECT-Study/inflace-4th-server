@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.service;
+package com.example.inflace.domain.channel.service.sync;
 
 import static com.example.inflace.global.util.AnalyticsParser.toDouble;
 import static com.example.inflace.global.util.AnalyticsParser.toLong;
