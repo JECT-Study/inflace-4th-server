@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -34,6 +35,7 @@ import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -42,20 +44,27 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class BrandCollaborationService {
 
-    private static final String VIDEO_PARTS = "snippet,statistics,contentDetails";
     // https://developers.google.com/youtube/v3/docs/videos/list
+    private static final String VIDEO_PARTS = "snippet,statistics,contentDetails";
     private static final String TRENDS_VIDEO_PARTS = "snippet,statistics";
-    private static final int SHORTS_MAX_DURATION_SECONDS = 180;
-    private static final String CHANNEL_PARTS = "snippet";
+
     // https://developers.google.com/youtube/v3/docs/channels/list
+    private static final String CHANNEL_PARTS = "snippet";
     private static final String CHANNEL_PARTS_WITH_STATS = "snippet,statistics,contentDetails";
+
+    private static final int SHORTS_MAX_DURATION_SECONDS = 180;
     private static final int RECENT_UPLOADS_COUNT = 10;
+    private static final int DEFAULT_VIDEO_COUNT = 9;
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final String DEFAULT_VIDEOS_CACHE_KEY = "brand-collaboration:default-videos";
 
     private final YoutubeSearchApiClient youtubeSearchApiClient;
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeCategoryRepository youtubeCategoryRepository;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public CursorSliceResponse<BrandCollaborationVideoResponse> search(BrandCollaborationSearchCondition condition) {
         validateKeywords(condition.includeKeywords(), condition.excludeKeywords());
