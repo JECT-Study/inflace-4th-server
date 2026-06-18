@@ -45,7 +45,6 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class YoutubeChannelDataSyncService {
 
-    private static final String VIDEO_PARTS = "snippet,contentDetails,statistics,paidProductPlacementDetails";
     private static final int RECENT_VIDEO_SAMPLE_SIZE = 30;
     private static final int CHANNEL_CATEGORY_LIMIT = 3;
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
@@ -62,12 +61,12 @@ public class YoutubeChannelDataSyncService {
     @Transactional
     public ChannelDataSyncResult synchronizeChannel(
             User user,
-            String googleId,
-            YoutubeDataChannelResponse.Item channelItem
+            YoutubeDataChannelResponse.Item channelItem,
+            List<YoutubeDataVideoResponse.Item> videoItems
     ) {
         Channel channel = upsertChannel(user, channelItem);
         upsertChannelStats(channel, channelItem.statistics());
-        syncChannelVideos(googleId, channel, channelItem.statistics());
+        syncChannelVideos(channel, channelItem.statistics(),videoItems);
         refreshCalculatedChannelStats(channel);
         refreshVideoRisingScores(channel);
         refreshChannelCategories(channel);
@@ -119,13 +118,14 @@ public class YoutubeChannelDataSyncService {
                 );
     }
 
-    private void syncChannelVideos(String googleId, Channel channel, YoutubeDataChannelResponse.Statistics channelStatistics) {
+    private void syncChannelVideos(
+            Channel channel,
+            YoutubeDataChannelResponse.Statistics channelStatistics,
+            List<YoutubeDataVideoResponse.Item> videoItems) {
         if (!StringUtils.hasText(channel.getUploadsPlaylistId())) {
             return;
         }
 
-        List<String> videoIds = youtubeDataApiClient.getMyVideoIds(googleId, channel.getUploadsPlaylistId());
-        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(videoIds, VIDEO_PARTS);
         ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channel.getId())
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
 
