@@ -56,7 +56,6 @@ public class YoutubeChannelDataSyncService {
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
     private final VideoTagRepository videoTagRepository;
-    private final YoutubeDataApiClient youtubeDataApiClient;
 
     @Transactional
     public ChannelDataSyncResult synchronizeChannel(
