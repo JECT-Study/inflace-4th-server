@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -70,6 +71,15 @@ public class BrandCollaborationService {
     private final RedisTemplate<String, String> redisTemplate;
 
     public CursorSliceResponse<BrandCollaborationVideoResponse> search(BrandCollaborationSearchCondition condition) {
+        if (condition.includeKeywords().isEmpty()) {
+            List<BrandCollaborationVideoResponse> defaults = getDefaultVideos();
+            return new CursorSliceResponse<>(
+                    defaults,
+                    new CursorSliceResponse.PageInfo(defaults.size(), defaults.size(), null, false),
+                    CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
+            );
+        }
+
         validateKeywords(condition.includeKeywords(), condition.excludeKeywords());
 
         String q = buildQuery(condition.includeKeywords(), condition.excludeKeywords());
@@ -409,6 +419,46 @@ public class BrandCollaborationService {
             stripped = stripped.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").strip();
         }
         return stripped;
+    }
+
+    public List<BrandCollaborationVideoResponse> getDefaultVideos() {
+        List<BrandCollaborationVideoResponse> cached = getCachedDefaultVideos();
+        if (cached != null) {
+            return cached;
+        }
+        List<BrandCollaborationVideoResponse> videos = fetchPreviousDayTopVideos();
+        saveDefaultVideosCache(videos);
+        return videos;
+    }
+
+    public void refreshDefaultVideosCache() {
+        redisTemplate.delete(DEFAULT_VIDEOS_CACHE_KEY);
+        List<BrandCollaborationVideoResponse> videos = fetchPreviousDayTopVideos();
+        saveDefaultVideosCache(videos);
+    }
+
+    private List<BrandCollaborationVideoResponse> fetchPreviousDayTopVideos() {
+        LocalDate yesterday = LocalDate.now(KST).minusDays(1);
+        String publishedAfter = yesterday.atStartOfDay(KST).toInstant().toString();
+        String publishedBefore = yesterday.plusDays(1).atStartOfDay(KST).toInstant().toString();
+
+        YoutubeSearchListResponse searchResponse = youtubeSearchApiClient.search(
+                null, null, "viewCount", null, null, null, null,
+                DEFAULT_VIDEO_COUNT, publishedAfter, publishedBefore, null
+        );
+
+        if (searchResponse == null || searchResponse.items() == null || searchResponse.items().isEmpty()) {
+            return List.of();
+        }
+
+        List<String> videoIds = searchResponse.items().stream()
+                .map(item -> item.id().videoId())
+                .filter(StringUtils::hasText)
+                .toList();
+
+        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(videoIds, VIDEO_PARTS);
+        Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(videoItems, CHANNEL_PARTS);
+        return buildContent(videoItems, channelMap);
     }
 
     private List<BrandCollaborationVideoResponse> getCachedDefaultVideos() {
