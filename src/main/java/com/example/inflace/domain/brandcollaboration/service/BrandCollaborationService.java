@@ -21,10 +21,13 @@ import com.example.inflace.infra.openai.OpenAiSendRequest;
 import com.example.inflace.infra.openai.prompt.BrandCollaborationTrendsPrompt;
 import com.example.inflace.infra.openai.service.OpenAiService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -406,6 +409,35 @@ public class BrandCollaborationService {
             stripped = stripped.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").strip();
         }
         return stripped;
+    }
+
+    private List<BrandCollaborationVideoResponse> getCachedDefaultVideos() {
+        String value = redisTemplate.opsForValue().get(DEFAULT_VIDEOS_CACHE_KEY);
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(value, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to deserialize default videos cache", e);
+            redisTemplate.delete(DEFAULT_VIDEOS_CACHE_KEY);
+            return null;
+        }
+    }
+
+    private void saveDefaultVideosCache(List<BrandCollaborationVideoResponse> videos) {
+        try {
+            ZonedDateTime now = ZonedDateTime.now(KST);
+            ZonedDateTime nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(KST);
+            Duration ttl = Duration.between(now, nextMidnight);
+            redisTemplate.opsForValue().set(
+                    DEFAULT_VIDEOS_CACHE_KEY,
+                    objectMapper.writeValueAsString(videos),
+                    ttl
+            );
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize default videos cache", e);
+        }
     }
 
     private long parseLong(String value) {

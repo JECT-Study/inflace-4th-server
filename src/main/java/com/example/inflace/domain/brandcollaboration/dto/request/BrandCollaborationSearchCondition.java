@@ -16,7 +16,7 @@ public record BrandCollaborationSearchCondition(
         @Schema(description = "기간 필터 종료일 (RFC 3339)", example = "2024-12-31T23:59:59Z")
         String endDate,
 
-        @ArraySchema(schema = @Schema(description = "포함 키워드 (최대 5개)", example = "메디큐브"))
+        @ArraySchema(schema = @Schema(description = "포함 키워드 (최대 5개). 미입력 시 기본 영상 반환", example = "메디큐브"))
         List<String> includeKeywords,
 
         @ArraySchema(schema = @Schema(description = "제외 키워드 (최대 5개)", example = "쿠팡파트너스"))
@@ -64,9 +64,6 @@ public record BrandCollaborationSearchCondition(
         excludeKeywords = excludeKeywords == null ? List.of()
                 : excludeKeywords.stream().map(String::trim).filter(StringUtils::hasText).toList();
 
-        if (includeKeywords.isEmpty()) {
-            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
-        }
         if (includeKeywords.size() > MAX_KEYWORD_COUNT || excludeKeywords.size() > MAX_KEYWORD_COUNT) {
             throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
         }
