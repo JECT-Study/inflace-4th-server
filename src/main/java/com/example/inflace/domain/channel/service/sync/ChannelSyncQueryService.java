@@ -6,6 +6,7 @@ import com.example.inflace.domain.channel.dto.sync.RefreshChannelTarget;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.user.infra.UserReadRepository;
+import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import java.util.UUID;
@@ -20,7 +21,7 @@ public class ChannelSyncQueryService {
     private final UserReadRepository userReadRepository;
     private final ChannelRepository channelRepository;
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public ConnectChannelTarget getConnectTarget(UUID userId) {
         User user = userReadRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
@@ -28,7 +29,7 @@ public class ChannelSyncQueryService {
         return new ConnectChannelTarget(user.getId(), user.getProviderId());
     }
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public RefreshChannelTarget getRefreshTarget(UUID userId, Long channelId) {
         User user = userReadRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));

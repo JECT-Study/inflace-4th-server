@@ -12,6 +12,7 @@ import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.domain.video.repository.VideoAnalyticsRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
+import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import java.time.LocalDate;
@@ -34,7 +35,7 @@ public class YoutubeChannelAnalyticsQueryService {
     private final VideoAnalyticsRepository videoAnalyticsRepository;
     private final VideoStatsRepository videoStatsRepository;
 
-    @Transactional(readOnly = true)
+    @ReadOnlyTransactional
     public AnalyticsSyncContext loadContext(Long channelId, List<Video> videos) {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
