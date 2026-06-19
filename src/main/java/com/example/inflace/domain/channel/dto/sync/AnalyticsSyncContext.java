@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.dto;
+package com.example.inflace.domain.channel.dto.sync;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

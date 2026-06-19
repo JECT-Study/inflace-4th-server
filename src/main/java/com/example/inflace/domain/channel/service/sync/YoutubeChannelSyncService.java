@@ -3,26 +3,20 @@ package com.example.inflace.domain.channel.service.sync;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelAnalytics;
 import com.example.inflace.domain.channel.dto.ChannelDataSyncResult;
-import com.example.inflace.domain.channel.dto.ConnectChannelTarget;
-import com.example.inflace.domain.channel.dto.RefreshChannelTarget;
+import com.example.inflace.domain.channel.dto.sync.ConnectChannelTarget;
+import com.example.inflace.domain.channel.dto.sync.RefreshChannelTarget;
 import com.example.inflace.domain.channel.dto.response.ChannelSyncResponse;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelAnalyticsRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
-import com.example.inflace.domain.user.domain.entity.User;
-import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
-import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse.Item;
-import com.example.inflace.global.client.YoutubeDataApiClient;
-import com.example.inflace.global.exception.ApiException;
-import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.security.util.SecurityUtils;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -93,7 +87,7 @@ public class YoutubeChannelSyncService {
     private ChannelSyncResponse buildChannelSyncResponse(Channel channel) {
         LocalDateTime updatedAt = channelAnalyticsRepository.findByChannel_Id(channel.getId())
                 .map(ChannelAnalytics::getUpdatedAt)
-                .orElse(LocalDateTime.now());
+                .orElse(LocalDateTime.now(ZoneOffset.UTC));
         return new ChannelSyncResponse(channel.getId(), channel.getYoutubeChannelId(), updatedAt);
     }
 }

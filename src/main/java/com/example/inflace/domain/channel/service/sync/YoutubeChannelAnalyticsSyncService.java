@@ -1,8 +1,8 @@
 package com.example.inflace.domain.channel.service.sync;
 
 import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.domain.channel.dto.AnalyticsSyncContext;
-import com.example.inflace.domain.channel.dto.YoutubeAnalyticsSyncData;
+import com.example.inflace.domain.channel.dto.sync.AnalyticsSyncContext;
+import com.example.inflace.domain.channel.dto.sync.YoutubeAnalyticsSyncData;
 import com.example.inflace.domain.video.domain.Video;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

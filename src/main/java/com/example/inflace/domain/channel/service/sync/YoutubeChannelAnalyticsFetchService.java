@@ -3,8 +3,8 @@ package com.example.inflace.domain.channel.service.sync;
 import static com.example.inflace.global.util.AnalyticsParser.toDouble;
 import static com.example.inflace.global.util.AnalyticsParser.toLong;
 
-import com.example.inflace.domain.channel.dto.AnalyticsSyncContext;
-import com.example.inflace.domain.channel.dto.YoutubeAnalyticsSyncData;
+import com.example.inflace.domain.channel.dto.sync.AnalyticsSyncContext;
+import com.example.inflace.domain.channel.dto.sync.YoutubeAnalyticsSyncData;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoRequest;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoResponse;
 import com.example.inflace.global.client.YoutubeAnalyticsApiClient;

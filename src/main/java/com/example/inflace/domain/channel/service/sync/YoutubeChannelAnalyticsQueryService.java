@@ -3,7 +3,7 @@ package com.example.inflace.domain.channel.service.sync;
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.domain.SubscriberLog;
-import com.example.inflace.domain.channel.dto.AnalyticsSyncContext;
+import com.example.inflace.domain.channel.dto.sync.AnalyticsSyncContext;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.channel.repository.SubscriberLogRepository;

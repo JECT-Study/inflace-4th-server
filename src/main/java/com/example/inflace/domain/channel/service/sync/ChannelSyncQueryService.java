@@ -1,8 +1,8 @@
 package com.example.inflace.domain.channel.service.sync;
 
 import com.example.inflace.domain.channel.domain.Channel;
-import com.example.inflace.domain.channel.dto.ConnectChannelTarget;
-import com.example.inflace.domain.channel.dto.RefreshChannelTarget;
+import com.example.inflace.domain.channel.dto.sync.ConnectChannelTarget;
+import com.example.inflace.domain.channel.dto.sync.RefreshChannelTarget;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.user.domain.entity.User;
 import com.example.inflace.domain.user.infra.UserReadRepository;
