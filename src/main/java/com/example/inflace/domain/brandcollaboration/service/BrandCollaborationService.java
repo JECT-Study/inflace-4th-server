@@ -75,7 +75,7 @@ public class BrandCollaborationService {
             List<BrandCollaborationVideoResponse> defaults = getDefaultVideos();
             return new CursorSliceResponse<>(
                     defaults,
-                    new CursorSliceResponse.PageInfo(defaults.size(), defaults.size(), null, false),
+                    new CursorSliceResponse.PageInfo(condition.pageSize(), defaults.size(), null, false),
                     CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
             );
         }
@@ -427,14 +427,17 @@ public class BrandCollaborationService {
             return cached;
         }
         List<BrandCollaborationVideoResponse> videos = fetchPreviousDayTopVideos();
-        saveDefaultVideosCache(videos);
+        if (!videos.isEmpty()) {
+            saveDefaultVideosCache(videos);
+        }
         return videos;
     }
 
     public void refreshDefaultVideosCache() {
-        redisTemplate.delete(DEFAULT_VIDEOS_CACHE_KEY);
         List<BrandCollaborationVideoResponse> videos = fetchPreviousDayTopVideos();
-        saveDefaultVideosCache(videos);
+        if (!videos.isEmpty()) {
+            saveDefaultVideosCache(videos);
+        }
     }
 
     private List<BrandCollaborationVideoResponse> fetchPreviousDayTopVideos() {

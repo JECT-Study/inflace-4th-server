@@ -16,7 +16,7 @@ public record BrandCollaborationSearchCondition(
         @Schema(description = "기간 필터 종료일 (RFC 3339)", example = "2024-12-31T23:59:59Z")
         String endDate,
 
-        @ArraySchema(schema = @Schema(description = "포함 키워드 (최대 5개). 미입력 시 기본 영상 반환", example = "메디큐브"))
+        @ArraySchema(schema = @Schema(description = "포함 키워드 (최대 5개). 미입력 시 기본 영상 반환", example = "나이키"))
         List<String> includeKeywords,
 
         @ArraySchema(schema = @Schema(description = "제외 키워드 (최대 5개)", example = "쿠팡파트너스"))
