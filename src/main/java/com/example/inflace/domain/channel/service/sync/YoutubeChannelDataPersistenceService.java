@@ -1,17 +1,15 @@
-package com.example.inflace.domain.channel.service;
+package com.example.inflace.domain.channel.service.sync;
 
 import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.domain.ChannelCategory;
 import com.example.inflace.domain.channel.domain.ChannelStats;
-import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
 import com.example.inflace.domain.channel.dto.ChannelDataSyncResult;
-
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.channel.repository.ChannelCategoryRepository;
 import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
-import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.user.domain.entity.User;
+import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.domain.video.domain.VideoTag;
@@ -19,7 +17,8 @@ import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.domain.video.repository.VideoRepository;
 import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.domain.video.repository.VideoTagRepository;
-import com.example.inflace.global.client.YoutubeDataApiClient;
+import com.example.inflace.domain.youtubecategory.domain.YoutubeCategory;
+import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
 import com.example.inflace.global.util.AnalyticsCalculator;
@@ -34,6 +33,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -43,13 +43,13 @@ import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
-public class YoutubeChannelDataSyncService {
+public class YoutubeChannelDataPersistenceService {
 
-    private static final String VIDEO_PARTS = "snippet,contentDetails,statistics,paidProductPlacementDetails";
     private static final int RECENT_VIDEO_SAMPLE_SIZE = 30;
     private static final int CHANNEL_CATEGORY_LIMIT = 3;
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
 
+    private final UserReadRepository userReadRepository;
     private final ChannelRepository channelRepository;
     private final ChannelCategoryRepository channelCategoryRepository;
     private final ChannelStatsRepository channelStatsRepository;
@@ -57,17 +57,19 @@ public class YoutubeChannelDataSyncService {
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
     private final VideoTagRepository videoTagRepository;
-    private final YoutubeDataApiClient youtubeDataApiClient;
 
     @Transactional
-    public ChannelDataSyncResult synchronizeChannel(
-            User user,
-            String googleId,
-            YoutubeDataChannelResponse.Item channelItem
+    public ChannelDataSyncResult persistChannelData(
+            UUID userId,
+            YoutubeDataChannelResponse.Item channelItem,
+            List<YoutubeDataVideoResponse.Item> videoItems
     ) {
+        User user = userReadRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
         Channel channel = upsertChannel(user, channelItem);
         upsertChannelStats(channel, channelItem.statistics());
-        syncChannelVideos(googleId, channel, channelItem.statistics());
+        syncChannelVideos(channel, channelItem.statistics(), videoItems);
         refreshCalculatedChannelStats(channel);
         refreshVideoRisingScores(channel);
         refreshChannelCategories(channel);
@@ -119,13 +121,15 @@ public class YoutubeChannelDataSyncService {
                 );
     }
 
-    private void syncChannelVideos(String googleId, Channel channel, YoutubeDataChannelResponse.Statistics channelStatistics) {
+    private void syncChannelVideos(
+            Channel channel,
+            YoutubeDataChannelResponse.Statistics channelStatistics,
+            List<YoutubeDataVideoResponse.Item> videoItems
+    ) {
         if (!StringUtils.hasText(channel.getUploadsPlaylistId())) {
             return;
         }
 
-        List<String> videoIds = youtubeDataApiClient.getMyVideoIds(googleId, channel.getUploadsPlaylistId());
-        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(videoIds, VIDEO_PARTS);
         ChannelStats channelStats = channelStatsRepository.findByChannel_Id(channel.getId())
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
 

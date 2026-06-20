@@ -1,4 +1,4 @@
-package com.example.inflace.domain.channel.service;
+package com.example.inflace.domain.channel.service.sync;
 
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
