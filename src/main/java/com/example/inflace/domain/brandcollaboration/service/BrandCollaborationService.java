@@ -4,8 +4,13 @@ import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborat
 import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborationTrendsRequest;
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationTrendsResponse;
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationVideoResponse;
+import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
+import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.domain.VideoStats;
+import com.example.inflace.domain.video.repository.VideoRepository;
+import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.client.YoutubeDataApiClient;
@@ -36,7 +41,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Limit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -69,6 +76,8 @@ public class BrandCollaborationService {
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
     private final RedisTemplate<String, String> redisTemplate;
+    private final VideoRepository videoRepository;
+    private final VideoStatsRepository videoStatsRepository;
 
     public CursorSliceResponse<BrandCollaborationVideoResponse> search(BrandCollaborationSearchCondition condition) {
         if (condition.includeKeywords().isEmpty()) {
@@ -441,27 +450,39 @@ public class BrandCollaborationService {
     }
 
     private List<BrandCollaborationVideoResponse> fetchPreviousDayTopVideos() {
-        LocalDate yesterday = LocalDate.now(KST).minusDays(1);
-        String publishedAfter = yesterday.atStartOfDay(KST).toInstant().toString();
-        String publishedBefore = yesterday.plusDays(1).atStartOfDay(KST).toInstant().toString();
-
-        YoutubeSearchListResponse searchResponse = youtubeSearchApiClient.search(
-                null, null, "viewCount", null, null, null, null,
-                DEFAULT_VIDEO_COUNT, publishedAfter, publishedBefore, null
-        );
-
-        if (searchResponse == null || searchResponse.items() == null || searchResponse.items().isEmpty()) {
+        List<Video> videos = videoRepository.findTopAdVideos(Limit.of(DEFAULT_VIDEO_COUNT));
+        if (videos.isEmpty()) {
             return List.of();
         }
+        List<Long> videoIds = videos.stream().map(Video::getId).toList();
+        Map<Long, VideoStats> statsMap = videoStatsRepository.findAllByVideoIdIn(videoIds)
+                .stream().collect(Collectors.toMap(vs -> vs.getVideo().getId(), Function.identity()));
+        return buildContentFromVideos(videos, statsMap);
+    }
 
-        List<String> videoIds = searchResponse.items().stream()
-                .map(item -> item.id().videoId())
-                .filter(StringUtils::hasText)
+    private List<BrandCollaborationVideoResponse> buildContentFromVideos(
+            List<Video> videos, Map<Long, VideoStats> statsMap
+    ) {
+        return videos.stream()
+                .map(video -> {
+                    VideoStats stats = statsMap.get(video.getId());
+                    Channel channel = video.getChannel();
+                    return new BrandCollaborationVideoResponse(
+                            video.getYoutubeVideoId(),
+                            video.getTitle(),
+                            video.getThumbnailUrl(),
+                            video.getPublishedAt() != null
+                                    ? video.getPublishedAt().atZone(ZoneId.of("UTC")).toInstant().toString()
+                                    : null,
+                            stats != null ? stats.getViewCount() : 0L,
+                            stats != null ? stats.getLikeCount() : 0L,
+                            stats != null ? stats.getCommentCount() : 0L,
+                            channel != null ? channel.getYoutubeChannelId() : null,
+                            channel != null ? channel.getName() : null,
+                            channel != null ? channel.getProfileImageUrl() : null
+                    );
+                })
                 .toList();
-
-        List<YoutubeDataVideoResponse.Item> videoItems = youtubeDataApiClient.getYoutubeVideos(videoIds, VIDEO_PARTS);
-        Map<String, YoutubeDataChannelResponse.Item> channelMap = fetchChannelMap(videoItems, CHANNEL_PARTS);
-        return buildContent(videoItems, channelMap);
     }
 
     private List<BrandCollaborationVideoResponse> getCachedDefaultVideos() {
