@@ -4,8 +4,13 @@ import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborat
 import com.example.inflace.domain.brandcollaboration.dto.request.BrandCollaborationTrendsRequest;
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationTrendsResponse;
 import com.example.inflace.domain.brandcollaboration.dto.response.BrandCollaborationVideoResponse;
+import com.example.inflace.domain.channel.domain.Channel;
 import com.example.inflace.domain.channel.dto.request.ChannelVideoFormat;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
+import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.domain.VideoStats;
+import com.example.inflace.domain.video.repository.VideoRepository;
+import com.example.inflace.domain.video.repository.VideoStatsRepository;
 import com.example.inflace.domain.youtubecategory.repository.YoutubeCategoryRepository;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
 import com.example.inflace.global.client.YoutubeDataApiClient;
@@ -21,9 +26,14 @@ import com.example.inflace.infra.openai.OpenAiSendRequest;
 import com.example.inflace.infra.openai.prompt.BrandCollaborationTrendsPrompt;
 import com.example.inflace.infra.openai.service.OpenAiService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -31,9 +41,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Limit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -42,22 +55,40 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class BrandCollaborationService {
 
-    private static final String VIDEO_PARTS = "snippet,statistics,contentDetails";
     // https://developers.google.com/youtube/v3/docs/videos/list
+    private static final String VIDEO_PARTS = "snippet,statistics,contentDetails";
     private static final String TRENDS_VIDEO_PARTS = "snippet,statistics";
-    private static final int SHORTS_MAX_DURATION_SECONDS = 180;
-    private static final String CHANNEL_PARTS = "snippet";
+
     // https://developers.google.com/youtube/v3/docs/channels/list
+    private static final String CHANNEL_PARTS = "snippet";
     private static final String CHANNEL_PARTS_WITH_STATS = "snippet,statistics,contentDetails";
+
+    private static final int SHORTS_MAX_DURATION_SECONDS = 180;
     private static final int RECENT_UPLOADS_COUNT = 10;
+    private static final int DEFAULT_VIDEO_COUNT = 9;
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final String DEFAULT_VIDEOS_CACHE_KEY = "brand-collaboration:default-videos";
 
     private final YoutubeSearchApiClient youtubeSearchApiClient;
     private final YoutubeDataApiClient youtubeDataApiClient;
     private final YoutubeCategoryRepository youtubeCategoryRepository;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final VideoRepository videoRepository;
+    private final VideoStatsRepository videoStatsRepository;
 
     public CursorSliceResponse<BrandCollaborationVideoResponse> search(BrandCollaborationSearchCondition condition) {
+        if (condition.includeKeywords().isEmpty()) {
+            List<BrandCollaborationVideoResponse> defaults = getDefaultVideos();
+            return new CursorSliceResponse<>(
+                    defaults,
+                    new CursorSliceResponse.PageInfo(condition.pageSize(), defaults.size(), null, false),
+                    CustomSort.of(true, condition.sortCriteriaValue(), condition.sortOrder().name())
+            );
+        }
+
         validateKeywords(condition.includeKeywords(), condition.excludeKeywords());
 
         String q = buildQuery(condition.includeKeywords(), condition.excludeKeywords());
@@ -397,6 +428,98 @@ public class BrandCollaborationService {
             stripped = stripped.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").strip();
         }
         return stripped;
+    }
+
+    public List<BrandCollaborationVideoResponse> getDefaultVideos() {
+        List<BrandCollaborationVideoResponse> cached = getCachedDefaultVideos();
+        if (cached != null) {
+            return cached;
+        }
+        List<BrandCollaborationVideoResponse> videos = fetchPreviousDayTopVideos();
+        if (!videos.isEmpty()) {
+            saveDefaultVideosCache(videos);
+        }
+        return videos;
+    }
+
+    public void refreshDefaultVideosCache() {
+        List<BrandCollaborationVideoResponse> videos = fetchPreviousDayTopVideos();
+        if (!videos.isEmpty()) {
+            saveDefaultVideosCache(videos);
+        }
+    }
+
+    private List<BrandCollaborationVideoResponse> fetchPreviousDayTopVideos() {
+        List<Video> videos = videoRepository.findTopAdVideos(Limit.of(DEFAULT_VIDEO_COUNT));
+        if (videos.isEmpty()) {
+            return List.of();
+        }
+        List<Long> videoIds = videos.stream().map(Video::getId).toList();
+        Map<Long, VideoStats> statsMap = videoStatsRepository.findAllByVideoIdIn(videoIds)
+                .stream().collect(Collectors.toMap(vs -> vs.getVideo().getId(), Function.identity()));
+        return buildContentFromVideos(videos, statsMap);
+    }
+
+    private List<BrandCollaborationVideoResponse> buildContentFromVideos(
+            List<Video> videos, Map<Long, VideoStats> statsMap
+    ) {
+        return videos.stream()
+                .map(video -> {
+                    VideoStats stats = statsMap.get(video.getId());
+                    Channel channel = video.getChannel();
+                    return new BrandCollaborationVideoResponse(
+                            video.getYoutubeVideoId(),
+                            video.getTitle(),
+                            video.getThumbnailUrl(),
+                            video.getPublishedAt() != null
+                                    ? video.getPublishedAt().atZone(ZoneId.of("UTC")).toInstant().toString()
+                                    : null,
+                            stats != null ? stats.getViewCount() : 0L,
+                            stats != null ? stats.getLikeCount() : 0L,
+                            stats != null ? stats.getCommentCount() : 0L,
+                            channel != null ? channel.getYoutubeChannelId() : null,
+                            channel != null ? channel.getName() : null,
+                            channel != null ? channel.getProfileImageUrl() : null
+                    );
+                })
+                .toList();
+    }
+
+    private List<BrandCollaborationVideoResponse> getCachedDefaultVideos() {
+        String value;
+        try {
+            value = redisTemplate.opsForValue().get(DEFAULT_VIDEOS_CACHE_KEY);
+        } catch (RuntimeException e) {
+            log.warn("Failed to read default videos cache from Redis", e);
+            return null;
+        }
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(value, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to deserialize default videos cache", e);
+            redisTemplate.delete(DEFAULT_VIDEOS_CACHE_KEY);
+            return null;
+        }
+    }
+
+    private void saveDefaultVideosCache(List<BrandCollaborationVideoResponse> videos) {
+        try {
+            ZonedDateTime now = ZonedDateTime.now(KST);
+            ZonedDateTime nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(KST);
+            Duration ttl = Duration.between(now, nextMidnight);
+            redisTemplate.opsForValue().set(
+                    DEFAULT_VIDEOS_CACHE_KEY,
+                    objectMapper.writeValueAsString(videos),
+                    ttl
+            );
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize default videos cache", e);
+        } catch (RuntimeException e) {
+            log.warn("Failed to write default videos cache to Redis", e);
+        }
     }
 
     private long parseLong(String value) {

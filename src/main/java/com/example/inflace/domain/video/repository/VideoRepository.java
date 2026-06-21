@@ -55,4 +55,13 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     List<Video> findByChannelId(Long channelId);
 
     List<Video> findByChannelIdOrderByPublishedAtDesc(Long channelId);
+
+    @Query("""
+            select v from Video v
+            join fetch v.channel
+            left join VideoStats vs on vs.video = v
+            where v.isAdvertisement = true
+            order by coalesce(vs.viewCount, 0) desc
+            """)
+    List<Video> findTopAdVideos(Limit limit);
 }
