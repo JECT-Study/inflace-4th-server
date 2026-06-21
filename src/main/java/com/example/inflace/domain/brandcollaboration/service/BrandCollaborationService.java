@@ -486,7 +486,13 @@ public class BrandCollaborationService {
     }
 
     private List<BrandCollaborationVideoResponse> getCachedDefaultVideos() {
-        String value = redisTemplate.opsForValue().get(DEFAULT_VIDEOS_CACHE_KEY);
+        String value;
+        try {
+            value = redisTemplate.opsForValue().get(DEFAULT_VIDEOS_CACHE_KEY);
+        } catch (RuntimeException e) {
+            log.warn("Failed to read default videos cache from Redis", e);
+            return null;
+        }
         if (value == null || value.isBlank()) {
             return null;
         }
@@ -511,6 +517,8 @@ public class BrandCollaborationService {
             );
         } catch (JsonProcessingException e) {
             log.warn("Failed to serialize default videos cache", e);
+        } catch (RuntimeException e) {
+            log.warn("Failed to write default videos cache to Redis", e);
         }
     }
 
