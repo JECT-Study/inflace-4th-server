@@ -158,10 +158,8 @@ public class ChannelService {
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_STATS_NOT_FOUND));
 
         List<Video> videos = videoRepository.findByChannelId(channelId);
-        Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
 
-        LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
-        Long recentUploadCount = videoRepository.countByChannelIdAndPublishedAtGreaterThanEqual(channelId, oneMonthAgo);
+        Integer recentUploadCount = channelStats.getRecentUploadCount30d();
         double weeklyUploadCount = Math.round((recentUploadCount / (30.0 / 7.0)) * 100) / 100.0;
 
         return ChannelKpiResponse.from(
