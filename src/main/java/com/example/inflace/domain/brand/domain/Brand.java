@@ -18,4 +18,7 @@ public class Brand {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "ai_generated", nullable = false)
+    private boolean aiGenerated;
 }
