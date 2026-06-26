@@ -3,12 +3,14 @@ package com.example.inflace.domain.channel.dto.response;
 import com.example.inflace.domain.channel.domain.Channel;
 
 public record UserChannelDetailsResponse(
+        Long channelId,
         String youtubeChannelId,
         String youtubeChannelName,
         String youtubeChannelProfileImageUrl
 ) {
     public static UserChannelDetailsResponse from(Channel channel) {
         return new UserChannelDetailsResponse(
+                channel.getId(),
                 channel.getYoutubeChannelId(),
                 channel.getName(),
                 null
