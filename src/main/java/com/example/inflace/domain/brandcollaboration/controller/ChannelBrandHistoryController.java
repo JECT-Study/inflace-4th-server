@@ -23,7 +23,7 @@ public class ChannelBrandHistoryController implements ChannelBrandHistoryApi {
     @Override
     @GetMapping("/{channelId}")
     public BaseResponse<CursorSliceResponse<ChannelBrandHistoryVideoResponse>> search(
-            @PathVariable String channelId,
+            @PathVariable Long channelId,
             @ModelAttribute ChannelBrandHistorySearchCondition condition
     ) {
         return new BaseResponse<>(channelBrandHistoryService.search(channelId, condition));
@@ -32,7 +32,7 @@ public class ChannelBrandHistoryController implements ChannelBrandHistoryApi {
     @Override
     @GetMapping("/{channelId}/analysis")
     public BaseResponse<ChannelBrandHistoryAnalysisResponse> analysis(
-            @PathVariable String channelId,
+            @PathVariable Long channelId,
             @ModelAttribute ChannelBrandHistorySearchCondition condition
     ) {
         return new BaseResponse<>(channelBrandHistoryService.analysis(channelId, condition));
