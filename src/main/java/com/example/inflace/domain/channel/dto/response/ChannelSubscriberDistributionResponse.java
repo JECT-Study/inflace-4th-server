@@ -92,8 +92,12 @@ public record ChannelSubscriberDistributionResponse(
             }
         }
 
-        if (type == DistributionType.AGE && code != null && code.endsWith("-")) {
-            return code.substring(0, code.length() - 1);
+        if (type == DistributionType.AGE && code != null) {
+            String ageLabel = code.startsWith("age") ? code.substring("age".length()) : code;
+            if (ageLabel.endsWith("-")) {
+                return ageLabel.substring(0, ageLabel.length() - 1) + "+";
+            }
+            return ageLabel;
         }
 
         return code;
