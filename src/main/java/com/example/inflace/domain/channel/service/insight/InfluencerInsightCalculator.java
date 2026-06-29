@@ -291,7 +291,7 @@ public class InfluencerInsightCalculator {
                 .filter(predicate)
                 .count();
 
-        return matched * 100.0 / CONTENT_WINDOW_SIZE;
+        return matched * 100.0 / metrics.size();
     }
 
     private double averageViewCount(List<VideoMetric> metrics) {
