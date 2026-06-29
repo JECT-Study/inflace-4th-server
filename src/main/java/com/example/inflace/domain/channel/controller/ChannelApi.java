@@ -85,7 +85,7 @@ public interface ChannelApi {
             summary = "구독자 분포",
             description = "채널의 국가별, 연령별, 성별 분포를 조회합니다."
     )
-    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND})
+    @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND, ErrorDefine.ANALYTICS_DATA_NOT_FOUND})
     BaseResponse<ChannelSubscriberDistributionResponse> getSubscriberDistribution(@PathVariable Long channelId);
 
     @Operation(

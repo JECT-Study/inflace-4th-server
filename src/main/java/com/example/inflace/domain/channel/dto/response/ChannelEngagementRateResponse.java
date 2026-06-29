@@ -9,8 +9,8 @@ public record ChannelEngagementRateResponse(
         List<EngageVideo> videos
 ) {
     public record Summary(
-            Double longFormAverageEngagementRate,
-            Double shortFormAverageEngagementRate
+            Double longFormEngagementRate,
+            Double shortFormEngagementRate
     ) {
     }
 

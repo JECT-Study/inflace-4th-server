@@ -130,6 +130,9 @@ public class ChannelService {
                 channelId,
                 PageRequest.of(0,5)
         );
+        if (videos.isEmpty()) {
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
+        }
 
         Map<Long, VideoStats> videoStatsMap = getVideoStatsMap(videos);
         Map<Long, VideoAnalytics> videoAnalyticsMap = getVideoAnalyticsMap(videos);
@@ -247,12 +250,25 @@ public class ChannelService {
 
         ChannelAnalytics channelAnalytics = channelAnalyticsRepository.findByChannel_Id(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_ANALYTICS_NOT_FOUND));
+        validateSubscriberDistributionAnalytics(channelAnalytics);
 
         return ChannelSubscriberDistributionResponse.from(
                 channelAnalytics.getAudienceGender(),
                 channelAnalytics.getAudienceAge(),
                 channelAnalytics.getAudienceCountry()
         );
+    }
+
+    private void validateSubscriberDistributionAnalytics(ChannelAnalytics channelAnalytics) {
+        if (isEmpty(channelAnalytics.getAudienceGender())
+                && isEmpty(channelAnalytics.getAudienceAge())
+                && isEmpty(channelAnalytics.getAudienceCountry())) {
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
+        }
+    }
+
+    private boolean isEmpty(Map<?, ?> source) {
+        return source == null || source.isEmpty();
     }
 
 
