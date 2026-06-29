@@ -10,14 +10,18 @@ import com.example.inflace.domain.channel.repository.ChannelRepository;
 import com.example.inflace.domain.channel.repository.ChannelStatsRepository;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.repository.VideoRepository;
+import com.example.inflace.domain.video.repository.projection.VideoFormatStatsProjection;
 import com.example.inflace.domain.video.service.VideoService;
 import com.example.inflace.global.annotation.ReadOnlyTransactional;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -26,7 +30,9 @@ import org.springframework.util.StringUtils;
 public class InfluencerInsightQueryService {
 
     private static final int MIN_VIDEO_COUNT_FOR_INSIGHT = 10;
+    private static final int LATEST_VIDEO_COUNT_FOR_INSIGHT = 50;
     private static final int MAX_RECENT_VIDEO_DESCRIPTION_COUNT = 10;
+    private static final int RECENT_WINDOW_DAYS = 30;
 
     private final ChannelRepository channelRepository;
     private final ChannelStatsRepository channelStatsRepository;
@@ -40,10 +46,18 @@ public class InfluencerInsightQueryService {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
 
-        List<Video> videos = videoRepository.findByChannelIdOrderByPublishedAtDesc(channelId);
-        if (videos.size() < MIN_VIDEO_COUNT_FOR_INSIGHT) {
+        if (videoRepository.countByChannelId(channelId) < MIN_VIDEO_COUNT_FOR_INSIGHT) {
             throw new ApiException(ErrorDefine.CHANNEL_INSIGHT_REQUIRES_MIN_VIDEO_COUNT);
         }
+        List<Video> latestVideos = videoRepository.findByChannelIdOrderByPublishedAtDesc(
+                channelId,
+                PageRequest.of(0, LATEST_VIDEO_COUNT_FOR_INSIGHT)
+        );
+        List<VideoFormatStatsProjection> recentFormatProjections = videoRepository
+                .findFormatStatsRowsByChannelIdAndPublishedAtGreaterThanEqual(
+                        channelId,
+                        LocalDateTime.now(ZoneOffset.UTC).minusDays(RECENT_WINDOW_DAYS)
+                );
         List<String> categories = channelCategoryRepository.findAllByChannel_Id(channelId).stream()
                 .map(ChannelCategory::getCategory)
                 .filter(Objects::nonNull)
@@ -56,13 +70,14 @@ public class InfluencerInsightQueryService {
                 channel,
                 channelStats,
                 categories,
-                videos,
-                videoService.getVideoStatsMap(videos)
+                latestVideos,
+                videoService.getVideoStatsMap(latestVideos),
+                recentFormatProjections
         );
 
         return new InfluencerInsightQueryResult(
                 channel.getDescription(),
-                getRecentVideoDescriptions(videos),
+                getRecentVideoDescriptions(latestVideos),
                 insight
         );
     }

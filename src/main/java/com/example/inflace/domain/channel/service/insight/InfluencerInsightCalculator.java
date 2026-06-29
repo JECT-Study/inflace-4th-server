@@ -5,6 +5,7 @@ import com.example.inflace.domain.channel.domain.ChannelStats;
 import com.example.inflace.domain.channel.dto.response.GetInfluencerInsightResponse;
 import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoStats;
+import com.example.inflace.domain.video.repository.projection.VideoFormatStatsProjection;
 import com.example.inflace.global.util.AnalyticsCalculator;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,7 +26,6 @@ public class InfluencerInsightCalculator {
     private static final int CONTENT_WINDOW_SIZE = 50;
     private static final int GROWTH_WINDOW_SIZE = 25;
     private static final int FREQUENCY_INTERVAL_WINDOW_SIZE = 5;
-    private static final int RECENT_WINDOW_DAYS = 30;
     private static final int MIN_ADVERTISEMENT_VIDEO_COUNT = 3;
 
     public InfluencerInsightCalculator(InfluencerInsightScoreCalculator scoreCalculator) {
@@ -37,7 +37,8 @@ public class InfluencerInsightCalculator {
             ChannelStats channelStats,
             List<String> categories,
             List<Video> videos,
-            Map<Long, VideoStats> videoStatsMap
+            Map<Long, VideoStats> videoStatsMap,
+            List<VideoFormatStatsProjection> recentFormatProjections
     ) {
         List<VideoMetric> metrics = buildVideoMetrics(videos, videoStatsMap);
         List<Video> latestVideos = getLatestVideos(videos);
@@ -47,7 +48,7 @@ public class InfluencerInsightCalculator {
         GetInfluencerInsightResponse.Content content = buildContentMetrics(latestMetrics);
         GetInfluencerInsightResponse.Activity activity = buildActivityMetrics(latestVideos);
         GetInfluencerInsightResponse.Advertisement advertisement = buildAdvertisementMetrics(latestMetrics, channelStats);
-        GetInfluencerInsightResponse.FormatAnalysis formatAnalysis = buildFormatAnalysis(metrics);
+        GetInfluencerInsightResponse.FormatAnalysis formatAnalysis = buildFormatAnalysis(recentFormatProjections);
 
         return new GetInfluencerInsightResponse(
                 channel.getId(),
@@ -203,29 +204,27 @@ public class InfluencerInsightCalculator {
         );
     }
 
-    private GetInfluencerInsightResponse.FormatAnalysis buildFormatAnalysis(List<VideoMetric> metrics) {
-        LocalDateTime recent30d = LocalDateTime.now().minusDays(RECENT_WINDOW_DAYS);
-
-        List<VideoMetric> recentLongForm = metrics.stream()
-                .filter(metric -> metric.publishedAt() != null && !metric.publishedAt().isBefore(recent30d))
-                .filter(metric -> !metric.isShort())
+    private GetInfluencerInsightResponse.FormatAnalysis buildFormatAnalysis(
+            List<VideoFormatStatsProjection> projections
+    ) {
+        List<VideoFormatStatsProjection> recentLongForm = projections.stream()
+                .filter(projection -> !projection.isShort())
                 .toList();
 
-        List<VideoMetric> recentShortForm = metrics.stream()
-                .filter(metric -> metric.publishedAt() != null && !metric.publishedAt().isBefore(recent30d))
-                .filter(VideoMetric::isShort)
+        List<VideoFormatStatsProjection> recentShortForm = projections.stream()
+                .filter(VideoFormatStatsProjection::isShort)
                 .toList();
 
         return new GetInfluencerInsightResponse.FormatAnalysis(
                 new GetInfluencerInsightResponse.FormatMetric(
                         recentLongForm.size(),
-                        calculateRound(averageViewCount(recentLongForm)),
-                        calculateRound(averageEngagementRate(recentLongForm))
+                        calculateRound(averageFormatViewCount(recentLongForm)),
+                        calculateRound(averageFormatEngagementRate(recentLongForm))
                 ),
                 new GetInfluencerInsightResponse.FormatMetric(
                         recentShortForm.size(),
-                        calculateRound(averageViewCount(recentShortForm)),
-                        calculateRound(averageEngagementRate(recentShortForm))
+                        calculateRound(averageFormatViewCount(recentShortForm)),
+                        calculateRound(averageFormatEngagementRate(recentShortForm))
                 )
         );
     }
@@ -305,12 +304,26 @@ public class InfluencerInsightCalculator {
                 .orElse(0.0);
     }
 
-    private double averageEngagementRate(List<VideoMetric> metrics) {
-        if (metrics.isEmpty()) {
+    private double averageFormatViewCount(List<VideoFormatStatsProjection> projections) {
+        if (projections.isEmpty()) {
             return 0.0;
         }
-        return metrics.stream()
-                .mapToDouble(VideoMetric::engagementRate)
+        return projections.stream()
+                .mapToLong(VideoFormatStatsProjection::viewCount)
+                .average()
+                .orElse(0.0);
+    }
+
+    private double averageFormatEngagementRate(List<VideoFormatStatsProjection> projections) {
+        if (projections.isEmpty()) {
+            return 0.0;
+        }
+        return projections.stream()
+                .mapToDouble(projection -> AnalyticsCalculator.engagementRate(
+                        projection.likeCount(),
+                        projection.commentCount(),
+                        projection.viewCount()
+                ))
                 .average()
                 .orElse(0.0);
     }

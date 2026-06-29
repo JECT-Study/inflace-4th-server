@@ -1,6 +1,7 @@
 package com.example.inflace.domain.video.repository;
 
 import com.example.inflace.domain.video.domain.Video;
+import com.example.inflace.domain.video.repository.projection.VideoFormatStatsProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +53,29 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 
     Long countByChannelIdAndPublishedAtGreaterThanEqual(Long channelId, LocalDateTime publishedAt);
 
+    long countByChannelId(Long channelId);
+
     List<Video> findByChannelId(Long channelId);
 
     List<Video> findByChannelIdOrderByPublishedAtDesc(Long channelId);
+
+    List<Video> findByChannelIdOrderByPublishedAtDesc(Long channelId, Pageable pageable);
+
+    @Query("""
+            select new com.example.inflace.domain.video.repository.projection.VideoFormatStatsProjection(
+                v.isShort,
+                vs.viewCount,
+                vs.likeCount,
+                vs.commentCount
+            )
+            from Video v
+            join VideoStats vs on vs.video = v
+            where v.channel.id = :channelId
+              and v.publishedAt >= :publishedAt
+            """)
+    List<VideoFormatStatsProjection> findFormatStatsRowsByChannelIdAndPublishedAtGreaterThanEqual(
+            @Param("channelId") Long channelId,
+            @Param("publishedAt") LocalDateTime publishedAt
+    );
+
 }
