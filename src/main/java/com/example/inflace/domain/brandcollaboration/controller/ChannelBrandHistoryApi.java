@@ -30,8 +30,8 @@ public interface ChannelBrandHistoryApi {
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT})
     BaseResponse<CursorSliceResponse<ChannelBrandHistoryVideoResponse>> search(
-            @Parameter(description = "YouTube 채널 ID", example = "UCxxxxxxxxxxxxxxxxxxxxxx")
-            @PathVariable String channelId,
+            @Parameter(description = "채널 ID", example = "1701")
+            @PathVariable Long channelId,
             @ParameterObject ChannelBrandHistorySearchCondition condition
     );
 
@@ -40,7 +40,7 @@ public interface ChannelBrandHistoryApi {
             description = """
                     특정 채널의 PPL 영상(최대 50개)을 집계하여 분석 결과를 반환합니다.
 
-                    - `channelId`는 Path Variable로 전달합니다. (YouTube 채널 ID)
+                    - `channelId`는 Path Variable로 전달합니다. (로그인 응답의 channelId)
 
                     **brands** (브랜드별 협업 수)
                     - 전체 영상의 태그를 집계하여 빈도순 정렬
@@ -58,8 +58,8 @@ public interface ChannelBrandHistoryApi {
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT})
     BaseResponse<ChannelBrandHistoryAnalysisResponse> analysis(
-            @Parameter(description = "YouTube 채널 ID", example = "UCxxxxxxxxxxxxxxxxxxxxxx")
-            @PathVariable String channelId,
+            @Parameter(description = "채널 ID", example = "1701")
+            @PathVariable Long channelId,
             @ParameterObject ChannelBrandHistorySearchCondition condition
     );
 }
