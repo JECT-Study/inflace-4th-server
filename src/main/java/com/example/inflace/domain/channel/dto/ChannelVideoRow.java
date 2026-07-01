@@ -29,6 +29,8 @@ public record ChannelVideoRow(
                 viewCount,
                 likeCount,
                 commentCount,
+                vph,
+                outlierScore,
                 durationSeconds,
                 isShort,
                 isAd

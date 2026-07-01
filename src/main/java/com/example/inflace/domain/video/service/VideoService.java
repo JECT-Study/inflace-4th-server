@@ -120,7 +120,8 @@ public class VideoService {
 
         VideoStats videoStats = videoStatsRepository.findByVideoId(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
-        VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId).orElse(null);
+        VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND));
 
         return RetentionSummaryResponse.from(videoStats, videoAnalytics);
     }
