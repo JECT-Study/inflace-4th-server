@@ -15,6 +15,8 @@ public record ChannelVideosResponse(
             Long viewCount,
             Long likeCount,
             Long commentCount,
+            Double vph,
+            Double outlierScore,
             Integer durationSeconds,
             Boolean isShort,
             Boolean isAd
