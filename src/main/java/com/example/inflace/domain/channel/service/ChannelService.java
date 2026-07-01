@@ -377,10 +377,16 @@ public class ChannelService {
     }
 
 
-    private void validateChannelExists(Long channelId) {
-        if (!channelRepository.existsById(channelId)) {
+    @Transactional
+    public void disconnectChannel(Long channelId) {
+        UUID userId = SecurityUtils.getAuthenticatedUserId();
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
+        if (channel.getUser() == null) {
             throw new ApiException(ErrorDefine.CHANNEL_NOT_FOUND);
         }
+        validateChannelOwnership(channel, userId);
+        channel.updateUser(null);
     }
 
     private Map<Long, VideoStats> getVideoStatsMap(List<Video> videos) {

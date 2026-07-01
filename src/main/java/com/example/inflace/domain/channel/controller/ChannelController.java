@@ -15,6 +15,7 @@ import com.example.inflace.domain.channel.service.sync.YoutubeChannelSyncService
 import com.example.inflace.global.response.BaseResponse;
 import com.example.inflace.global.response.CursorSliceResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -121,5 +122,11 @@ public class ChannelController implements ChannelApi {
             @RequestParam(defaultValue = "30D") String range
     ) {
         return new BaseResponse<>(channelService.getSubscriberTrend(channelId, range));
+    }
+
+    @DeleteMapping("/connect/{channelId}")
+    public BaseResponse<Void> disconnectChannel(@PathVariable Long channelId) {
+        channelService.disconnectChannel(channelId);
+        return new BaseResponse<>(null);
     }
 }

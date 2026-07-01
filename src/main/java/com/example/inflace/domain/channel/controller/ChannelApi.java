@@ -114,4 +114,11 @@ public interface ChannelApi {
             @PathVariable Long channelId,
             @RequestParam(defaultValue = "30D") String range
     );
+
+    @Operation(
+            summary = "채널 연동 해제",
+            description = "연동된 유튜브 채널을 해제합니다."
+    )
+    @ApiErrorDefines({ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
+    BaseResponse<Void> disconnectChannel(@PathVariable Long channelId);
 }
