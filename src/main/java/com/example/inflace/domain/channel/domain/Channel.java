@@ -73,4 +73,8 @@ public class Channel extends BaseTimeEntity {
         this.uploadsPlaylistId = uploadsPlaylistId;
         this.youtubePublishedAt = youtubePublishedAt;
     }
+
+    public void updateUser(User user) {
+        this.user = user;
+    }
 }

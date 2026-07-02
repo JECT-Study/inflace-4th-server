@@ -80,15 +80,20 @@ public class YoutubeChannelDataPersistenceService {
     private Channel upsertChannel(User user, YoutubeDataChannelResponse.Item item) {
         return channelRepository.findByUser_IdAndYoutubeChannelId(user.getId(), item.id())
                 .map(channel -> updateChannel(channel, item))
-                .orElseGet(() -> channelRepository.save(Channel.builder()
-                        .user(user)
-                        .name(item.snippet() == null ? null : item.snippet().title())
-                        .youtubeChannelId(item.id())
-                        .channelHandle(item.snippet() == null ? null : item.snippet().customUrl())
-                        .profileImageUrl(extractChannelThumbnailUrl(item.snippet() == null ? null : item.snippet().thumbnails()))
-                        .uploadsPlaylistId(extractUploadsPlaylistId(item.contentDetails()))
-                        .youtubePublishedAt(parsePublishedAt(item.snippet() == null ? null : item.snippet().publishedAt()))
-                        .build()));
+                .orElseGet(() -> channelRepository.findByYoutubeChannelIdAndUserIsNull(item.id())
+                        .map(channel -> {
+                            channel.updateUser(user);
+                            return updateChannel(channel, item);
+                        })
+                        .orElseGet(() -> channelRepository.save(Channel.builder()
+                                .user(user)
+                                .name(item.snippet() == null ? null : item.snippet().title())
+                                .youtubeChannelId(item.id())
+                                .channelHandle(item.snippet() == null ? null : item.snippet().customUrl())
+                                .profileImageUrl(extractChannelThumbnailUrl(item.snippet() == null ? null : item.snippet().thumbnails()))
+                                .uploadsPlaylistId(extractUploadsPlaylistId(item.contentDetails()))
+                                .youtubePublishedAt(parsePublishedAt(item.snippet() == null ? null : item.snippet().publishedAt()))
+                                .build())));
     }
 
     private Channel updateChannel(Channel channel, YoutubeDataChannelResponse.Item item) {
