@@ -76,18 +76,13 @@ public class ChannelService {
     private final SubscriberLogRepository subscriberLogRepository;
 
     @ReadOnlyTransactional
-    public ChannelTopVideosResponse getTopVideos(Long channelId, String contentType) {
+    public ChannelTopVideosResponse getTopVideos(Long channelId, String filter) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
         validateChannelOwnership(channel, userId);
 
-        VideoType parsedContentType;
-        try {
-            parsedContentType = VideoType.valueOf(contentType.toUpperCase());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
-        }
+        VideoType parsedContentType = parseFilter(filter);
 
         List<Video> videos = videoRepository.findTopVideos(
                 channelId,
@@ -120,14 +115,16 @@ public class ChannelService {
     }
 
     @ReadOnlyTransactional
-    public ChannelNewSubscriberResponse getNewSubscriberVideos(Long channelId) {
+    public ChannelNewSubscriberResponse getNewSubscriberVideos(Long channelId, String filter) {
         UUID userId = SecurityUtils.getAuthenticatedUserId();
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.CHANNEL_NOT_FOUND));
         validateChannelOwnership(channel, userId);
 
+        VideoType parsedContentType = parseFilter(filter);
         List<Video> videos = videoRepository.findTopNewSubscriberVideos(
                 channelId,
+                parsedContentType.isShort(),
                 PageRequest.of(0,5)
         );
         if (videos.isEmpty()) {
@@ -148,6 +145,17 @@ public class ChannelService {
         }
 
         return new ChannelNewSubscriberResponse(items);
+    }
+
+    private VideoType parseFilter(String filter) {
+        if (filter == null || filter.isBlank()) {
+            return VideoType.LONG_FORM;
+        }
+        try {
+            return VideoType.valueOf(filter.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ApiException(ErrorDefine.INVALID_ARGUMENT);
+        }
     }
 
     @ReadOnlyTransactional

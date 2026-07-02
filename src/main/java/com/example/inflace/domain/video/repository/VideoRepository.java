@@ -33,10 +33,12 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
        from Video v
        left join VideoAnalytics va on va.video = v
        where v.channel.id = :channelId
+         and v.isShort = :isShort
        order by coalesce(va.unsubscribedViewerPercentage, 0) desc, v.id desc
     """)
     List<Video> findTopNewSubscriberVideos(
             @Param("channelId") Long channelId,
+            @Param("isShort") boolean isShort,
             Pageable pageable
     );
 
