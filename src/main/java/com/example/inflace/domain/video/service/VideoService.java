@@ -63,7 +63,6 @@ public class VideoService {
                 .orElseThrow(() -> new ApiException(ErrorDefine.VIDEO_STATS_NOT_FOUND));
         VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND));
-        validateVideoStatsAnalytics(videoAnalytics);
 
         return VideoStatsResponse.from(videoStats, videoAnalytics, 0L, 0L);
     }
@@ -79,7 +78,7 @@ public class VideoService {
 
         List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(videoId);
         if (retentionList.isEmpty()) {
-            throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
         }
 
         int durationSeconds = video.getDurationSeconds() != null ? video.getDurationSeconds() : 0;
@@ -101,7 +100,7 @@ public class VideoService {
 
         List<AudienceRetention> retentionList = audienceRetentionRepository.findByVideoIdOrderByTimeRatioAsc(videoId);
         if (retentionList.isEmpty()) {
-            throw new ApiException(ErrorDefine.RETENTION_NOT_FOUND);
+            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
         }
         if (retentionList.size() != 100) {
             throw new ApiException(ErrorDefine.RETENTION_INVALID);
@@ -129,15 +128,6 @@ public class VideoService {
     private void validateVideoOwnership(Video video, UUID userId) {
         if (!video.getChannel().getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
-        }
-    }
-
-    private void validateVideoStatsAnalytics(VideoAnalytics analytics) {
-        if (analytics.getShareCount() == null
-                || analytics.getSubscribersGained() == null
-                || analytics.getCtr() == null
-                || analytics.getUnsubscribedViewCount() == null) {
-            throw new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
         }
     }
 

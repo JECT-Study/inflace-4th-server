@@ -226,7 +226,7 @@ class VideoServiceTest {
         // when & then
         assertThatThrownBy(() -> videoService.getDropPoints(OWNER_USER_ID, VIDEO_ID))
                 .isInstanceOf(ApiException.class)
-                .hasFieldOrPropertyWithValue("error", ErrorDefine.RETENTION_NOT_FOUND);
+                .hasFieldOrPropertyWithValue("error", ErrorDefine.ANALYTICS_DATA_NOT_FOUND);
     }
 
     @Test

@@ -39,7 +39,7 @@ public record VideoStatsResponse(
                 new StatValue(safeDoubleValue(stats.getCommentCount()), null),
                 new StatValue(safeDoubleValue(analytics != null ? analytics.getShareCount() : null), null),
                 new StatValue(safeDoubleValue(analytics != null ? analytics.getSubscribersGained() : null), null),
-                new StatValue(analytics != null ? analytics.getAvgWatchDuration() : null, null),
+                new StatValue(safeDoubleValue(analytics != null ? analytics.getAvgWatchDuration() : null), null),
                 new StatValue(AnalyticsCalculator.engagementRate(stats.getLikeCount(), stats.getCommentCount(), stats.getViewCount()), null),
                 new StatValue(AnalyticsCalculator.newViewerRate(analytics != null ? analytics.getUnsubscribedViewCount() : null, stats.getViewCount()), null),
                 new StatValue(AnalyticsCalculator.outlier(stats.getViewCount(), totalViewCount, videoCount), null),

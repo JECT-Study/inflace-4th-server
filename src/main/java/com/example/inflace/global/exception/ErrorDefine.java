@@ -30,7 +30,7 @@ public enum ErrorDefine {
     // VIDEO
     VIDEO_NOT_FOUND("VIDEO_404", HttpStatus.NOT_FOUND, "Not Found: Video not found"),
     VIDEO_STATS_NOT_FOUND("VIDEO_STATS_404", HttpStatus.NOT_FOUND, "Not Found: Video Stats not found"),
-    RETENTION_NOT_FOUND("RETENTION_404", HttpStatus.NOT_FOUND, "Not Found: Retention not found"),
+    // RETENTION_NOT_FOUND("RETENTION_404", HttpStatus.NOT_FOUND, "Not Found: Retention not found"),
     RETENTION_INVALID("RETENTION_400", HttpStatus.BAD_REQUEST, "Bad Request: Retention data must have exactly 100 points"),
 
     //CHANNEL
