@@ -51,9 +51,9 @@ public class ChannelController implements ChannelApi {
     @GetMapping("/{channelId}/tops")
     public BaseResponse<ChannelTopVideosResponse> getTopVideos(
             @PathVariable Long channelId,
-            @RequestParam(defaultValue = "LONG_FORM") String contentType
+            @RequestParam(name = "filter", required = false) String filter
     ) {
-        return new BaseResponse<>(channelService.getTopVideos(channelId, contentType));
+        return new BaseResponse<>(channelService.getTopVideos(channelId, filter));
     }
 
     @GetMapping("/{channelId}/engagement-rate")
@@ -65,9 +65,10 @@ public class ChannelController implements ChannelApi {
 
     @GetMapping("/{channelId}/new-subscriber")
     public BaseResponse<ChannelNewSubscriberResponse> getNewSubscriberVideos(
-            @PathVariable Long channelId
+            @PathVariable Long channelId,
+            @RequestParam(name = "filter", required = false) String filter
     ) {
-        return new BaseResponse<>(channelService.getNewSubscriberVideos(channelId));
+        return new BaseResponse<>(channelService.getNewSubscriberVideos(channelId, filter));
     }
 
     @GetMapping("/{channelId}/kpi")

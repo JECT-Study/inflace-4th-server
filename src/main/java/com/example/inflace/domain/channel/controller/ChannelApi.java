@@ -50,7 +50,7 @@ public interface ChannelApi {
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<ChannelTopVideosResponse> getTopVideos(
             @PathVariable Long channelId,
-            @RequestParam String contentType
+            @RequestParam(name = "filter", required = false) String filter
     );
 
     @Operation(
@@ -65,7 +65,10 @@ public interface ChannelApi {
             description = "채널의 신규 유입 비율이 높은 상위 5개 영상을 조회합니다."
     )
     @ApiErrorDefines({ErrorDefine.INVALID_ARGUMENT, ErrorDefine.CHANNEL_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.ANALYTICS_DATA_NOT_FOUND})
-    BaseResponse<ChannelNewSubscriberResponse> getNewSubscriberVideos(@PathVariable Long channelId);
+    BaseResponse<ChannelNewSubscriberResponse> getNewSubscriberVideos(
+            @PathVariable Long channelId,
+            @RequestParam(name = "filter", required = false) String filter
+    );
 
     @Operation(
             summary = "핵심 지표 카드(KPI)",

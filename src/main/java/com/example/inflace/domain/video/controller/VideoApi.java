@@ -36,7 +36,7 @@ public interface VideoApi {
             description = "비디오 ID로 시청 지속률 시계열 데이터를 조회합니다. <br>" +
                     "0.01~1.00 구간의 100개 포인트를 반환합니다."
     )
-    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.ANALYTICS_DATA_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<AudienceRetentionResponse> getRetention(@PathVariable("videoId") Long videoId);
 
     @Operation(
@@ -44,7 +44,7 @@ public interface VideoApi {
             description = "비디오 ID로 구간별 평균 이탈률을 조회합니다. <br>" +
                     "100개의 시청 지속률 데이터를 25개씩 4구간으로 나눠 각 구간의 평균 이탈률을 반환합니다."
     )
-    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.RETENTION_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.RETENTION_INVALID, ErrorDefine.INVALID_ARGUMENT})
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.ANALYTICS_DATA_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN, ErrorDefine.RETENTION_INVALID, ErrorDefine.INVALID_ARGUMENT})
     BaseResponse<DropPointsResponse> getDropPoints(@PathVariable("videoId") Long videoId);
 
     @Operation(

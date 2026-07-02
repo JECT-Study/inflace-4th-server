@@ -3,6 +3,8 @@ package com.example.inflace.domain.video.dto;
 import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 
+import static com.example.inflace.global.util.AnalyticsParser.safeDoubleValue;
+
 public record RetentionSummaryResponse(RetentionData retentionData) {
 
     public record RetentionData(
@@ -14,8 +16,8 @@ public record RetentionSummaryResponse(RetentionData retentionData) {
     public static RetentionSummaryResponse from(VideoStats stats, VideoAnalytics analytics) {
         return new RetentionSummaryResponse(
                 new RetentionData(
-                        analytics != null ? analytics.getAvgWatchDuration() : null,
-                        analytics != null ? analytics.getRelativeRetentionPerformance() : null
+                        safeDoubleValue(analytics != null ? analytics.getAvgWatchDuration() : null),
+                        safeDoubleValue(analytics != null ? analytics.getRelativeRetentionPerformance() : null)
                 )
         );
     }
