@@ -201,7 +201,7 @@ public class ChannelService {
     }
 
     private void validateChannelOwnership(Channel channel, UUID userId) {
-        if (!channel.getUser().getId().equals(userId)) {
+        if (channel.getUser() == null || !channel.getUser().getId().equals(userId)) {
             throw new ApiException(ErrorDefine.AUTH_FORBIDDEN);
         }
     }
