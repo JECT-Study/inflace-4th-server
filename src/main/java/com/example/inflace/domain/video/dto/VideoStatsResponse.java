@@ -1,6 +1,5 @@
 package com.example.inflace.domain.video.dto;
 
-import com.example.inflace.domain.video.domain.Video;
 import com.example.inflace.domain.video.domain.VideoAnalytics;
 import com.example.inflace.domain.video.domain.VideoStats;
 import com.example.inflace.global.util.AnalyticsCalculator;
@@ -28,22 +27,44 @@ public record VideoStatsResponse(
     ) {
     }
 
-    public static VideoStatsResponse from(VideoStats stats, VideoAnalytics analytics, Long totalViewCount, Long videoCount) {
-        Video video = stats.getVideo();
+    public static VideoStatsResponse from(VideoStats stats, VideoAnalytics analytics, VideoStatsChannelAverages averages) {
+        Double viewCount = safeDoubleValue(stats.getViewCount());
+        Double likeCount = safeDoubleValue(stats.getLikeCount());
+        Double commentCount = safeDoubleValue(stats.getCommentCount());
+        Double shareCount = safeDoubleValue(analytics != null ? analytics.getShareCount() : null);
+        Double subscribersGained = safeDoubleValue(analytics != null ? analytics.getSubscribersGained() : null);
+        Double avd = safeDoubleValue(analytics != null ? analytics.getAvgWatchDuration() : null);
+        Double engagementRate = AnalyticsCalculator.engagementRate(
+                stats.getLikeCount(),
+                stats.getCommentCount(),
+                stats.getViewCount()
+        );
+        Double newViewerRate = AnalyticsCalculator.newViewerRate(
+                analytics != null ? analytics.getUnsubscribedViewCount() : null,
+                stats.getViewCount()
+        );
+        Double outlier = safeDoubleValue(stats.getOutlierScore());
+        Double vph = safeDoubleValue(stats.getVph());
 
-        // TODO : 변화율은 이전 값을 스냅샷으로 저장할 히스토리 엔티티가 따로 필요, 배치 구현 시 추가 기능으로 붙이는 방안 생각중입니다..
         return new VideoStatsResponse(
                 stats.getCollectedAt(),
-                new StatValue(safeDoubleValue(stats.getViewCount()), null),
-                new StatValue(safeDoubleValue(stats.getLikeCount()), null),
-                new StatValue(safeDoubleValue(stats.getCommentCount()), null),
-                new StatValue(safeDoubleValue(analytics != null ? analytics.getShareCount() : null), null),
-                new StatValue(safeDoubleValue(analytics != null ? analytics.getSubscribersGained() : null), null),
-                new StatValue(safeDoubleValue(analytics != null ? analytics.getAvgWatchDuration() : null), null),
-                new StatValue(AnalyticsCalculator.engagementRate(stats.getLikeCount(), stats.getCommentCount(), stats.getViewCount()), null),
-                new StatValue(AnalyticsCalculator.newViewerRate(analytics != null ? analytics.getUnsubscribedViewCount() : null, stats.getViewCount()), null),
-                new StatValue(AnalyticsCalculator.outlier(stats.getViewCount(), totalViewCount, videoCount), null),
-                new StatValue(AnalyticsCalculator.vph(stats.getViewCount(), video.getPublishedAt()), null)
+                new StatValue(viewCount, changeRate(viewCount, averages != null ? averages.viewCount() : null)),
+                new StatValue(likeCount, changeRate(likeCount, averages != null ? averages.likeCount() : null)),
+                new StatValue(commentCount, changeRate(commentCount, averages != null ? averages.commentCount() : null)),
+                new StatValue(shareCount, changeRate(shareCount, averages != null ? averages.shareCount() : null)),
+                new StatValue(subscribersGained, changeRate(subscribersGained, averages != null ? averages.subscribersGained() : null)),
+                new StatValue(avd, changeRate(avd, averages != null ? averages.avd() : null)),
+                new StatValue(engagementRate, changeRate(engagementRate, averages != null ? averages.engagementRate() : null)),
+                new StatValue(newViewerRate, changeRate(newViewerRate, averages != null ? averages.newViewerRate() : null)),
+                new StatValue(outlier, changeRate(outlier, averages != null ? averages.outlier() : null)),
+                new StatValue(vph, changeRate(vph, averages != null ? averages.vph() : null))
         );
+    }
+
+    private static double changeRate(Double value, Double average) {
+        if (average == null || average == 0.0) {
+            return 0.0;
+        }
+        return Math.round(((safeDoubleValue(value) - average) / average) * 10000.0) / 100.0;
     }
 }

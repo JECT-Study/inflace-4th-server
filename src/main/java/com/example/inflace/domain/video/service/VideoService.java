@@ -64,7 +64,8 @@ public class VideoService {
         VideoAnalytics videoAnalytics = videoAnalyticsRepository.findByVideoId(videoId)
                 .orElseThrow(() -> new ApiException(ErrorDefine.ANALYTICS_DATA_NOT_FOUND));
 
-        return VideoStatsResponse.from(videoStats, videoAnalytics, 0L, 0L);
+        VideoStatsChannelAverages channelAverages = videoStatsRepository.findChannelAverages(video.getChannel().getId());
+        return VideoStatsResponse.from(videoStats, videoAnalytics, channelAverages);
     }
 
     @Transactional(readOnly=true)
