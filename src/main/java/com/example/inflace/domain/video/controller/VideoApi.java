@@ -52,6 +52,6 @@ public interface VideoApi {
             description = "비디오 ID로 시청 지속률 요약 통계를 조회합니다. <br>" +
                     "평균 시청 지속 시간(초)과 평균 대비 유지율을 반환합니다."
     )
-    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.VIDEO_STATS_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
+    @ApiErrorDefines({ErrorDefine.VIDEO_NOT_FOUND, ErrorDefine.VIDEO_STATS_NOT_FOUND, ErrorDefine.ANALYTICS_DATA_NOT_FOUND, ErrorDefine.AUTH_FORBIDDEN})
     BaseResponse<RetentionSummaryResponse> getRetentionSummary(@PathVariable("videoId") Long videoId);
 }

@@ -63,8 +63,8 @@ public class ChannelBrandHistoryService {
     private final VideoQueryRepository videoQueryRepository;
     private final VideoRepository videoRepository;
 
-    public CursorSliceResponse<ChannelBrandHistoryVideoResponse> search(String channelId, ChannelBrandHistorySearchCondition condition) {
-        Optional<Channel> channelOpt = channelRepository.findByYoutubeChannelId(channelId);
+    public CursorSliceResponse<ChannelBrandHistoryVideoResponse> search(Long channelId, ChannelBrandHistorySearchCondition condition) {
+        Optional<Channel> channelOpt = channelRepository.findById(channelId);
         if (channelOpt.isEmpty()) {
             return emptyResponse(condition);
         }
@@ -146,8 +146,8 @@ public class ChannelBrandHistoryService {
         };
     }
 
-    public ChannelBrandHistoryAnalysisResponse analysis(String channelId, ChannelBrandHistorySearchCondition condition) {
-        Optional<Channel> channelOpt = channelRepository.findByYoutubeChannelId(channelId);
+    public ChannelBrandHistoryAnalysisResponse analysis(Long channelId, ChannelBrandHistorySearchCondition condition) {
+        Optional<Channel> channelOpt = channelRepository.findById(channelId);
         if (channelOpt.isEmpty()) {
             return emptyAnalysis();
         }
