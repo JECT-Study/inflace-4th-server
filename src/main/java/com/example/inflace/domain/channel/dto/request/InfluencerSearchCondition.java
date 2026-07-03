@@ -31,21 +31,22 @@ public record InfluencerSearchCondition(
         String sortCriteria,
 
         @ArraySchema(
-                arraySchema = @Schema(description = "카테고리 ID 필터. /api/v1/youtube-categories에서 내려준 id 값을 전달합니다."),
+                arraySchema = @Schema(description = "카테고리 ID 필터. /api/v1/youtube-categories에서 내려준 id 값을 전달합니다. 미입력 시 여행/이벤트, 인물/블로그, 노하우/스타일"),
                 schema = @Schema(example = "1")
         )
         List<Long> categoryIds,
 
         @Schema(
-                description = "최소 참여율(%) 필터. 미입력 시 0.0",
-                defaultValue = "0.0",
-                example = "0.0"
+                description = "최소 참여율(%) 필터. 미입력 시 2.0",
+                defaultValue = "2.0",
+                example = "2.0"
         )
         Double engagementRateFrom,
 
         @Schema(
-                description = "최대 참여율(%) 필터",
-                example = "15.0"
+                description = "최대 참여율(%) 필터. 미입력 시 3.0",
+                defaultValue = "3.0",
+                example = "3.0"
         )
         Double engagementRateTo,
 
@@ -62,8 +63,9 @@ public record InfluencerSearchCondition(
         Long subscriberTo,
 
         @Schema(
-                description = "광고 이력 여부",
-                example = "false"
+                description = "광고 이력 여부. 미입력 시 true",
+                defaultValue = "true",
+                example = "true"
         )
         Boolean hasAdHistory,
 
@@ -102,11 +104,16 @@ public record InfluencerSearchCondition(
         )
         SortOrder sortOrder
 ) {
+    private static final List<Long> DEFAULT_CATEGORY_IDS = List.of(7L, 10L, 14L);
+    private static final double DEFAULT_ENGAGEMENT_RATE_FROM = 2.0;
+    private static final double DEFAULT_ENGAGEMENT_RATE_TO = 3.0;
     private static final int DEFAULT_PAGE_SIZE = 9;
 
     public InfluencerSearchCondition {
-        categoryIds = categoryIds == null ? List.of() : categoryIds;
-        engagementRateFrom = engagementRateFrom == null ? 0.0 : engagementRateFrom;
+        categoryIds = categoryIds == null ? DEFAULT_CATEGORY_IDS : categoryIds;
+        engagementRateFrom = engagementRateFrom == null ? DEFAULT_ENGAGEMENT_RATE_FROM : engagementRateFrom;
+        engagementRateTo = engagementRateTo == null ? DEFAULT_ENGAGEMENT_RATE_TO : engagementRateTo;
+        hasAdHistory = hasAdHistory == null || hasAdHistory;
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
         cursor = StringUtils.hasText(cursor) ? cursor : null;
