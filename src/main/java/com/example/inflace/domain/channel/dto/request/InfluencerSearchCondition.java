@@ -113,7 +113,7 @@ public record InfluencerSearchCondition(
         categoryIds = categoryIds == null ? DEFAULT_CATEGORY_IDS : categoryIds;
         engagementRateFrom = engagementRateFrom == null ? DEFAULT_ENGAGEMENT_RATE_FROM : engagementRateFrom;
         engagementRateTo = engagementRateTo == null ? DEFAULT_ENGAGEMENT_RATE_TO : engagementRateTo;
-        hasAdHistory = hasAdHistory == null ? true : hasAdHistory;
+        hasAdHistory = hasAdHistory == null || hasAdHistory;
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
         sortOrder = sortOrder == null ? SortOrder.DESC : sortOrder;
         cursor = StringUtils.hasText(cursor) ? cursor : null;
