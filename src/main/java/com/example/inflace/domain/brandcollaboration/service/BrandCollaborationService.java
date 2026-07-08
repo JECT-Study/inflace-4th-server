@@ -41,11 +41,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.springframework.data.domain.Limit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -78,6 +80,7 @@ public class BrandCollaborationService {
     private final RedisTemplate<String, String> redisTemplate;
     private final VideoRepository videoRepository;
     private final VideoStatsRepository videoStatsRepository;
+    private final ExecutorService externalApiExecutor;
 
     public CursorSliceResponse<BrandCollaborationVideoResponse> search(BrandCollaborationSearchCondition condition) {
         if (condition.includeKeywords().isEmpty()) {
@@ -269,22 +272,39 @@ public class BrandCollaborationService {
     }
 
     private Double computeAvgUploadDays(Map<String, YoutubeDataChannelResponse.Item> channelMap) {
-        OptionalDouble avg = channelMap.values().stream()
+        List<CompletableFuture<Double>> futures = channelMap.values().stream()
                 .filter(c -> c.contentDetails() != null && c.contentDetails().relatedPlaylists() != null)
                 .map(c -> c.contentDetails().relatedPlaylists().uploads())
                 .filter(StringUtils::hasText)
-                .mapToDouble(playlistId -> {
-                    List<Instant> instants = youtubeDataApiClient
-                            .getRecentUploadDates(playlistId, RECENT_UPLOADS_COUNT)
-                            .stream().map(Instant::parse).sorted().toList();
-                    if (instants.size() < 2) return Double.NaN;
-                    long spanSeconds = instants.getLast().getEpochSecond() - instants.getFirst().getEpochSecond();
-                    return spanSeconds / 86400.0 / (instants.size() - 1);
-                })
+                .map(playlistId -> CompletableFuture
+                        .supplyAsync(() -> computeUploadDays(playlistId), externalApiExecutor)
+                        .exceptionally(exception -> {
+                            log.warn("Failed to compute average upload days. playlistId={}", playlistId, exception);
+                            return Double.NaN;
+                        }))
+                .toList();
+
+        OptionalDouble avg = futures.stream()
+                .map(CompletableFuture::join)
+                .mapToDouble(Double::doubleValue)
                 .filter(d -> !Double.isNaN(d) && d > 0)
                 .average();
 
         return avg.isPresent() ? avg.getAsDouble() : null;
+    }
+
+    private Double computeUploadDays(String playlistId) {
+        List<Instant> instants = youtubeDataApiClient
+                .getRecentUploadDates(playlistId, RECENT_UPLOADS_COUNT)
+                .stream()
+                .map(Instant::parse)
+                .sorted()
+                .toList();
+        if (instants.size() < 2) {
+            return Double.NaN;
+        }
+        long spanSeconds = instants.getLast().getEpochSecond() - instants.getFirst().getEpochSecond();
+        return spanSeconds / 86400.0 / (instants.size() - 1);
     }
 
     private void validateKeywords(List<String> includeKeywords, List<String> excludeKeywords) {

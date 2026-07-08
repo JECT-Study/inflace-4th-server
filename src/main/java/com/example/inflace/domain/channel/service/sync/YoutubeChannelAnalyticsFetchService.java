@@ -20,6 +20,9 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class YoutubeChannelAnalyticsFetchService {
 
     private static final int ANALYTICS_END_DATE_OFFSET_DAYS = 3;
     private static final int SUBSCRIBER_LOG_MAX_BACKFILL_DAYS = 365;
+    private static final int VIDEO_ANALYTICS_BATCH_SIZE = 4;
 
     private static final List<String> CHANNEL_METRICS = List.of(
             "views",
@@ -57,6 +61,7 @@ public class YoutubeChannelAnalyticsFetchService {
     );
 
     private final YoutubeAnalyticsApiClient youtubeAnalyticsApiClient;
+    private final ExecutorService externalApiExecutor;
 
     public YoutubeAnalyticsSyncData fetchAnalytics(String googleId, AnalyticsSyncContext context) {
         LocalDate endDate = resolveEndDate();
@@ -185,43 +190,63 @@ public class YoutubeChannelAnalyticsFetchService {
             LocalDate endDate
     ) {
         List<YoutubeAnalyticsSyncData.VideoAnalyticsData> result = new ArrayList<>();
-        for (AnalyticsSyncContext.VideoContext video : videos) {
-            LocalDate startDate = resolveStartDate(video.publishedAt(), endDate);
-            if (startDate.isAfter(endDate)) {
-                continue;
-            }
+        for (List<AnalyticsSyncContext.VideoContext> batch : chunked(videos, VIDEO_ANALYTICS_BATCH_SIZE)) {
+            List<CompletableFuture<YoutubeAnalyticsSyncData.VideoAnalyticsData>> futures = batch.stream()
+                    .map(video -> CompletableFuture
+                            .supplyAsync(() -> fetchVideoAnalyticsForVideo(googleId, video, endDate), externalApiExecutor)
+                            .exceptionally(exception -> {
+                                log.warn("Failed to schedule video analytics sync. videoId={} youtubeVideoId={}",
+                                        video.videoId(), video.youtubeVideoId(), exception);
+                                return defaultVideoAnalyticsData(video.videoId(), !video.existingVideoAnalytics());
+                            }))
+                    .toList();
 
-            YoutubeAnalyticsVideoRequest request = new YoutubeAnalyticsVideoRequest(
-                    startDate,
-                    endDate,
-                    VIDEO_METRICS,
-                    video.youtubeVideoId(),
-                    "video",
-                    null
-            );
-            Map<String, Object> summary;
-            try {
-                summary = querySingleRow(googleId, request);
-            } catch (ApiException e) {
-                log.warn("Failed to sync video analytics summary. videoId={} youtubeVideoId={} startDate={} endDate={}",
-                        video.videoId(), video.youtubeVideoId(), startDate, endDate, e);
-                result.add(defaultVideoAnalyticsData(video.videoId(), !video.existingVideoAnalytics()));
-                continue;
-            }
-
-            if (summary.isEmpty() && !video.existingVideoAnalytics()) {
-                continue;
-            }
-
-            result.add(fetchUnsubscribedVideoAnalytics(
-                    googleId,
-                    video,
-                    startDate,
-                    endDate,
-                    summary
-            ));
+            result.addAll(futures.stream()
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .toList());
         }
         return result;
+    }
+
+    private YoutubeAnalyticsSyncData.VideoAnalyticsData fetchVideoAnalyticsForVideo(
+            String googleId,
+            AnalyticsSyncContext.VideoContext video,
+            LocalDate endDate
+    ) {
+        LocalDate startDate = resolveStartDate(video.publishedAt(), endDate);
+        if (startDate.isAfter(endDate)) {
+            return null;
+        }
+
+        YoutubeAnalyticsVideoRequest request = new YoutubeAnalyticsVideoRequest(
+                startDate,
+                endDate,
+                VIDEO_METRICS,
+                video.youtubeVideoId(),
+                "video",
+                null
+        );
+        Map<String, Object> summary;
+        try {
+            summary = querySingleRow(googleId, request);
+        } catch (ApiException e) {
+            log.warn("Failed to sync video analytics summary. videoId={} youtubeVideoId={} startDate={} endDate={}",
+                    video.videoId(), video.youtubeVideoId(), startDate, endDate, e);
+            return defaultVideoAnalyticsData(video.videoId(), !video.existingVideoAnalytics());
+        }
+
+        if (summary.isEmpty() && !video.existingVideoAnalytics()) {
+            return null;
+        }
+
+        return fetchUnsubscribedVideoAnalytics(
+                googleId,
+                video,
+                startDate,
+                endDate,
+                summary
+        );
     }
 
     private YoutubeAnalyticsSyncData.VideoAnalyticsData fetchUnsubscribedVideoAnalytics(
@@ -292,54 +317,75 @@ public class YoutubeChannelAnalyticsFetchService {
             LocalDate endDate
     ) {
         List<YoutubeAnalyticsSyncData.AudienceRetentionData> result = new ArrayList<>();
-        for (AnalyticsSyncContext.VideoContext video : videos) {
-            LocalDate startDate = resolveStartDate(video.publishedAt(), endDate);
-            if (startDate.isAfter(endDate)) {
-                continue;
-            }
+        for (List<AnalyticsSyncContext.VideoContext> batch : chunked(videos, VIDEO_ANALYTICS_BATCH_SIZE)) {
+            List<CompletableFuture<List<YoutubeAnalyticsSyncData.AudienceRetentionData>>> futures = batch.stream()
+                    .map(video -> CompletableFuture
+                            .supplyAsync(() -> fetchAudienceRetentionForVideo(googleId, video, endDate), externalApiExecutor)
+                            .exceptionally(exception -> {
+                                log.warn("Failed to schedule audience retention sync. videoId={} youtubeVideoId={}",
+                                        video.videoId(), video.youtubeVideoId(), exception);
+                                return List.of();
+                            }))
+                    .toList();
 
-            YoutubeAnalyticsVideoRequest request = new YoutubeAnalyticsVideoRequest(
-                    startDate,
-                    endDate,
-                    VIDEO_RETENTION_METRICS,
-                    video.youtubeVideoId(),
-                    "elapsedVideoTimeRatio",
-                    null
-            );
-            try {
-                YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
-                if (response.rows() == null || response.rows().isEmpty()) {
-                    continue;
-                }
-
-                Map<String, Integer> indexMap = buildIndexMap(response.columnHeaders());
-                LocalDateTime now = LocalDateTime.now();
-
-                List<YoutubeAnalyticsSyncData.AudienceRetentionPointData> retentions = response.rows().stream()
-                        .map(row -> new YoutubeAnalyticsSyncData.AudienceRetentionPointData(
-                                toDouble(row.get(indexMap.get("elapsedVideoTimeRatio"))),
-                                toDouble(row.get(indexMap.get("audienceWatchRatio"))),
-                                now
-                        ))
-                        .toList();
-
-                double relativeRetentionAvg = response.rows().stream()
-                        .mapToDouble(row -> toDouble(row.get(indexMap.get("relativeRetentionPerformance"))))
-                        .average()
-                        .orElse(0.0);
-
-                result.add(new YoutubeAnalyticsSyncData.AudienceRetentionData(
-                        video.videoId(),
-                        retentions,
-                        relativeRetentionAvg
-                ));
-            } catch (ApiException e) {
-                log.warn("Failed to sync audience retention. videoId={} youtubeVideoId={} startDate={} endDate={}",
-                        video.videoId(), video.youtubeVideoId(), startDate, endDate, e);
-                continue;
-            }
+            result.addAll(futures.stream()
+                    .map(CompletableFuture::join)
+                    .flatMap(List::stream)
+                    .toList());
         }
         return result;
+    }
+
+    private List<YoutubeAnalyticsSyncData.AudienceRetentionData> fetchAudienceRetentionForVideo(
+            String googleId,
+            AnalyticsSyncContext.VideoContext video,
+            LocalDate endDate
+    ) {
+        LocalDate startDate = resolveStartDate(video.publishedAt(), endDate);
+        if (startDate.isAfter(endDate)) {
+            return List.of();
+        }
+
+        YoutubeAnalyticsVideoRequest request = new YoutubeAnalyticsVideoRequest(
+                startDate,
+                endDate,
+                VIDEO_RETENTION_METRICS,
+                video.youtubeVideoId(),
+                "elapsedVideoTimeRatio",
+                null
+        );
+        try {
+            YoutubeAnalyticsVideoResponse response = youtubeAnalyticsApiClient.getYoutubeAnalytics(googleId, request);
+            if (response.rows() == null || response.rows().isEmpty()) {
+                return List.of();
+            }
+
+            Map<String, Integer> indexMap = buildIndexMap(response.columnHeaders());
+            LocalDateTime now = LocalDateTime.now();
+
+            List<YoutubeAnalyticsSyncData.AudienceRetentionPointData> retentions = response.rows().stream()
+                    .map(row -> new YoutubeAnalyticsSyncData.AudienceRetentionPointData(
+                            toDouble(row.get(indexMap.get("elapsedVideoTimeRatio"))),
+                            toDouble(row.get(indexMap.get("audienceWatchRatio"))),
+                            now
+                    ))
+                    .toList();
+
+            double relativeRetentionAvg = response.rows().stream()
+                    .mapToDouble(row -> toDouble(row.get(indexMap.get("relativeRetentionPerformance"))))
+                    .average()
+                    .orElse(0.0);
+
+            return List.of(new YoutubeAnalyticsSyncData.AudienceRetentionData(
+                    video.videoId(),
+                    retentions,
+                    relativeRetentionAvg
+            ));
+        } catch (ApiException e) {
+            log.warn("Failed to sync audience retention. videoId={} youtubeVideoId={} startDate={} endDate={}",
+                    video.videoId(), video.youtubeVideoId(), startDate, endDate, e);
+            return List.of();
+        }
     }
 
     private Map<String, Long> querySubscriberViews(
@@ -562,6 +608,14 @@ public class YoutubeChannelAnalyticsFetchService {
         return BigDecimal.valueOf(value)
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue();
+    }
+
+    private <T> List<List<T>> chunked(List<T> values, int size) {
+        List<List<T>> chunks = new ArrayList<>();
+        for (int start = 0; start < values.size(); start += size) {
+            chunks.add(values.subList(start, Math.min(values.size(), start + size)));
+        }
+        return chunks;
     }
 
     private Map<String, Integer> buildIndexMap(List<YoutubeAnalyticsVideoResponse.ColumnHeader> headers) {

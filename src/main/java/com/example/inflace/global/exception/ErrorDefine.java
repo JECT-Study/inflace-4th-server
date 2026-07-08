@@ -42,6 +42,7 @@ public enum ErrorDefine {
     ANALYTICS_DATA_NOT_FOUND("ANALYTICS_404", HttpStatus.NOT_FOUND, "Not Found: Analytics data not found"),
 
     //ETC
+    EXTERNAL_API_RATE_LIMITED("EXTERNAL_429", HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests: External API capacity is temporarily limited"),
     YOUTUBE_API_ERROR("YOUTUBE_500", HttpStatus.INTERNAL_SERVER_ERROR, "YouTube API Error");
 
     private final String errorCode;
