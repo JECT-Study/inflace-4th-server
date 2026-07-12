@@ -59,6 +59,20 @@ class YoutubeChannelAnalyticsFetchServiceTest {
     }
 
     @Test
+    void fetchAnalytics_runsChannelAndSubscriberSectionsConcurrently() {
+        AtomicInteger activeCalls = new AtomicInteger();
+        AtomicInteger maxActiveCalls = new AtomicInteger();
+        when(youtubeAnalyticsApiClient.getYoutubeAnalytics(eq(GOOGLE_ID), any(YoutubeAnalyticsVideoRequest.class)))
+                .thenAnswer(invocation -> delayedEmptyResponse(activeCalls, maxActiveCalls));
+
+        service.fetchAnalytics(GOOGLE_ID, contextWithVideos(0));
+
+        assertThat(maxActiveCalls.get())
+                .as("expected channel analytics and subscriber logs to run concurrently but got sequential execution")
+                .isGreaterThan(1);
+    }
+
+    @Test
     void fetchAnalytics_keepsPartialResultWhenOneVideoSummaryFails() {
         stubAnalyticsApi(new AtomicInteger(), new AtomicInteger(), true);
 
@@ -120,6 +134,20 @@ class YoutubeChannelAnalyticsFetchServiceTest {
             );
         } finally {
             activeVideoSummaryCalls.decrementAndGet();
+        }
+    }
+
+    private YoutubeAnalyticsVideoResponse delayedEmptyResponse(
+            AtomicInteger activeCalls,
+            AtomicInteger maxActiveCalls
+    ) throws InterruptedException {
+        int active = activeCalls.incrementAndGet();
+        maxActiveCalls.accumulateAndGet(active, Math::max);
+        try {
+            Thread.sleep(80);
+            return emptyResponse();
+        } finally {
+            activeCalls.decrementAndGet();
         }
     }
 
