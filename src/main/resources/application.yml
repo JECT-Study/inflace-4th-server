@@ -67,11 +67,11 @@ resilience4j:
         max-concurrent-calls: ${YOUTUBE_DATA_BULKHEAD_MAX_CONCURRENT_CALLS:16}
         max-wait-duration: ${YOUTUBE_DATA_BULKHEAD_MAX_WAIT_DURATION:500ms}
       youtube-analytics:
-        max-concurrent-calls: ${YOUTUBE_ANALYTICS_BULKHEAD_MAX_CONCURRENT_CALLS:12}
+        max-concurrent-calls: ${YOUTUBE_ANALYTICS_BULKHEAD_MAX_CONCURRENT_CALLS:16}
         max-wait-duration: ${YOUTUBE_ANALYTICS_BULKHEAD_MAX_WAIT_DURATION:1s}
       openai:
         max-concurrent-calls: ${OPENAI_BULKHEAD_MAX_CONCURRENT_CALLS:8}
-        max-wait-duration: ${OPENAI_BULKHEAD_MAX_WAIT_DURATION:200ms}
+        max-wait-duration: ${OPENAI_BULKHEAD_MAX_WAIT_DURATION:1s}
   ratelimiter:
     instances:
       youtube-data:
@@ -79,10 +79,10 @@ resilience4j:
         limit-refresh-period: ${YOUTUBE_DATA_RATE_LIMIT_REFRESH_PERIOD:1s}
         timeout-duration: ${YOUTUBE_DATA_RATE_LIMIT_TIMEOUT:500ms}
       youtube-analytics:
-        limit-for-period: ${YOUTUBE_ANALYTICS_RATE_LIMIT_FOR_PERIOD:24}
+        limit-for-period: ${YOUTUBE_ANALYTICS_RATE_LIMIT_FOR_PERIOD:32}
         limit-refresh-period: ${YOUTUBE_ANALYTICS_RATE_LIMIT_REFRESH_PERIOD:1s}
         timeout-duration: ${YOUTUBE_ANALYTICS_RATE_LIMIT_TIMEOUT:1s}
       openai:
         limit-for-period: ${OPENAI_RATE_LIMIT_FOR_PERIOD:8}
         limit-refresh-period: ${OPENAI_RATE_LIMIT_REFRESH_PERIOD:1s}
-        timeout-duration: ${OPENAI_RATE_LIMIT_TIMEOUT:200ms}
+        timeout-duration: ${OPENAI_RATE_LIMIT_TIMEOUT:1s}

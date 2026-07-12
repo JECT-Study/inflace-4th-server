@@ -65,9 +65,14 @@ public class YoutubeChannelAnalyticsFetchService {
 
     public YoutubeAnalyticsSyncData fetchAnalytics(String googleId, AnalyticsSyncContext context) {
         LocalDate endDate = resolveEndDate();
+        CompletableFuture<YoutubeAnalyticsSyncData.ChannelAnalyticsData> channelAnalyticsFuture = CompletableFuture
+                .supplyAsync(() -> fetchChannelAnalytics(googleId, context, endDate), externalApiExecutor);
+        CompletableFuture<List<YoutubeAnalyticsSyncData.SubscriberLogData>> subscriberLogsFuture = CompletableFuture
+                .supplyAsync(() -> fetchSubscriberLogs(googleId, context, endDate), externalApiExecutor);
+
         return new YoutubeAnalyticsSyncData(
-                fetchChannelAnalytics(googleId, context, endDate),
-                fetchSubscriberLogs(googleId, context, endDate),
+                channelAnalyticsFuture.join(),
+                subscriberLogsFuture.join(),
                 fetchVideoAnalytics(googleId, context.videos(), endDate),
                 fetchAudienceRetention(googleId, context.videos(), endDate)
         );

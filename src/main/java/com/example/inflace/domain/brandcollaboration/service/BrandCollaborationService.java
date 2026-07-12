@@ -43,6 +43,7 @@ import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -68,6 +69,7 @@ public class BrandCollaborationService {
     private static final int SHORTS_MAX_DURATION_SECONDS = 180;
     private static final int RECENT_UPLOADS_COUNT = 10;
     private static final int DEFAULT_VIDEO_COUNT = 9;
+    private static final Duration RECENT_UPLOAD_DAYS_TIMEOUT = Duration.ofSeconds(6);
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final String DEFAULT_VIDEOS_CACHE_KEY = "brand-collaboration:default-videos";
@@ -278,6 +280,10 @@ public class BrandCollaborationService {
                 .filter(StringUtils::hasText)
                 .map(playlistId -> CompletableFuture
                         .supplyAsync(() -> computeUploadDays(playlistId), externalApiExecutor)
+                        .orTimeout(
+                                RECENT_UPLOAD_DAYS_TIMEOUT.toSeconds(),
+                                TimeUnit.SECONDS
+                        )
                         .exceptionally(exception -> {
                             log.warn("Failed to compute average upload days. playlistId={}", playlistId, exception);
                             return Double.NaN;
