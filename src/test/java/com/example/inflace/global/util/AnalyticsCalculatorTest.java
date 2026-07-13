@@ -244,7 +244,7 @@ class AnalyticsCalculatorTest {
     @DisplayName("시간 포맷 변환 - 분:초 정상 변환")
     void formatTime_분초_정상변환() {
         // 0.5 * 600 = 300s → "5:00"
-        String result = AnalyticsCalculator.formatTime(0.5, 600.0);
+        String result = AnalyticsCalculator.formatTime(0.5, 600);
 
         assertThat(result).isEqualTo("5:00");
     }
@@ -253,7 +253,7 @@ class AnalyticsCalculatorTest {
     @DisplayName("시간 포맷 변환 - 초가 한 자리면 0 패딩")
     void formatTime_초한자리이면_0패딩() {
         // 0.01 * 600 = 6s → "0:06"
-        String result = AnalyticsCalculator.formatTime(0.01, 600.0);
+        String result = AnalyticsCalculator.formatTime(0.01, 600);
 
         assertThat(result).isEqualTo("0:06");
     }
@@ -262,7 +262,7 @@ class AnalyticsCalculatorTest {
     @DisplayName("시간 포맷 변환 - 정확히 분 단위이면 초 00")
     void formatTime_정확히분단위이면_초00() {
         // 0.1 * 600 = 60s → "1:00"
-        String result = AnalyticsCalculator.formatTime(0.1, 600.0);
+        String result = AnalyticsCalculator.formatTime(0.1, 600);
 
         assertThat(result).isEqualTo("1:00");
     }
@@ -271,7 +271,7 @@ class AnalyticsCalculatorTest {
     @DisplayName("시간 포맷 변환 - 반올림 적용")
     void formatTime_반올림적용() {
         // 0.25 * 363 = 90.75 → round → 91s → "1:31"
-        String result = AnalyticsCalculator.formatTime(0.25, 363.0);
+        String result = AnalyticsCalculator.formatTime(0.25, 363);
 
         assertThat(result).isEqualTo("1:31");
     }

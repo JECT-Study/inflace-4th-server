@@ -1,6 +1,9 @@
 package com.example.inflace.infra.openai.service;
 
 import com.example.inflace.infra.openai.OpenAiSendRequest;
+import com.example.inflace.global.exception.ExternalApiLimitExceptionMapper;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.ai.chat.client.ChatClient;
@@ -22,6 +25,8 @@ public class OpenAiService {
         this.openAiChatClient = chatClientBuilder.build();
     }
 
+    @Bulkhead(name = "openai", fallbackMethod = "openAiFallback")
+    @RateLimiter(name = "openai", fallbackMethod = "openAiFallback")
     public String sendChatMessage(OpenAiSendRequest request) {
         List<Message> messages = new ArrayList<>();
 
@@ -45,5 +50,9 @@ public class OpenAiService {
         return openAiChatClient.prompt(prompt)
                 .call()
                 .content();
+    }
+
+    private String openAiFallback(OpenAiSendRequest request, Throwable throwable) {
+        throw ExternalApiLimitExceptionMapper.toRuntimeException(throwable);
     }
 }

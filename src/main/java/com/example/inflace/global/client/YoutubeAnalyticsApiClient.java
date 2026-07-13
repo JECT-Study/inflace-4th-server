@@ -5,7 +5,10 @@ import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoRequest;
 import com.example.inflace.domain.video.dto.YoutubeAnalyticsVideoResponse;
 import com.example.inflace.global.exception.ApiException;
 import com.example.inflace.global.exception.ErrorDefine;
+import com.example.inflace.global.exception.ExternalApiLimitExceptionMapper;
 import com.example.inflace.global.properties.YoutubeProperties;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +33,8 @@ public class YoutubeAnalyticsApiClient {
     private final YoutubeProperties youtubeProperties;
     private final GoogleOAuthTokenService googleOAuthTokenService;
 
+    @Bulkhead(name = "youtube-analytics", fallbackMethod = "youtubeAnalyticsFallback")
+    @RateLimiter(name = "youtube-analytics", fallbackMethod = "youtubeAnalyticsFallback")
     public YoutubeAnalyticsVideoResponse getYoutubeAnalytics(String googleId, YoutubeAnalyticsVideoRequest request) {
         Map<String, Object> requestLog = new LinkedHashMap<>();
         requestLog.put("startDate", request.startDate());
@@ -89,5 +94,15 @@ public class YoutubeAnalyticsApiClient {
                     throw new ApiException(ErrorDefine.YOUTUBE_API_ERROR);
                 })
                 .body(YoutubeAnalyticsVideoResponse.class));
+    }
+
+    private YoutubeAnalyticsVideoResponse youtubeAnalyticsFallback(
+            String googleId,
+            YoutubeAnalyticsVideoRequest request,
+            Throwable throwable
+    ) {
+        log.warn("YouTube Analytics API call blocked or failed before execution. googleId={} metrics={} dimensions={}",
+                googleId, request.formattedMetricsList(), request.dimensions(), throwable);
+        throw ExternalApiLimitExceptionMapper.toRuntimeException(throwable);
     }
 }

@@ -1,6 +1,9 @@
 package com.example.inflace.global.client;
 
 import com.example.inflace.global.properties.YoutubeProperties;
+import com.example.inflace.global.exception.ExternalApiLimitExceptionMapper;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,8 @@ public class YoutubeSearchApiClient {
     private final YoutubeProperties youtubeProperties;
 
     // https://developers.google.com/youtube/v3/docs/search/list
+    @Bulkhead(name = "youtube-data", fallbackMethod = "searchFallback")
+    @RateLimiter(name = "youtube-data", fallbackMethod = "searchFallback")
     public YoutubeSearchListResponse search(
             String q,
             String pageToken,
@@ -77,6 +82,23 @@ public class YoutubeSearchApiClient {
                 .uri(uri)
                 .retrieve()
                 .body(YoutubeSearchListResponse.class);
+    }
+
+    private YoutubeSearchListResponse searchFallback(
+            String q,
+            String pageToken,
+            String order,
+            String videoDuration,
+            String categoryId,
+            String regionCode,
+            String relevanceLanguage,
+            int maxResults,
+            String publishedAfter,
+            String publishedBefore,
+            String channelId,
+            Throwable throwable
+    ) {
+        throw ExternalApiLimitExceptionMapper.toRuntimeException(throwable);
     }
 
     public record YoutubeSearchListResponse(

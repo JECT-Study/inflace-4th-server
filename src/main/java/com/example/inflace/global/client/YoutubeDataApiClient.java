@@ -3,7 +3,11 @@ package com.example.inflace.global.client;
 import com.example.inflace.domain.channel.dto.response.YoutubeDataChannelResponse;
 import com.example.inflace.domain.auth.service.GoogleOAuthTokenService;
 import com.example.inflace.domain.video.dto.YoutubeDataVideoResponse;
+import com.example.inflace.global.exception.ApiException;
+import com.example.inflace.global.exception.ExternalApiLimitExceptionMapper;
 import com.example.inflace.global.properties.YoutubeProperties;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -29,6 +33,8 @@ public class YoutubeDataApiClient {
     private final YoutubeProperties youtubeProperties;
     private final GoogleOAuthTokenService googleOAuthTokenService;
 
+    @Bulkhead(name = "youtube-data", fallbackMethod = "youtubeDataChannelFallback")
+    @RateLimiter(name = "youtube-data", fallbackMethod = "youtubeDataChannelFallback")
     public YoutubeDataChannelResponse getYoutubeChannels(String channelId, String parts) {
         URI uri = UriComponentsBuilder
                 .fromUriString(youtubeProperties.dataApi().baseUrl())
@@ -45,6 +51,8 @@ public class YoutubeDataApiClient {
                 .body(YoutubeDataChannelResponse.class);
     }
 
+    @Bulkhead(name = "youtube-data", fallbackMethod = "youtubeDataChannelFallback")
+    @RateLimiter(name = "youtube-data", fallbackMethod = "youtubeDataChannelFallback")
     public YoutubeDataChannelResponse getMyChannel(String googleId, String parts) {
         URI uri = UriComponentsBuilder
                 .fromUriString(youtubeProperties.dataApi().baseUrl())
@@ -61,6 +69,8 @@ public class YoutubeDataApiClient {
                 .body(YoutubeDataChannelResponse.class));
     }
 
+    @Bulkhead(name = "youtube-data", fallbackMethod = "youtubeDataVideoFallback")
+    @RateLimiter(name = "youtube-data", fallbackMethod = "youtubeDataVideoFallback")
     public YoutubeDataVideoResponse getYoutubeVideo(String videoId, String parts) {
         URI uri = UriComponentsBuilder
                 .fromUriString(youtubeProperties.dataApi().baseUrl())
@@ -77,6 +87,8 @@ public class YoutubeDataApiClient {
                 .body(YoutubeDataVideoResponse.class);
     }
 
+    @Bulkhead(name = "youtube-data", fallbackMethod = "youtubeDataStringListFallback")
+    @RateLimiter(name = "youtube-data", fallbackMethod = "youtubeDataStringListFallback")
     public List<String> getMyVideoIds(String googleId, String uploadsPlaylistId) {
         if (!StringUtils.hasText(uploadsPlaylistId)) {
             return List.of();
@@ -124,6 +136,8 @@ public class YoutubeDataApiClient {
         return new ArrayList<>(videoIds);
     }
 
+    @Bulkhead(name = "youtube-data", fallbackMethod = "youtubeDataVideoItemListFallback")
+    @RateLimiter(name = "youtube-data", fallbackMethod = "youtubeDataVideoItemListFallback")
     public List<YoutubeDataVideoResponse.Item> getYoutubeVideos(List<String> videoIds, String parts) {
         List<String> normalizedVideoIds = normalizeIds(videoIds);
         if (normalizedVideoIds.isEmpty()) {
@@ -174,6 +188,8 @@ public class YoutubeDataApiClient {
     }
 
     // https://developers.google.com/youtube/v3/docs/playlistItems/list
+    @Bulkhead(name = "youtube-data", fallbackMethod = "youtubeDataStringListFallback")
+    @RateLimiter(name = "youtube-data", fallbackMethod = "youtubeDataStringListFallback")
     public List<String> getRecentUploadDates(String playlistId, int maxResults) {
         if (!StringUtils.hasText(playlistId)) {
             return List.of();
@@ -204,6 +220,34 @@ public class YoutubeDataApiClient {
                 .filter(item -> item.snippet() != null && StringUtils.hasText(item.snippet().publishedAt()))
                 .map(item -> item.snippet().publishedAt())
                 .toList();
+    }
+
+    private YoutubeDataChannelResponse youtubeDataChannelFallback(String id, String parts, Throwable throwable) {
+        throw youtubeDataException(throwable);
+    }
+
+    private YoutubeDataVideoResponse youtubeDataVideoFallback(String videoId, String parts, Throwable throwable) {
+        throw youtubeDataException(throwable);
+    }
+
+    private List<String> youtubeDataStringListFallback(String id, int maxResults, Throwable throwable) {
+        throw youtubeDataException(throwable);
+    }
+
+    private List<String> youtubeDataStringListFallback(String id, String value, Throwable throwable) {
+        throw youtubeDataException(throwable);
+    }
+
+    private List<YoutubeDataVideoResponse.Item> youtubeDataVideoItemListFallback(
+            List<String> videoIds,
+            String parts,
+            Throwable throwable
+    ) {
+        throw youtubeDataException(throwable);
+    }
+
+    private ApiException youtubeDataException(Throwable throwable) {
+        throw ExternalApiLimitExceptionMapper.toRuntimeException(throwable);
     }
 
     public record PlaylistItemsResponse(
