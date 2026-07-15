@@ -1,5 +1,6 @@
 package com.example.inflace.global.security.config;
 
+import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.global.filter.MdcFilter;
 import com.example.inflace.global.properties.CorsAllowedOriginsProperties;
 import com.example.inflace.global.security.custom.CustomAccessDeniedHandler;
@@ -48,6 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(SecurityAllowedPaths.allowedPaths()).permitAll()
+                        .requestMatchers("/admin/**").hasRole(Plan.ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
