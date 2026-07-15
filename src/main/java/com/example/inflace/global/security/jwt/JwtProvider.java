@@ -1,5 +1,6 @@
 package com.example.inflace.global.security.jwt;
 
+import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.domain.enums.UserRole;
 import com.example.inflace.global.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
@@ -20,16 +21,21 @@ import java.util.UUID;
 public class JwtProvider {
 
     private static final String CLAIM_USER_TYPE = "userType";
+    private static final String CLAIM_PLAN = "plan";
 
     private final JwtProperties jwtProperties;
 
-    public String createAccessToken(UUID userId, List<UserRole> userRoles) {
+    public String createAccessToken(UUID userId, Plan plan, List<UserRole> userRoles) {
         Date now = new Date();
         var builder = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + jwtProperties.expiration()))
                 .signWith(getSigningKey());
+
+        if (plan != null) {
+            builder.claim(CLAIM_PLAN, plan.name());
+        }
 
         if (userRoles != null && !userRoles.isEmpty()) {
             builder.claim(
@@ -79,6 +85,11 @@ public class JwtProvider {
                 .filter(userType -> userType != null && !userType.isBlank())
                 .map(UserRole::valueOf)
                 .toList();
+    }
+
+    public Plan getPlan(String token) {
+        String plan = parseClaims(token).get(CLAIM_PLAN, String.class);
+        return plan == null || plan.isBlank() ? null : Plan.valueOf(plan);
     }
 
     public boolean isValid(String token) {

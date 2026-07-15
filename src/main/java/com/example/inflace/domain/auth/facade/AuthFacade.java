@@ -35,7 +35,9 @@ public class AuthFacade {
 
         UserDetailsResponse userDetails = userService.getUserDetails(result.userId());
 
-        String accessToken = jwtProvider.createAccessToken(userDetails.id(), userDetails.userRoles());
+        String accessToken = jwtProvider.createAccessToken(
+                userDetails.id(), userDetails.plan(), userDetails.userRoles()
+        );
         String refreshToken = jwtProvider.createRefreshToken(userDetails.id());
 
         authTokenRedisService.saveRefreshToken(result.userId(), refreshToken, jwtProvider.getRefreshTokenExpirationMillis());
@@ -72,7 +74,9 @@ public class AuthFacade {
 
         UserDetailsResponse userDetails = userService.getUserDetails(userId);
 
-        String newAccessToken = jwtProvider.createAccessToken(userDetails.id(), userDetails.userRoles());
+        String newAccessToken = jwtProvider.createAccessToken(
+                userDetails.id(), userDetails.plan(), userDetails.userRoles()
+        );
         String newRefreshToken = jwtProvider.createRefreshToken(userId);
         authTokenRedisService.saveRefreshToken(userId, newRefreshToken, jwtProvider.getRefreshTokenExpirationMillis());
 

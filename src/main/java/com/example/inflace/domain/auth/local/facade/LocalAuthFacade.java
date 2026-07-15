@@ -35,7 +35,9 @@ public class LocalAuthFacade {
 
         UserDetailsResponse userDetails = userService.getUserDetails(result.userId());
 
-        String accessToken = jwtProvider.createAccessToken(userDetails.id(), userDetails.userRoles());
+        String accessToken = jwtProvider.createAccessToken(
+                userDetails.id(), userDetails.plan(), userDetails.userRoles()
+        );
         String refreshToken = jwtProvider.createRefreshToken(userDetails.id());
         authTokenRedisService.saveRefreshToken(
                 result.userId(),
