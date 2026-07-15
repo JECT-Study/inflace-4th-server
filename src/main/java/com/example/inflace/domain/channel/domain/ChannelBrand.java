@@ -48,11 +48,18 @@ public class ChannelBrand extends BaseTimeEntity {
     @Column(name = "ai_generated", nullable = false)
     private boolean aiGenerated;
 
+    @Column(name = "admin_approved", nullable = false)
+    private boolean adminApproved;
+
     public static ChannelBrand of(Channel channel, Brand brand, String matchedAlias) {
         ChannelBrand relation = new ChannelBrand();
         relation.channel = channel;
         relation.brand = brand;
         relation.matchedAlias = matchedAlias;
         return relation;
+    }
+
+    public void approveByAdmin() {
+        this.adminApproved = true;
     }
 }
