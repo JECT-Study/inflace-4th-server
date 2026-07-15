@@ -21,4 +21,11 @@ public class Brand {
 
     @Column(name = "ai_generated", nullable = false)
     private boolean aiGenerated;
+
+    @Column(name = "admin_approved", nullable = false)
+    private boolean adminApproved;
+
+    public void approveByAdmin() {
+        this.adminApproved = true;
+    }
 }
