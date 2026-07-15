@@ -1,7 +1,7 @@
 package com.example.inflace.global.security.jwt;
 
 import com.example.inflace.domain.auth.service.AuthTokenRedisService;
-import com.example.inflace.domain.user.domain.enums.UserRole;
+import com.example.inflace.domain.user.domain.enums.Plan;
 import com.example.inflace.domain.user.infra.UserReadRepository;
 import com.example.inflace.global.config.AuthUser;
 import com.example.inflace.global.exception.ErrorDefine;
@@ -70,8 +70,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             UUID userId = jwtProvider.getUserId(token);
-            validateUserExists(userId);
-            List<GrantedAuthority> authorities = buildAuthorities(token);
+            Plan plan = jwtProvider.getPlan(token);
+            validateUserPlan(userId, plan);
+            List<GrantedAuthority> authorities = buildAuthorities(plan);
             AuthUser authUser = new AuthUser(userId);
             PreAuthenticatedAuthenticationToken authentication =
                     new PreAuthenticatedAuthenticationToken(authUser, token, authorities);
@@ -102,22 +103,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private List<GrantedAuthority> buildAuthorities(String token) {
-        List<UserRole> userRoles = jwtProvider.getUserRoles(token);
-        if (userRoles.isEmpty()) {
-            return List.of();
-        }
-
-        return userRoles.stream()
-                .map(UserRole::toSpringRole)
-                .map(SimpleGrantedAuthority::new)
-                .map(GrantedAuthority.class::cast)
-                .toList();
+    private List<GrantedAuthority> buildAuthorities(Plan plan) {
+        return List.of(new SimpleGrantedAuthority(plan.toSpringRole()));
     }
 
-    private void validateUserExists(UUID userId) {
-        if (!userReadRepository.existsById(userId)) {
-            throw new JwtAuthenticationException(ErrorDefine.USER_NOT_FOUND);
+    private void validateUserPlan(UUID userId, Plan tokenPlan) {
+        Plan currentPlan = userReadRepository.findPlanByUserId(userId)
+                .orElseThrow(() -> new JwtAuthenticationException(ErrorDefine.USER_NOT_FOUND));
+        if (tokenPlan == null || currentPlan != tokenPlan) {
+            throw new JwtAuthenticationException(ErrorDefine.INVALID_ACCESS_TOKEN);
         }
     }
 }
